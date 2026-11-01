@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- =====================================================================
+     НАСТРОЙКА ПОДКЛЮЧЕНИЯ / CONNECTION SETTINGS  (меняется только здесь)
+     Supabase → кнопка «Connect» вверху проекта (или Settings → API Keys):
+       SUPABASE_URL = Project URL       пример: https://abcdefgh.supabase.co
+       SUPABASE_KEY = Publishable key   пример: sb_publishable_xxxxxxxx
+     Вставьте значения между кавычками и сохраните файл.
+     NEXT_PUBLIC_SUPABASE_URL=https://cbbqnocjrcalatlcjvzz.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3
+     ===================================================================== -->
+<script>
+window.HS_CONFIG = {
+  SUPABASE_URL: 'https://cbbqnocjrcalatlcjvzz.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3',
+  ADMIN_EMAIL:  'mihastya@gmail.com'
+};
+</script>
+<title>Hotshot Fleet Hub 6.1</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hotshot Hub">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0d0f12" id="meta-theme">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230d0f12%22/><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2265%22>🚚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3/dist/d3-array.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+:root{color-scheme:dark;
+--bg:#0d0f12;--bg2:#101318;--card:#15181d;--card2:#1b1f26;--line:#2a2f38;--tx:#f4f4f2;--mut:#9aa1ad;--dim:#6c7480;
+--acc:#ffc400;--ink:#171200;--grn:#3ddc97;--red:#ff5a5f;--blu:#5cc8ff;--vio:#b39cff;
+--fd:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;--fb:"Barlow",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
+body.light{color-scheme:light;--bg:#e6e9ed;--bg2:#dde1e7;--card:#ffffff;--card2:#f2f4f7;--line:#cfd5de;--tx:#12171f;--mut:#4d5967;--dim:#74808f;
+--acc:#f2b600;--ink:#171200;--grn:#0a8f5c;--red:#d92d3a;--blu:#0b79b8;--vio:#6a54dd}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:var(--fb);background:var(--bg);color:var(--tx);line-height:1.4;min-height:100vh;min-height:100dvh;overflow-x:hidden;overscroll-behavior-y:none;touch-action:manipulation;font-size:15px}
+button{font-family:inherit;color:inherit}
+.num,.big,.kv,.kpi .v,.bn{font-family:var(--fd);font-variant-numeric:tabular-nums}
+.muted{color:var(--mut)}.dim{color:var(--dim)}.pad{padding:14px}.grow{flex:1;min-width:0}
+.row{display:flex;gap:10px;align-items:center}.wrap{flex-wrap:wrap}.between{justify-content:space-between}
+a{color:var(--acc)}
+
+/* ---------- auth ---------- */
+#auth{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(20px + var(--st)) 16px 20px}
+.auth-box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
+.auth-brand{font-family:var(--fd);font-size:44px;font-weight:800;line-height:.95;letter-spacing:.5px}
+.auth-brand span{color:var(--acc)}
+.road{height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--acc) 0 22px,transparent 22px 40px);opacity:.9}
+.auth-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.msg{font-size:13px;padding:9px 11px;border-radius:10px;display:none}
+.msg.err{display:block;color:var(--red);background:rgba(255,90,95,.1);border:1px solid rgba(255,90,95,.3)}
+.msg.ok{display:block;color:var(--grn);background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.3)}
+
+/* ---------- inputs / buttons ---------- */
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:500}
+input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--tx);padding:10px 12px;border-radius:11px;font-size:16px;font-family:var(--fb);outline:none;min-height:46px;min-width:0}
+input[type=date]{-webkit-appearance:none;appearance:none;text-align:left}
+input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--acc);flex:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,196,0,.18)}
+textarea{min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.btn{min-height:44px;padding:0 16px;border-radius:11px;border:1px solid var(--line);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--acc);color:var(--ink);border-color:var(--acc)}
+.btn.grn{background:var(--grn);color:#04150d;border-color:var(--grn)}
+.btn.dng{background:rgba(255,90,95,.12);color:var(--red);border-color:rgba(255,90,95,.4)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px}
+.btn.block{width:100%}
+.icon-btn{min-width:42px;min-height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:16px;font-weight:700;cursor:pointer}
+.seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;max-width:100%}
+.seg button{border:0;background:transparent;color:var(--mut);padding:0 14px;min-height:38px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--acc);color:var(--ink)}
+.mset{display:flex;flex-wrap:wrap;gap:10px 18px;margin-bottom:8px}
+.mset>div{min-width:0;max-width:100%}
+.mlbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 0 5px 2px}
+.mhint{margin:2px 2px 12px;line-height:1.45}
+.wstart{background:var(--bg2);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.wstart .pst{font-size:11px;color:var(--grn);min-height:15px;margin-top:3px}
+.wstart .pst.warn{color:var(--red)}
+.atag{display:none;margin-left:6px;font-size:10px;font-weight:800;letter-spacing:.05em;padding:1px 6px;border-radius:6px;background:color-mix(in srgb,var(--grn) 18%,transparent);color:var(--grn);vertical-align:1px;text-transform:uppercase}
+.is-auto .atag{display:inline-block}
+.is-auto input{border-style:dashed;border-color:color-mix(in srgb,var(--grn) 55%,var(--line));background:color-mix(in srgb,var(--grn) 8%,var(--bg2));cursor:default}
+.is-auto input:focus{box-shadow:none;border-color:var(--grn)}
+.seg.blu button.on{background:var(--blu);color:#02121b}
+
+/* ---------- shell ---------- */
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(8px + var(--st)) 12px 8px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{font-family:var(--fd);font-weight:800;font-size:22px;letter-spacing:.3px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tag{font-family:var(--fb);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--acc);color:var(--acc)}
+.tag.d{border-color:var(--blu);color:var(--blu)}
+.top-r{display:flex;align-items:center;gap:6px;flex:none}
+.sync{font-size:11px;color:var(--dim);white-space:nowrap}
+.brand{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{flex:none}
+@media(max-width:560px){.sync{display:none}.top .tag{display:none}.icon-btn{min-width:40px;min-height:40px}}
+.shell{display:block}
+main{padding:12px 12px calc(88px + var(--sb));max-width:1120px;margin:0 auto;width:100%}
+nav#nav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--sb))}
+nav#nav button{border:0;background:transparent;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:11px;font-weight:600;cursor:pointer;border-radius:12px;min-height:50px}
+nav#nav button .ic{font-size:21px;line-height:1}
+nav#nav button.on{color:var(--acc)}
+nav#nav button.on .ic{transform:translateY(-1px)}
+@media(min-width:980px){
+ .shell{display:grid;grid-template-columns:210px 1fr;gap:0;max-width:1360px;margin:0 auto}
+ nav#nav{position:sticky;top:64px;align-self:start;height:calc(100vh - 80px);grid-template-columns:1fr;grid-auto-rows:52px;align-content:start;gap:4px;background:transparent;backdrop-filter:none;border:0;padding:16px 10px}
+ nav#nav button{flex-direction:row;justify-content:flex-start;gap:12px;padding:0 14px;font-size:14px}
+ nav#nav button.on{background:var(--card);border:1px solid var(--line)}
+ main{padding-bottom:40px}
+}
+.page{display:none;flex-direction:column;gap:14px}
+.page.active{display:flex}
+
+/* ---------- cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
+.card.flat{background:var(--card2)}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.ct{font-family:var(--fd);font-size:20px;font-weight:700;letter-spacing:.3px}
+.cs{font-size:12px;color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:860px){.grid2{grid-template-columns:1fr 1fr}}
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.fgrid .s2{grid-column:span 2}
+.ro-banner{background:rgba(255,196,0,.12);border:1px solid var(--acc);color:var(--acc);padding:9px 12px;border-radius:12px;font-weight:700;font-size:13px;text-align:center}
+body.ro .need-write{display:none!important}
+
+/* hero */
+.hero{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 16px 14px;overflow:hidden}
+.hero:before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:repeating-linear-gradient(90deg,var(--acc) 0 22px,transparent 22px 40px)}
+.hero-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.hl{font-size:12px;font-weight:600;color:var(--mut)}
+.big{font-size:clamp(34px,11.5vw,58px);font-weight:800;line-height:1;margin-top:2px;letter-spacing:.5px;white-space:nowrap}
+.hero-top>div:first-child{min-width:0}
+.big.neg{color:var(--red)}
+.delta{font-size:12px;font-weight:700;margin-top:6px}
+.delta.up{color:var(--grn)}.delta.dn{color:var(--red)}.delta.zz{color:var(--mut)}
+.ring{--p:0;width:86px;height:86px;border-radius:50%;background:conic-gradient(var(--acc) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center;flex:none}
+@media(max-width:420px){.ring{width:74px;height:74px}.ring>div{width:58px!important;height:58px!important}.ring .rv{font-size:19px}.ring .rl{font-size:8px;max-width:52px}}
+.ring>div{width:68px;height:68px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .rv{font-family:var(--fd);font-size:22px;font-weight:800;line-height:1}
+.ring .rl{font-size:9px;color:var(--mut);text-align:center;line-height:1.1;max-width:60px}
+.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+@media(min-width:640px){.chips{grid-template-columns:repeat(4,1fr)}}
+.chip{background:var(--card2);border-radius:12px;padding:9px 11px}
+.chip .l{font-size:11px;color:var(--mut)}
+.chip .v{font-family:var(--fd);font-size:22px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:700px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;min-width:0}
+.kpi .l{font-size:11px;color:var(--mut);font-weight:600}
+.kpi .v{font-size:25px;font-weight:700;margin:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kpi .s{font-size:11px;color:var(--dim)}
+.kpi.hl{border-color:var(--acc)}
+.g{color:var(--grn)}.r{color:var(--red)}.a{color:var(--acc)}.b{color:var(--blu)}
+.ins{display:flex;flex-direction:column;gap:8px}
+.ins div{display:flex;gap:10px;align-items:flex-start;background:var(--card2);border-left:4px solid var(--acc);border-radius:10px;padding:9px 12px;font-size:13px}
+.ins div.w{border-color:var(--red)}.ins div.o{border-color:var(--grn)}
+
+/* row cards (loads / fuel / expenses) */
+.list{display:flex;flex-direction:column;gap:10px}
+.rc{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+.rc>.f{grid-column:span 6;min-width:0}
+.rc>.f.w12{grid-column:span 12}
+.rc>.rc-h{grid-column:span 12;display:flex;align-items:center;gap:10px}
+.rc .n{font-family:var(--fd);background:var(--acc);color:var(--ink);font-weight:800;border-radius:8px;min-width:28px;height:28px;display:grid;place-items:center;font-size:16px}
+.rc .rc-sum{flex:1;font-size:12px;color:var(--mut);font-weight:600}
+.rc .x{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,90,95,.4);background:rgba(255,90,95,.1);color:var(--red);font-size:16px;cursor:pointer}
+.rc .pst{font-size:11px;color:var(--grn);min-height:15px;margin-top:3px}
+.rc .pst.warn{color:var(--red)}
+.rc .chk{display:flex;align-items:center;gap:8px;min-height:46px;font-size:13px;color:var(--tx);margin:0;cursor:pointer}
+.rc .foot{grid-column:span 12;display:flex;gap:8px;flex-wrap:wrap}
+@media(min-width:760px){
+ .rc>.f.t2{grid-column:span 2}.rc>.f.t3{grid-column:span 3}.rc>.f.t4{grid-column:span 4}.rc>.f.t6{grid-column:span 6}
+}
+.sumbar{display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between;font-size:13px;color:var(--mut);background:var(--bg2);border-radius:11px;padding:10px 12px;margin-top:10px}
+.sumbar b{color:var(--tx)}
+.empty{padding:22px 10px;text-align:center;color:var(--dim);font-size:13px}
+
+/* tables (read-only) */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th{text-align:left;font-size:11px;color:var(--mut);padding:8px 8px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:8px;border-bottom:1px solid var(--line);font-size:13px}
+.ar{text-align:right}
+
+/* charts */
+.cw{position:relative;height:240px;width:100%}
+.cbox{background:var(--card2);border-radius:14px;padding:12px;min-width:0;overflow:hidden}
+.cbt{font-size:12px;font-weight:700;color:var(--mut);margin-bottom:8px}
+.prog{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:8px}
+.prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--grn));border-radius:6px;transition:width .4s}
+.anat{display:flex;height:28px;border-radius:9px;overflow:hidden;background:var(--line);margin:10px 0}
+.anat i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:10px;font-weight:800;color:#000;overflow:hidden;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mut)}
+.legend span.d{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.pill{display:inline-flex;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:700}
+.verdict{padding:14px;border-radius:12px;font-weight:800;text-align:center;border:2px solid;font-size:15px;margin:10px 0}
+.verdict.g{background:rgba(61,220,151,.12);border-color:var(--grn);color:var(--grn)}
+.verdict.y{background:rgba(255,196,0,.12);border-color:var(--acc);color:var(--acc)}
+.verdict.r{background:rgba(255,90,95,.12);border-color:var(--red);color:var(--red)}
+.scan{border:1px dashed var(--blu);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.scan-st{font-size:12px;font-weight:700;color:var(--acc);padding:8px 10px;border-radius:9px;background:rgba(255,196,0,.1);display:none}
+.scan-st.err{color:var(--red);background:rgba(255,90,95,.1)}
+.upl{position:relative;overflow:hidden}
+.upl input{position:absolute;inset:0;opacity:0;cursor:pointer;min-height:0}
+details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;display:flex;align-items:center}
+
+/* map */
+.map-wrap svg{width:100%;height:auto;display:block;border-radius:12px;background:var(--bg2)}
+.map-wrap .st{fill:var(--card2);stroke:var(--line);stroke-width:.8}
+.map-wrap .st.x{fill:color-mix(in srgb,var(--acc) 16%,var(--card2))}
+.map-wrap .st.s{fill:color-mix(in srgb,var(--acc) 38%,var(--card2))}
+.seg-ld{fill:none;stroke:var(--grn);stroke-width:5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw .9s ease forwards;animation-delay:var(--d)}
+.seg-dh{fill:none;stroke:var(--red);stroke-width:3.5;stroke-dasharray:10 8;opacity:0;animation:fade .5s ease forwards;animation-delay:var(--d)}
+.mk{opacity:0;animation:fade .4s ease forwards;animation-delay:var(--d)}
+.mk circle{fill:var(--acc);stroke:var(--bg);stroke-width:3}
+.mk .mn{fill:var(--ink);font:800 19px var(--fd);text-anchor:middle}
+.mk .ml{fill:var(--tx);font:700 25px var(--fb);paint-order:stroke;stroke:var(--bg2);stroke-width:7px;stroke-linejoin:round}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fade{to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.seg-ld{stroke-dashoffset:0;animation:none}.seg-dh,.mk{opacity:1;animation:none}}
+
+/* sheet / toast */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:520px;background:var(--card);border-radius:20px 20px 0 0;border:1px solid var(--line);padding:16px 16px calc(16px + var(--sb));display:flex;flex-direction:column;gap:12px;max-height:88dvh;overflow:auto}
+@media(min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:20px}}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + var(--sb));z-index:80;background:var(--tx);color:var(--bg);padding:11px 16px;border-radius:12px;font-weight:700;font-size:14px;max-width:90vw;display:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+@media(min-width:980px){#toast{bottom:30px}}
+
+@media print{
+ body{background:#fff!important;color:#000!important}
+ .top,nav#nav,.no-print,.page:not(#page-reports){display:none!important}
+ #page-reports{display:flex!important}
+ .card,.kpi,.chip{background:#fff!important;border:1px solid #bbb!important;color:#000!important}
+ *{color:#000!important}
+ main{padding:0}
+}
+</style>
+</head>
+<body>
+<noscript>JavaScript is required.</noscript>
+
+<!-- ===================== AUTH ===================== -->
+<div id="auth">
+  <div class="auth-box">
+    <div class="row between">
+      <div class="auth-brand">HOTSHOT<br><span>FLEET HUB</span></div>
+      <button class="icon-btn" data-act="lang" id="auth-lang">EN</button>
+    </div>
+    <div class="road"></div>
+    <div class="auth-card">
+      <div class="muted" data-i18n="auth.sub"></div>
+      <div id="auth-err" class="msg"></div>
+      <div id="auth-info" class="msg"></div>
+      <div><label data-i18n="auth.email"></label><input type="email" id="auth-email" autocomplete="email" inputmode="email" autocapitalize="none" placeholder="driver@hotshot.com"></div>
+      <div><label data-i18n="auth.pass"></label><input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••"></div>
+      <button class="btn pri block" data-act="login" data-i18n="auth.login"></button>
+      <button class="btn block" data-act="signup" data-i18n="auth.signup"></button>
+      <button class="btn sm block" style="background:transparent;border-color:transparent;color:var(--mut)" data-act="forgot" data-i18n="auth.forgot"></button>
+    </div>
+    <div class="cs" id="auth-db" style="text-align:center;margin-top:12px;opacity:.75"></div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="brand">🚚 Hotshot Hub <span class="tag" id="role-tag"></span></div>
+    <div class="top-r">
+      <span class="sync" id="sync"></span>
+      <button class="icon-btn" data-act="lang" id="btn-lang">EN</button>
+      <button class="icon-btn" data-act="theme" aria-label="theme">🌓</button>
+      <button class="icon-btn" data-act="menu" aria-label="menu">👤</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav id="nav">
+      <button data-act="page" data-v="week" class="on"><span class="ic">🏠</span><span data-i18n="nav.week"></span></button>
+      <button data-act="page" data-v="tools"><span class="ic">⚡</span><span data-i18n="nav.tools"></span></button>
+      <button data-act="page" data-v="archive"><span class="ic">🗂️</span><span data-i18n="nav.archive"></span></button>
+      <button data-act="page" data-v="summary"><span class="ic">📊</span><span data-i18n="nav.summary"></span></button>
+      <button data-act="page" data-v="reports"><span class="ic">📄</span><span data-i18n="nav.reports"></span></button>
+    </nav>
+
+    <main>
+      <div id="ro-banner" class="ro-banner" hidden data-i18n="ro.banner"></div>
+
+      <!-- ============ WEEK ============ -->
+      <section id="page-week" class="page active">
+        <div class="card">
+          <div class="fgrid">
+            <div class="s2"><label data-i18n="wk.label"></label><input type="text" id="in-label" data-set="label" style="font-weight:700"></div>
+          </div>
+          <div class="row wrap" style="margin-top:12px">
+            <div class="seg" id="seg-role">
+              <button data-act="role" data-v="owner">🚚 <span data-i18n="role.owner"></span></button>
+              <button data-act="role" data-v="driver">👨‍✈️ <span data-i18n="role.driver"></span></button>
+            </div>
+          </div>
+          <div class="row wrap need-write" style="margin-top:12px">
+            <button class="btn grn" data-act="archiveWeek">🏁 <span data-i18n="wk.archive"></span></button>
+            <button class="btn" data-act="newWeek">🔄 <span data-i18n="wk.new"></span></button>
+            <button class="btn" data-act="page" data-v="tools">⚡ <span data-i18n="wk.evalBtn"></span></button>
+          </div>
+        </div>
+
+        <div id="hero"></div>
+        <div class="kpis" id="kpis"></div>
+
+        <div class="card" id="card-ins"><div class="ch"><span class="ct" data-i18n="i.title"></span></div><div class="ins" id="ins"></div></div>
+
+        <!-- loads -->
+        <div class="card">
+          <div class="ch">
+            <span class="ct" data-i18n="ld.title"></span>
+            <button class="btn pri sm" data-act="addLoad" data-i18n="ld.add"></button>
+          </div>
+          <div class="mset">
+            <div><div class="mlbl" data-i18n="mc.what"></div>
+              <div class="seg" id="seg-miles">
+                <button data-act="milesMode" data-v="simple" data-i18n="ld.mode.simple"></button>
+                <button data-act="milesMode" data-v="split" data-i18n="ld.mode.split"></button>
+              </div></div>
+            <div><div class="mlbl" data-i18n="mc.how"></div>
+              <div class="seg" id="seg-mcalc">
+                <button data-act="milesCalc" data-v="auto" data-i18n="mc.auto"></button>
+                <button data-act="milesCalc" data-v="manual" data-i18n="mc.manual"></button>
+              </div></div>
+          </div>
+          <div class="cs mhint" id="mc-hint"></div>
+          <div class="wstart" id="wk-start" hidden>
+            <label for="in-start" data-i18n="mc.start"></label>
+            <input type="text" id="in-start" data-wplace="start" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+            <div class="pst"></div>
+          </div>
+          <div class="list" id="loads-list"></div>
+          <div class="sumbar" id="loads-sum" hidden></div>
+        </div>
+
+        <!-- driver pay -->
+        <div class="card" id="card-driver" style="border-color:var(--blu)">
+          <div class="ch"><span class="ct b" data-i18n="dr.title"></span><span class="cs" data-i18n="dr.sub"></span></div>
+          <div class="grid2">
+            <div><label data-i18n="dr.pct"></label><input type="number" inputmode="decimal" step="0.5" id="in-driverPct" data-set="driverPct" style="font-weight:800;font-size:20px;color:var(--blu)"></div>
+            <div class="grid2" style="grid-template-columns:1fr 1fr">
+              <div class="chip"><div class="l" data-i18n="dr.gross"></div><div class="v b" id="dr-gross">$0</div><div class="cs" id="dr-gross-mi"></div></div>
+              <div class="chip"><div class="l" data-i18n="dr.net"></div><div class="v a" id="dr-net">$0</div><div class="cs" id="dr-net-day"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- fuel -->
+        <div class="card" id="card-fuel">
+          <div class="ch"><span class="ct" data-i18n="fu.title"></span>
+            <div class="seg" id="seg-fuel">
+              <button data-act="fuelMode" data-v="mpg" data-i18n="fu.mpg"></button>
+              <button data-act="fuelMode" data-v="log" data-i18n="fu.log"></button>
+            </div>
+          </div>
+          <div id="fuel-mpg">
+            <div class="fgrid">
+              <div><label data-i18n="fu.mpgLbl"></label><input type="number" inputmode="decimal" step="0.1" id="in-mpg" data-set="mpg"></div>
+              <div><label data-i18n="fu.price"></label><input type="number" inputmode="decimal" step="0.01" id="in-diesel" data-set="diesel"></div>
+            </div>
+            <div class="sumbar"><span data-i18n="fu.est"></span><b class="a" id="fuel-est">$0.00</b></div>
+          </div>
+          <div id="fuel-log" hidden>
+            <div class="scan need-write">
+              <div class="row between wrap">
+                <b class="b" style="font-size:13px" data-i18n="fu.scanTitle"></b>
+                <label class="row" style="margin:0;gap:8px;font-size:12px"><input type="checkbox" id="chk-replace"><span data-i18n="fu.replace"></span></label>
+              </div>
+              <div class="row wrap">
+                <div class="btn pri upl">📸 <span data-i18n="fu.scan"></span><input type="file" accept="image/*" multiple data-file="img"></div>
+                <div class="btn upl">📄 <span data-i18n="fu.pdf"></span><input type="file" accept=".pdf,application/pdf" data-file="pdf"></div>
+                <button class="btn" data-act="addFuel">+ <span data-i18n="fu.manual"></span></button>
+              </div>
+              <div id="scan-st" class="scan-st"></div>
+              <details><summary data-i18n="fu.text"></summary>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+                  <textarea id="fuel-raw"></textarea>
+                  <div class="row" style="justify-content:flex-end"><button class="btn sm" data-act="clearRaw" data-i18n="c.clear"></button><button class="btn sm pri" data-act="parseRaw" data-i18n="fu.parse"></button></div>
+                </div>
+              </details>
+            </div>
+            <div class="list" id="fuel-list"></div>
+            <div class="sumbar" id="fuel-sum"></div>
+            <div style="margin-top:10px"><div class="cs" style="margin-bottom:6px" data-i18n="fu.byState"></div><div class="row wrap" id="fuel-states"></div></div>
+          </div>
+        </div>
+
+        <!-- maintenance -->
+        <div class="card" id="card-maint">
+          <div class="ch"><span class="ct" data-i18n="mt.title"></span>
+            <div class="seg" id="seg-maint"><button data-act="maint" data-v="0" data-i18n="c.off"></button><button data-act="maint" data-v="1" data-i18n="c.on"></button></div>
+          </div>
+          <div id="maint-body" hidden>
+            <div class="grid2">
+              <div class="cbox">
+                <div class="row between"><span class="cs" data-i18n="mt.saved"></span><input type="number" inputmode="decimal" id="in-maintStart" data-set="maintStart" style="width:110px;min-height:36px;text-align:right" aria-label="start"></div>
+                <div class="big g" style="font-size:34px" id="mt-saved">$0</div>
+                <div class="cs a" id="mt-week"></div>
+              </div>
+              <div class="cbox">
+                <div class="row between wrap"><span class="cs" data-i18n="mt.interval"></span>
+                  <div class="row"><input type="number" inputmode="numeric" id="in-maintInterval" data-set="maintInterval" style="width:100px;min-height:36px;text-align:right"><button class="btn sm" data-act="resetMaint" data-i18n="mt.reset"></button></div>
+                </div>
+                <div class="row between" style="margin-top:6px"><b class="b" id="mt-done"></b><span class="cs" id="mt-left"></span></div>
+                <div class="prog"><i id="mt-bar" style="width:0"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- tax -->
+        <div class="card" id="card-tax">
+          <div class="ch"><span class="ct" data-i18n="tx.title"></span><span class="cs" data-i18n="tx.sub"></span></div>
+          <div class="grid2">
+            <div><label data-i18n="tx.pct"></label><input type="number" inputmode="decimal" id="in-taxPct" data-set="taxPct"></div>
+            <div class="chip"><div class="l" data-i18n="tx.amount"></div><div class="v a" id="tx-amt">$0</div></div>
+          </div>
+        </div>
+
+        <!-- expenses -->
+        <div class="card">
+          <div class="ch">
+            <div><span class="ct" id="ex-title"></span><div class="cs" id="ex-sub" hidden></div></div>
+            <div class="row wrap need-write">
+              <button class="btn sm" data-act="saveTpl" data-i18n="ex.save"></button>
+              <button class="btn sm pri" data-act="addExp" data-i18n="ex.add"></button>
+            </div>
+          </div>
+          <div class="list" id="exp-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ TOOLS ============ -->
+      <section id="page-tools" class="page">
+        <div class="grid2">
+          <div class="card">
+            <div class="ch"><span class="ct a" data-i18n="tl.eval"></span></div>
+            <div class="cs" style="margin-bottom:12px" data-i18n="tl.evalDesc"></div>
+            <div class="mlbl" data-i18n="mc.how"></div>
+            <div class="seg" id="seg-evcalc" style="margin-bottom:12px">
+              <button data-act="evCalc" data-v="auto" data-i18n="mc.auto"></button>
+              <button data-act="evCalc" data-v="manual" data-i18n="mc.manual"></button>
+            </div>
+            <div class="fgrid">
+              <div class="s2"><label data-i18n="tl.pos"></label><input type="text" id="ev-pos" data-evplace="pos" placeholder="Dallas, TX / 75201" autocomplete="off"><div class="pst cs g" style="min-height:15px"></div></div>
+              <div><label data-i18n="tl.pick"></label><input type="text" id="ev-from" data-evplace="from" placeholder="Dallas, TX / 75201" autocomplete="off"><div class="pst cs g" style="min-height:15px"></div></div>
+              <div><label data-i18n="tl.drop"></label><input type="text" id="ev-to" data-evplace="to" placeholder="Atlanta, GA / 30301" autocomplete="off"><div class="pst cs g" style="min-height:15px"></div></div>
+              <div><label><span data-i18n="tl.loaded"></span><span class="atag" data-i18n="mc.tag"></span></label><input type="number" inputmode="decimal" id="ev-loaded" value="650"></div>
+              <div><label class="r"><span data-i18n="tl.dh"></span><span class="atag" data-i18n="mc.tag"></span></label><input type="number" inputmode="decimal" id="ev-dh" value="65"></div>
+              <div><label class="g" data-i18n="tl.gross"></label><input type="number" inputmode="decimal" id="ev-gross" value="1600" style="font-weight:800;color:var(--grn)"></div>
+              <div><label data-i18n="tl.days"></label><input type="number" inputmode="numeric" id="ev-days" value="2"></div>
+              <div class="s2"><label data-i18n="tl.target"></label><input type="number" inputmode="decimal" step="0.05" id="ev-target" value="1.00"></div>
+            </div>
+            <div class="cs" style="margin-top:6px" id="ev-hint"></div>
+            <div class="card flat" style="margin-top:12px" id="ev-owner">
+              <div class="fgrid" style="grid-template-columns:repeat(2,1fr)">
+                <div><label data-i18n="tl.pct"></label><input type="number" inputmode="decimal" id="ev-pct" value="12"></div>
+                <div><label data-i18n="tl.other"></label><input type="number" inputmode="decimal" step="0.05" id="ev-other" value="0.25"></div>
+                <div><label data-i18n="tl.mpg"></label><input type="number" inputmode="decimal" step="0.1" id="ev-mpg" value="9"></div>
+                <div><label data-i18n="tl.fuel"></label><input type="number" inputmode="decimal" step="0.01" id="ev-fuel" value="4"></div>
+              </div>
+            </div>
+            <div class="card flat" style="margin-top:12px;border-color:var(--blu)" id="ev-driver" hidden>
+              <div class="fgrid">
+                <div><label data-i18n="tl.drvPct"></label><input type="number" inputmode="decimal" step="0.5" id="ev-dpct" value="30"></div>
+                <div><label data-i18n="tl.drvExp"></label><input type="number" inputmode="decimal" id="ev-dexp" value="0"></div>
+              </div>
+            </div>
+            <div class="verdict g" id="ev-verdict"></div>
+            <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+              <div class="kpi"><div class="l" data-i18n="tl.net"></div><div class="v a" id="ev-net">$0</div><div class="s" id="ev-day"></div></div>
+              <div class="kpi"><div class="l" data-i18n="tl.allrpm"></div><div class="v g" id="ev-all">$0</div><div class="s" id="ev-ld"></div></div>
+              <div class="kpi"><div class="l" data-i18n="tl.netrpm"></div><div class="v a" id="ev-nrpm">$0</div><div class="s" id="ev-sub"></div></div>
+            </div>
+            <div class="chip" style="margin-top:10px"><div class="l" data-i18n="tl.minRate"></div><div class="v g" id="ev-min">$0</div><div class="cs" id="ev-min-sub"></div></div>
+            <button class="btn grn block need-write" style="margin-top:12px" data-act="evBook" data-i18n="tl.book"></button>
+          </div>
+
+          <div class="card">
+            <div class="ch"><span class="ct b" data-i18n="wt.title"></span></div>
+            <div class="cs" style="margin-bottom:12px" data-i18n="wt.desc"></div>
+            <div class="fgrid">
+              <div class="s2"><label data-i18n="wt.limit"></label>
+                <select id="wt-sel"><option value="26000">26,000 lbs (Non-CDL)</option><option value="36000">36,000 lbs (CDL-A)</option><option value="40000">40,000 lbs (CDL heavy)</option></select>
+              </div>
+              <div class="s2"><label class="g" data-i18n="wt.cargo"></label><input type="number" inputmode="numeric" id="wt-cargo" value="9500" style="font-weight:800;font-size:22px;color:var(--grn)"></div>
+              <div><label data-i18n="wt.truck"></label><input type="number" inputmode="numeric" id="wt-truck" value="8800"></div>
+              <div><label data-i18n="wt.trailer"></label><input type="number" inputmode="numeric" id="wt-trailer" value="7200"></div>
+              <div><label data-i18n="wt.pin"></label><input type="number" inputmode="decimal" id="wt-pin" value="20"></div>
+              <div><label data-i18n="wt.rawr"></label><input type="number" inputmode="numeric" id="wt-rawr" value="9750"></div>
+            </div>
+            <div class="verdict g" id="wt-verdict"></div>
+            <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+              <div class="kpi"><div class="l" data-i18n="wt.gcw"></div><div class="v" id="wt-gcw">0</div><div class="s" id="wt-margin"></div></div>
+              <div class="kpi"><div class="l" data-i18n="wt.maxpay"></div><div class="v g" id="wt-maxpay">0</div><div class="s"><span data-i18n="wt.empty"></span>: <span id="wt-empty"></span></div></div>
+              <div class="kpi"><div class="l" data-i18n="wt.drive"></div><div class="v a" id="wt-axle">0</div><div class="s" id="wt-pinw"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ARCHIVE ============ -->
+      <section id="page-archive" class="page">
+        <div class="card">
+          <div class="ch"><span class="ct" data-i18n="ar.title"></span><button class="btn dng sm need-write" id="btn-del-arch" data-act="delArchive">🗑️ <span data-i18n="ar.delete"></span></button></div>
+          <select id="archive-select"></select>
+        </div>
+        <div id="arch-body" class="page" style="display:none">
+          <div class="kpis" id="arch-kpis"></div>
+
+          <div class="card">
+            <div class="ch"><div><span class="ct" data-i18n="ar.map"></span><div class="cs" data-i18n="ar.mapSub"></div></div>
+              <button class="btn sm" data-act="replay">▶ <span data-i18n="map.replay"></span></button></div>
+            <div class="map-wrap" id="map-box"></div>
+            <div id="map-info" style="margin-top:10px"></div>
+          </div>
+
+          <div class="card">
+            <div class="ch"><span class="ct" data-i18n="ar.anat"></span><span class="cs" id="arch-be"></span></div>
+            <div class="cs">Gross RPM: <b id="arch-rpm"></b></div>
+            <div class="anat" id="anat"></div>
+            <div class="legend" id="anat-legend"></div>
+          </div>
+
+          <div class="grid2" id="arch-dh" style="display:none">
+            <div class="cbox"><div class="cbt" data-i18n="ar.dhpie"></div><div class="cw" style="height:220px"><canvas id="c-dhpie"></canvas></div></div>
+            <div class="cbox"><div class="cbt" data-i18n="ar.dhrpm"></div><div class="cw" style="height:220px"><canvas id="c-dhrpm"></canvas></div></div>
+          </div>
+          <div class="grid2">
+            <div class="cbox"><div class="cbt" data-i18n="ar.cpm"></div><div class="cw"><canvas id="c-cpm"></canvas></div></div>
+            <div class="cbox"><div class="cbt" data-i18n="ar.loadsrpm"></div><div class="cw"><canvas id="c-loadsrpm"></canvas></div></div>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <div class="ct" style="margin-bottom:8px" data-i18n="ar.expDetail"></div>
+              <div class="tscroll"><table id="t-exp"><thead><tr><th data-i18n="th.item"></th><th data-i18n="th.type"></th><th class="ar" data-i18n="th.sum"></th><th class="ar">CPM</th><th class="ar" data-i18n="th.pct"></th></tr></thead><tbody></tbody></table></div>
+            </div>
+            <div class="cbox"><div class="cbt" data-i18n="ar.split"></div><div class="cw"><canvas id="c-split"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="ct" style="margin-bottom:8px" data-i18n="ar.loads"></div>
+            <div class="tscroll"><table id="t-loads"><thead><tr><th data-i18n="th.dates"></th><th data-i18n="th.route"></th><th data-i18n="th.miles"></th><th class="r">DH</th><th>Gross</th><th>RPM</th><th class="a" data-i18n="th.net"></th><th data-i18n="th.broker"></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SUMMARY ============ -->
+      <section id="page-summary" class="page">
+        <div class="card">
+          <div class="ch"><span class="ct" data-i18n="sm.title"></span></div>
+          <select id="month-select"></select>
+          <div id="custom-panel" style="display:none;margin-top:12px">
+            <div class="row between wrap" style="margin-bottom:8px"><span class="cs" id="custom-count"></span>
+              <div class="row"><button class="btn sm" data-act="selAll" data-i18n="sm.all.btn"></button><button class="btn sm" data-act="selNone" data-i18n="sm.none"></button></div></div>
+            <div id="custom-list" class="list" style="max-height:260px;overflow:auto"></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="row between"><span class="cs" style="font-weight:700" data-i18n="sm.goal"></span><input type="number" inputmode="numeric" id="goal-in" value="10000" style="width:110px;min-height:36px;text-align:right;font-weight:800"></div>
+            <div class="row between" style="margin-top:6px"><b class="a big" style="font-size:30px" id="goal-amt"></b><b class="g" id="goal-pct"></b></div>
+            <div class="prog"><i id="goal-bar" style="width:0"></i></div>
+          </div>
+          <div class="card">
+            <div class="cs" style="font-weight:700" data-i18n="sm.util"></div>
+            <div class="row between" style="margin-top:4px"><b class="b big" style="font-size:30px" id="ut-days"></b><span class="cs" id="ut-rate"></span></div>
+            <div class="row between wrap cs" style="margin-top:6px"><span id="ut-day"></span><b class="g" id="ut-pd"></b></div>
+          </div>
+        </div>
+        <div class="kpis" id="m-kpis"></div>
+        <div class="cbox" id="m-dh-box" style="display:none"><div class="cbt" data-i18n="sm.dhdyn"></div><div class="cw" style="height:230px"><canvas id="c-mdh"></canvas></div></div>
+        <div class="grid2">
+          <div class="cbox"><div class="cbt" data-i18n="sm.dyn"></div><div class="cw"><canvas id="c-dyn"></canvas></div></div>
+          <div class="cbox"><div class="cbt" data-i18n="sm.struct"></div><div class="cw"><canvas id="c-struct"></canvas></div></div>
+          <div class="cbox"><div class="cbt" data-i18n="sm.corr"></div><div class="cw"><canvas id="c-corr"></canvas></div></div>
+          <div class="cbox"><div class="cbt" data-i18n="sm.hauls"></div><div class="cw"><canvas id="c-hauls"></canvas></div></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="ct a" style="margin-bottom:8px">🗺️ <span data-i18n="sm.lanes"></span></div>
+            <div class="tscroll"><table id="t-lanes"><thead><tr><th data-i18n="th.lane"></th><th data-i18n="th.trips"></th><th class="ar" data-i18n="th.miles"></th><th class="ar">Gross</th><th class="ar g">RPM</th></tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="cbox"><div class="cbt" data-i18n="sm.lanesChart"></div><div class="cw"><canvas id="c-lanes"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="ct" style="margin-bottom:8px" data-i18n="sm.weeks"></div>
+          <div class="tscroll"><table id="t-mweeks"><thead><tr><th data-i18n="c.week"></th><th data-i18n="th.miles"></th><th class="r">DH</th><th>Gross</th><th data-i18n="k.exp"></th><th data-i18n="th.net"></th><th>%</th><th>Net RPM</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- ============ REPORTS ============ -->
+      <section id="page-reports" class="page">
+        <div class="card no-print">
+          <div class="ch"><span class="ct" data-i18n="rp.title"></span>
+            <div class="row wrap"><button class="btn" data-act="csv" data-i18n="rp.csv"></button><button class="btn pri" data-act="print" data-i18n="rp.print"></button></div></div>
+          <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+            <div><label data-i18n="rp.mode"></label><select id="rp-mode"><option value="all" data-i18n="rp.all"></option><option value="month" data-i18n="rp.month"></option><option value="week" data-i18n="rp.week"></option><option value="range" data-i18n="rp.range"></option></select></div>
+            <div id="rp-w-month" hidden><label data-i18n="rp.month"></label><select id="rp-month"></select></div>
+            <div id="rp-w-week" hidden><label data-i18n="rp.week"></label><select id="rp-week"></select></div>
+            <div id="rp-w-from" hidden><label data-i18n="rp.from"></label><input type="date" id="rp-from"></div>
+            <div id="rp-w-to" hidden><label data-i18n="rp.to"></label><input type="date" id="rp-to"></div>
+            <div><label data-i18n="rp.rate"></label><input type="number" inputmode="decimal" id="in-perDiem" data-set="perDiem"></div>
+          </div>
+        </div>
+        <div class="card" id="rp-area">
+          <div class="row between wrap" style="border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px">
+            <div><div class="ct a" data-i18n="rp.heading"></div><div class="cs" id="rp-sub"></div></div>
+            <div class="cs" style="text-align:right"><div><span data-i18n="rp.profile"></span>: <b id="rp-email"></b></div><div id="rp-date"></div></div>
+          </div>
+          <div class="kpis" id="rp-kpis" style="margin-bottom:14px"></div>
+          <div class="grid2" style="margin-bottom:14px">
+            <div class="card flat"><div class="cs" style="font-weight:700" data-i18n="rp.perdiem"></div><div class="row between" style="margin-top:4px"><b class="big g" style="font-size:30px" id="rp-pd"></b><span class="cs b" id="rp-pd-d"></span></div><div class="cs" id="rp-pd-ded"></div></div>
+            <div class="card flat"><div class="cs" style="font-weight:700" data-i18n="rp.milesFuel"></div><div class="row between" style="margin-top:4px"><b id="rp-mi"></b><b class="a" id="rp-fuel"></b></div><div class="cs" id="rp-dh"></div></div>
+          </div>
+          <div class="card flat" style="margin-bottom:14px"><div class="ct b" style="margin-bottom:8px">⛽ <span data-i18n="rp.ifta"></span></div><div class="row wrap" id="rp-ifta"></div></div>
+          <div class="card flat" style="margin-bottom:14px"><div class="ct" style="margin-bottom:8px" data-i18n="rp.weeks"></div>
+            <div class="tscroll"><table id="rp-t-weeks"><thead><tr><th data-i18n="c.week"></th><th data-i18n="th.dates"></th><th data-i18n="th.miles"></th><th data-i18n="k.days"></th><th>Gross</th><th data-i18n="k.exp"></th><th data-i18n="th.net"></th><th>Net RPM</th></tr></thead><tbody></tbody></table></div></div>
+          <div class="card flat"><div class="ct" style="margin-bottom:8px" data-i18n="rp.loads"></div>
+            <div class="tscroll"><table id="rp-t-loads"><thead><tr><th data-i18n="c.week"></th><th data-i18n="th.dates"></th><th data-i18n="th.route"></th><th>Loaded</th><th>DH</th><th>Gross</th><th>RPM</th><th data-i18n="th.broker"></th></tr></thead><tbody></tbody></table></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- menu sheet -->
+<div id="menu-bg" class="sheet-bg" hidden data-act="closeMenu">
+  <div class="sheet" id="menu-sheet">
+    <div class="row between"><b style="font-size:16px" id="menu-email"></b><button class="icon-btn" data-act="closeMenu">✕</button></div>
+    <div id="admin-wrap" hidden><label data-i18n="menu.admin"></label><select id="admin-select"></select></div>
+    <button class="btn block" data-act="backup" data-i18n="menu.backup"></button>
+    <button class="btn dng block" data-act="logout" data-i18n="menu.logout"></button>
+    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.1</div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   Setup
+   ========================================================= */
+/* Connection settings live in window.HS_CONFIG at the top of the file */
+var APP_VER='6.1';
+var CFG=window.HS_CONFIG||{};
+var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
+var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
+var ADMIN_EMAIL=String(CFG.ADMIN_EMAIL||'').trim();
+var CFG_OK=/^https:\/\/[^\s'"]+$/i.test(SUPABASE_URL)&&/^[^\s'"]{20,}$/.test(SUPABASE_KEY)&&!/ВСТАВ|PASTE/i.test(SUPABASE_URL+SUPABASE_KEY);
+var DB_REF=CFG_OK?((SUPABASE_URL.match(/^https:\/\/([^.\/]+)/i)||[])[1]||''):'';
+var sb=null;
+try{if(CFG_OK&&window.supabase&&window.supabase.createClient)sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){sb=null;}
+if(window.pdfjsLib){window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+
+var SafeStorage={mem:{},get:function(k){try{return window.localStorage.getItem(k);}catch(e){return this.mem[k]||null;}},set:function(k,v){try{window.localStorage.setItem(k,v);}catch(e){this.mem[k]=String(v);}},del:function(k){try{window.localStorage.removeItem(k);}catch(e){delete this.mem[k];}}};
+
+var STATE_NAMES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',DC:'District of Columbia'};
+var NAME2ST={};Object.keys(STATE_NAMES).forEach(function(k){NAME2ST[STATE_NAMES[k].toLowerCase()]=k;});
+var CENTROID={AL:[32.8,-86.8],AK:[64.2,-152.5],AZ:[34.3,-111.7],AR:[34.9,-92.4],CA:[37.2,-119.5],CO:[39.0,-105.5],CT:[41.6,-72.7],DE:[39.0,-75.5],FL:[28.6,-82.4],GA:[32.7,-83.4],HI:[20.8,-156.3],ID:[44.4,-114.6],IL:[40.0,-89.2],IN:[39.9,-86.3],IA:[42.1,-93.5],KS:[38.5,-98.4],KY:[37.5,-85.3],LA:[31.1,-92.0],ME:[45.3,-69.2],MD:[39.0,-76.8],MA:[42.3,-71.8],MI:[44.3,-85.4],MN:[46.3,-94.3],MS:[32.7,-89.7],MO:[38.4,-92.5],MT:[47.0,-109.6],NE:[41.5,-99.8],NV:[39.3,-116.6],NH:[43.7,-71.6],NJ:[40.1,-74.7],NM:[34.4,-106.1],NY:[42.9,-75.5],NC:[35.5,-79.4],ND:[47.4,-100.5],OH:[40.3,-82.8],OK:[35.6,-97.5],OR:[43.9,-120.6],PA:[40.9,-77.8],RI:[41.7,-71.5],SC:[33.9,-80.9],SD:[44.4,-100.2],TN:[35.9,-86.4],TX:[31.5,-99.3],UT:[39.3,-111.7],VT:[44.0,-72.7],VA:[37.5,-78.8],WA:[47.4,-120.5],WV:[38.6,-80.6],WI:[44.6,-89.9],WY:[43.0,-107.5],DC:[38.9,-77.0]};
+
+/* =========================================================
+   i18n  (key, RU, EN)
+   ========================================================= */
+var DICT=[
+['nav.week','Неделя','Week'],['nav.tools','Грузы','Loads'],['nav.archive','Архив','Archive'],['nav.summary','Итоги','Summary'],['nav.reports','Отчёты','Reports'],
+['auth.sub','Вход для водителей и владельцев траков','Sign in for drivers and truck owners'],['auth.email','Email','Email'],['auth.pass','Пароль','Password'],['auth.login','Войти','Sign in'],['auth.signup','Создать аккаунт','Create account'],['auth.forgot','Забыли пароль?','Forgot password?'],
+['auth.need','Введите email и пароль','Enter email and password'],['auth.needEmail','Введите email','Enter your email'],['auth.signed','Готово! Если включено подтверждение почты, проверьте входящие.','Done! If email confirmation is on, check your inbox.'],['auth.reset','Письмо для сброса пароля отправлено.','Password reset email sent.'],['auth.nosdk','Не загрузился Supabase SDK. Проверьте интернет.','Supabase SDK did not load. Check your connection.'],
+['auth.cfg','Сайт ещё не подключён к базе. Откройте index.html в блокноте и вставьте Project URL и Publishable key из Supabase в блок «НАСТРОЙКА ПОДКЛЮЧЕНИЯ» в начале файла.','The site is not connected to a database yet. Open index.html in a text editor and paste the Supabase Project URL and Publishable key into the CONNECTION SETTINGS block at the top of the file.'],
+['auth.newPass','Введите новый пароль (не короче 6 символов):','Enter a new password (at least 6 characters):'],['auth.short','Пароль слишком короткий','Password is too short'],['auth.passOk','✅ Пароль изменён','✅ Password updated'],['auth.db','база: {r}','database: {r}'],
+['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.logout','Выйти','Sign out'],
+['ro.banner','Вы смотрите чужой профиль: только чтение, изменения не сохраняются.','You are viewing another profile: read-only, changes are not saved.'],
+['wk.label','Название недели / период','Week name / period'],['wk.archive','Завершить и в архив','Finish and archive'],['wk.new','Новая неделя','New week'],['wk.evalBtn','Проверить груз','Check a load'],
+['wk.defLabel','Неделя от {d}','Week of {d}'],['wk.confirmNew','Начать новую неделю? Рейсы и чеки очистятся, настройки по умолчанию сохранятся.','Start a new week? Loads and receipts will be cleared; your defaults stay.'],['wk.confirmArch','Сохранить неделю «{n}» в архив?','Save week «{n}» to the archive?'],
+['role.owner','Овнер-оператор','Owner-operator'],['role.driver','Водитель на %','Driver on %'],['tag.owner','Owner-Op','Owner-Op'],['tag.driver','Driver %','Driver %'],
+['h.net.o','Чистая прибыль','Net profit'],['h.net.d','Чистыми на руки','Take-home pay'],['h.vs','к прошлой неделе','vs last week'],['h.m.o','маржа','margin'],['h.m.d','доля от Gross','of gross'],['h.per','в день','per day'],
+['k.gross','Gross','Gross'],['k.exp','Расходы','Expenses'],['k.earned','Начислено по %','Earned by %'],['k.deduct','Вычеты: {a}','Deductions: {a}'],['k.netrpm','Net / миля','Net / mile'],['k.rpm','Gross RPM','Gross RPM'],['k.loaded','Loaded: {v}','Loaded: {v}'],
+['k.miles','Мили','Miles'],['k.days','Дни в рейсе','Days on road'],['k.cpm','Себестоимость мили','Cost per mile'],['k.fuel','Топливо','Fuel'],['k.unpaid','Ждёт оплаты','Awaiting payment'],['k.nUnpaid','{n} груз(ов)','{n} load(s)'],['k.dh','Пустые мили','Deadhead'],
+['i.title','Подсказки недели','Week insights'],['i.empty','Добавьте рейсы, и здесь появятся подсказки.','Add loads and insights will show up here.'],
+['i.dh','Пустой пробег {p}%. Старайтесь держать ниже 15%.','Deadhead is {p}%. Try to keep it under 15%.'],
+['i.below','Gross RPM {r} ниже вашей себестоимости мили {c}: на каждой миле вы в минусе.','Gross RPM {r} is below your cost per mile {c}: you lose money on every mile.'],
+['i.lane','Лучшее направление недели: {l}, {r}/mi.','Best lane this week: {l}, {r}/mi.'],['i.unpaid','Не оплачено брокерами: {a} ({n} гр.).','Unpaid by brokers: {a} ({n} load(s)).'],
+['i.maint','До ТО осталось {m} mi.','{m} mi left until service.'],['i.maintDue','Пора на ТО!','Service is due!'],['i.tax','Отложите {a} на налоги ({p}% от чистой).','Set aside {a} for taxes ({p}% of net).'],['i.good','Сильная неделя: Net {r}/mi.','Strong week: Net {r}/mi.'],
+['ld.title','Журнал рейсов','Load log'],['ld.add','+ Рейс','+ Load'],['ld.mode.simple','Всего миль','Total miles'],['ld.mode.split','Loaded + Deadhead','Loaded + Deadhead'],
+['ld.from','Откуда: город, ШТ или ZIP','From: city, ST or ZIP'],['ld.to','Куда: город, ШТ или ZIP','To: city, ST or ZIP'],['ld.ph','Dallas, TX или 75201','Dallas, TX or 75201'],
+['ld.pick','Pick up','Pick up'],['ld.del','Delivery','Delivery'],['ld.mi.s','Мили (всего)','Miles (total)'],['ld.mi.l','Loaded (mi)','Loaded (mi)'],['ld.dh','Deadhead (mi)','Deadhead (mi)'],['ld.gross','Gross ($)','Gross ($)'],
+['ld.broker','Брокер / Load #','Broker / Load #'],['ld.unpaid','Ждёт оплаты','Awaiting payment'],['ld.calc','Рассчитать мили','Calculate miles'],['ld.d','{n} дн.','{n} d'],['ld.empty','Рейсов пока нет','No loads yet'],
+['ld.sumL','Loaded','Loaded'],['ld.sumD','Deadhead','Deadhead'],['ld.sumR','Loaded RPM','Loaded RPM'],['ld.auto','≈ авто','≈ auto'],
+['mc.what','Учёт миль','Miles tracked'],['mc.how','Ввод миль','Miles entry'],['mc.auto','🤖 Авто','🤖 Auto'],['mc.manual','✍️ Вручную','✍️ Manual'],['mc.tag','авто','auto'],
+['mc.hAuto','🤖 Мили считаются по дорогам: груженые — «Откуда» → «Куда», пустые — от прошлой выгрузки до следующей загрузки. Поля с меткой АВТО заблокированы. Где нет адреса — впишите мили сами.','🤖 Miles are calculated by road: loaded = From → To, deadhead = previous drop → next pickup. Fields tagged AUTO are locked. Where an address is missing, type the miles yourself.'],
+['mc.hAutoS','🤖 Мили считаются по дорогам: путь груза плюс пустой перегон от прошлой выгрузки. Поля с меткой АВТО заблокированы. Где нет адреса — впишите мили сами.','🤖 Miles are calculated by road: the load route plus deadhead from the previous drop. Fields tagged AUTO are locked. Where an address is missing, type the miles yourself.'],
+['mc.hManual','✍️ Мили вписываете сами — сайт их не меняет. Кнопка «📏 Рассчитать мили» в рейсе посчитает по адресам, только если её нажать.','✍️ You type the miles and the site never changes them. The 📏 Calculate miles button on a load fills them from addresses only when you tap it.'],
+['mc.start','🏁 Откуда начали неделю (для пустых миль до 1-го груза)','🏁 Week start location (for deadhead to the 1st load)'],
+['mc.confirm','Пересчитать мили по адресам? Мили, которые можно посчитать, заменятся автоматическими, остальные останутся как есть.','Recalculate miles from addresses? Miles that can be calculated will be replaced; the rest stay as they are.'],
+['mc.done','🤖 Мили посчитаны по адресам','🤖 Miles calculated from addresses'],['mc.manualOn','✍️ Ручной ввод миль включён','✍️ Manual miles entry is on'],['mc.recalc','Пересчитать','Recalculate'],
+['mc.need','Укажите «Откуда» и «Куда»: город, ШТ или ZIP','Fill in From and To: city, ST or ZIP'],
+['geo.nf','не найдено','not found'],['geo.approx','≈ по штату','≈ state level'],['geo.zip','ZIP {z}','ZIP {z}'],['geo.ok','найдено','found'],
+['dr.title','Заработок водителя','Driver pay'],['dr.sub','Топливо и трак оплачивает овнер','Fuel and truck are paid by the owner'],['dr.pct','Ваш процент от Gross, %','Your % of gross'],['dr.gross','Начислено до вычетов','Earned before deductions'],['dr.net','На руки','Take-home'],['dr.mi','{a} / миля','{a} / mile'],['dr.day','{a} / день','{a} / day'],
+['fu.title','Топливо и IFTA','Fuel and IFTA'],['fu.mpg','По MPG','By MPG'],['fu.log','По чекам','By receipts'],['fu.mpgLbl','Расход (MPG)','Fuel economy (MPG)'],['fu.price','Цена дизеля, $/gal','Diesel price, $/gal'],['fu.est','Расчётное топливо','Estimated fuel'],
+['fu.scanTitle','🤖 Авто-чтение чеков Relay (скриншот или PDF)','🤖 Auto-read Relay receipts (screenshot or PDF)'],['fu.scan','Скан чека','Scan receipt'],['fu.pdf','PDF','PDF'],['fu.manual','Чек','Receipt'],['fu.replace','Очистить старые строки перед импортом','Clear existing rows before import'],
+['fu.text','Вставить текст чека вручную','Paste receipt text manually'],['fu.parse','Распознать текст','Parse text'],['fu.loc','Город, ШТ','City, ST'],['fu.dgal','Дизель, gal','Diesel, gal'],['fu.dcost','Дизель, $','Diesel, $'],['fu.fgal','DEF, gal','DEF, gal'],['fu.fcost','DEF, $','DEF, $'],
+['fu.total','Итого по чекам','Receipts total'],['fu.avg','Ср. цена','Avg price'],['fu.actual','Факт. расход','Actual MPG'],['fu.byState','Дизель по штатам (IFTA)','Diesel by state (IFTA)'],['fu.none','Нет данных по штатам','No state data'],
+['sc.busy','⏳ Читаю файл…','⏳ Reading file…'],['sc.ocr','🔍 Чек {i}/{n}: {p}%','🔍 Receipt {i}/{n}: {p}%'],['sc.ok','✅ Добавлено заправок: {n}','✅ Fuel stops added: {n}'],['sc.none','⚠️ Текст считан, но галлоны и суммы не найдены. Проверьте текст ниже.','⚠️ Text was read, but gallons and amounts were not found. Check the text below.'],['sc.err','❌ Ошибка: {e}','❌ Error: {e}'],['sc.noText','⚠️ Загрузите скриншот/PDF или вставьте текст чека.','⚠️ Upload a screenshot/PDF or paste the receipt text.'],['sc.wait','Библиотека ещё загружается, попробуйте через секунду.','The library is still loading, try again in a second.'],
+['mt.title','Копилка на ТО','Maintenance fund'],['mt.saved','Накоплено, $','Saved, $'],['mt.week','+{a} за неделю','+{a} this week'],['mt.interval','Интервал ТО, mi','Service interval, mi'],['mt.reset','Сбросить ТО','Reset service'],['mt.done','Пройдено: {a} / {b} mi','Driven: {a} / {b} mi'],['mt.left','Осталось: {a} mi','Left: {a} mi'],['mt.due','⚠️ Пора на ТО!','⚠️ Service due!'],['mt.confirm','Сбросить счётчик до ТО? Отсчёт начнётся с нуля.','Reset the service counter? It will start from zero.'],
+['tx.title','Налоговая копилка','Tax set-aside'],['tx.sub','Подушка под налоги, только для овнера','A buffer for taxes, owner mode only'],['tx.pct','Откладывать, % от чистой','Set aside, % of net'],['tx.amount','Отложить за неделю','Set aside this week'],
+['ex.t.o','Статьи расходов','Expenses'],['ex.t.d','Личные вычеты','Personal deductions'],['ex.sub.d','Вычитаются из вашего заработка: аванс, ELD, питание…','Deducted from your pay: advance, ELD, meals…'],['ex.add','+ Расход','+ Expense'],['ex.save','📌 Запомнить как шаблон','📌 Save as default'],
+['ex.name','Название','Name'],['ex.type','Тип расчёта','Calculation'],['ex.val','Значение','Value'],['ex.fixed','Фикс ($)','Fixed ($)'],['ex.pct','% от Gross','% of gross'],['ex.cpm','¢ / миля','¢ / mile'],['ex.dpm','$ / миля','$ / mile'],['ex.total','Итого','Total'],['ex.new','Новый расход','New expense'],['ex.saved','Шаблон сохранён: режим, процент и статьи расходов','Default saved: mode, percent and expense items'],
+['d.truck','Аренда трака','Truck payment'],['d.trailer','Аренда прицепа','Trailer payment'],['d.ins','Страховка','Insurance'],['d.comm','Комиссия компании (%)','Company fee (%)'],['d.eld','ELD / Logbook','ELD / Logbook'],['d.adv','Аванс / личные расходы','Advance / personal costs'],
+['tl.eval','Брать груз или нет?','Take the load?'],['tl.evalDesc','Реальный заработок за 10 секунд, с учётом пустого перегона.','Real earnings in 10 seconds, deadhead included.'],['tl.pos','Где вы сейчас (необязательно)','Where you are now (optional)'],['tl.pick','Pick up','Pick up'],['tl.drop','Delivery','Delivery'],
+['tl.autoHint','🤖 Введите город или ZIP — мили по дорогам посчитаются сами. Поля АВТО заблокированы; свои цифры — в режиме «Вручную».','🤖 Enter a city or ZIP and road miles are calculated for you. AUTO fields are locked; for your own numbers switch to Manual.'],
+['tl.manualHint','✍️ Впишите груженые и пустые мили сами. Адреса нужны только чтобы записать груз в неделю.','✍️ Type loaded and deadhead miles yourself. Addresses are only used when you book the load into the week.'],['tl.loaded','Loaded mi','Loaded mi'],['tl.dh','Deadhead mi','Deadhead mi'],['tl.gross','Ставка брокера, $','Broker rate, $'],['tl.days','Дней в пути','Days'],['tl.target','Цель Net RPM, $/mi','Target Net RPM, $/mi'],
+['tl.pct','Комиссия, %','Fee, %'],['tl.other','Прочее, $/mi','Other, $/mi'],['tl.mpg','MPG','MPG'],['tl.fuel','Дизель, $/gal','Diesel, $/gal'],['tl.drvPct','Ваш %','Your %'],['tl.drvExp','Расходы на рейс, $','Trip expenses, $'],
+['tl.net','Чистыми','Net'],['tl.allrpm','All-miles RPM','All-miles RPM'],['tl.netrpm','Net RPM','Net RPM'],['tl.book','+ Добавить в журнал недели','+ Add to this week'],['tl.good','🟢 ОТЛИЧНЫЙ ГРУЗ','🟢 GREAT LOAD'],['tl.ok','🟡 ПРОХОДНОЙ ГРУЗ','🟡 DECENT LOAD'],['tl.bad','🔴 СЛАБЫЙ ГРУЗ','🔴 WEAK LOAD'],
+['tl.minRate','Просите минимум','Ask for at least'],['tl.minSub','чтобы выйти на цель Net RPM, это {r}/mi по Loaded','to hit your Net RPM target, that is {r}/mi loaded'],['tl.booked','Груз добавлен в журнал недели','Load added to this week'],['tl.day','{a} / день','{a} / day'],['tl.rate','Ставка {p}%: {a}','Rate {p}%: {a}'],['tl.fuelOut','Топливо: {a}','Fuel: {a}'],
+['wt.title','Вес сцепки и ось','Weight and axle'],['wt.desc','Запас до лимита и нагрузка на заднюю ось пикапа.','Margin to the limit and load on the pickup drive axle.'],['wt.limit','Лимит GCWR','GCWR limit'],['wt.cargo','Вес груза, lbs','Cargo weight, lbs'],['wt.truck','Трак с топливом, lbs','Truck with fuel, lbs'],['wt.trailer','Пустой прицеп, lbs','Empty trailer, lbs'],['wt.pin','Доля веса на шар, %','Pin weight, %'],['wt.rawr','Лимит задней оси (RAWR), lbs','Rear axle limit (RAWR), lbs'],
+['wt.ok','✅ ВЕС В НОРМЕ: {a} / {b} lbs (запас {c})','✅ WITHIN LIMIT: {a} / {b} lbs ({c} spare)'],['wt.over','🚨 ПЕРЕГРУЗ {c} lbs ({a} / {b})','🚨 OVERWEIGHT by {c} lbs ({a} / {b})'],['wt.axle','⚠️ Общий вес в норме, но задняя ось перегружена ({a} > {b}). Сдвиньте груз назад.','⚠️ Total is fine, but the drive axle is overloaded ({a} > {b}). Shift cargo rearward.'],
+['wt.gcw','Общий вес','Gross weight'],['wt.maxpay','Макс. груз','Max payload'],['wt.drive','Задняя ось','Drive axle'],['wt.pinw','На шар: ~{a} lbs','On pin: ~{a} lbs'],['wt.empty','Пустая сцепка','Empty combo'],['wt.spare','Запас: +{a}','Spare: +{a}'],['wt.overS','Перегруз: {a}','Over: {a}'],
+['ar.title','Архив недель','Weeks archive'],['ar.pick','— выберите неделю —','— choose a week —'],['ar.empty','В архиве пока нет недель','No archived weeks yet'],['ar.delete','Удалить','Delete'],['ar.confirmDel','Удалить неделю «{n}» навсегда?','Delete week «{n}» forever?'],
+['ar.map','Маршрут недели','Week route'],['ar.mapSub','Карта США по вашим рейсам: груженые и пустые перегоны','US map of your loads: loaded legs and deadhead'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет и обновите страницу.','The map failed to load. Check your connection and reload.'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в рейсах.','No route data. Fill in From and To on the loads.'],
+['map.replay','Повтор','Replay'],['map.loaded','Груженый','Loaded'],['map.dh','Пустой','Deadhead'],['map.stops','Остановок','Stops'],['map.states','Штатов на пути','States crossed'],['map.crossed','Штаты на пути (примерно)','States on the way (approx.)'],['map.missing','Не удалось найти мест: {n}','Places not found: {n}'],
+['ar.anat','Анатомия одной мили','Anatomy of one mile'],['ar.be','Себестоимость мили (CPM): {c}/mi','Cost per mile (CPM): {c}/mi'],['ar.be.d','Чистыми водителю: {c}/mi','Driver net: {c}/mi'],['ar.dhpie','Loaded и Deadhead мили','Loaded vs deadhead miles'],['ar.dhrpm','Ставка: Loaded, All-miles, Net','Rate: Loaded, All-miles, Net'],['ar.cpm','CPM по статьям, $/mi','CPM by item, $/mi'],['ar.loadsrpm','RPM рейсов и CPM','Load RPM vs CPM'],['ar.split','Куда ушла выручка','Where revenue went'],['ar.expDetail','Расходы и удержания','Expenses and deductions'],['ar.loads','Рейсы недели','Loads of the week'],
+['ar.fuelItem','⛽ Дизель и DEF','⛽ Diesel and DEF'],['ar.ownerShare','🏢 Доля овнера / компании','🏢 Owner / company share'],['ar.netItem','💰 Чистая прибыль','💰 Net profit'],['ar.sumLoad','Сводный рейс недели','Week summary load'],['ar.fixed','Фиксированные','Fixed'],['ar.percent','Процентные','Percent-based'],['ar.permile','Помильные','Per-mile'],
+['th.item','Статья','Item'],['th.type','Тип','Type'],['th.sum','Сумма','Amount'],['th.pct','% от Gross','% of gross'],['th.dates','Даты','Dates'],['th.route','Маршрут','Route'],['th.miles','Мили','Miles'],['th.net','Чистыми','Net'],['th.broker','Брокер','Broker'],['th.lane','Направление','Lane'],['th.trips','Рейсов','Trips'],
+['sm.title','Итоги периода','Period summary'],['sm.all','📊 Всё время','📊 All time'],['sm.custom','☑️ Выбрать недели вручную','☑️ Pick weeks manually'],['sm.month','📅 Месяц {m}','📅 Month {m}'],['sm.sel','Выбрано: {a} из {b}','Selected: {a} of {b}'],['sm.all.btn','Все','All'],['sm.none','Снять','None'],
+['sm.goal','Цель чистой прибыли, $','Net profit goal, $'],['sm.util','Загрузка и Per Diem','Utilization and Per Diem'],['sm.days','{n} дн. в рейсах','{n} days on road'],['sm.weeksN','Недель: {n}','Weeks: {n}'],['sm.load','{p}% загрузка','{p}% utilization'],['sm.perday','Чистыми / день: {a}','Net / day: {a}'],['sm.pd','Per Diem (${r}/д): {a}','Per Diem (${r}/d): {a}'],
+['sm.dyn','Динамика: Gross, расходы, чистыми','Trend: gross, expenses, net'],['sm.struct','Структура затрат','Cost structure'],['sm.corr','Gross RPM, Net RPM, CPM','Gross RPM, Net RPM, CPM'],['sm.hauls','Эффективность по длине рейса','Efficiency by haul length'],['sm.lanes','Лучшие направления','Best lanes'],['sm.lanesChart','Топ направлений по RPM','Top lanes by RPM'],['sm.weeks','Недели в отчёте','Weeks included'],['sm.dhdyn','Пустой пробег по неделям','Deadhead by week'],['sm.hint','Указывайте штаты в маршрутах, напр. Dallas, TX','Include states in routes, e.g. Dallas, TX'],
+['sm.gAll','Gross за всё время','Gross, all time'],['sm.gSel','Gross (выбранные)','Gross (selected)'],['sm.gMonth','Gross за месяц','Gross, month'],['sm.expD','Расходы / вычеты','Expenses / deductions'],['sm.net','Чистый доход','Net income'],['sm.nrpm','Net RPM периода','Period Net RPM'],['sm.margin','Маржа','Margin'],['sm.miles','Пробег','Mileage'],['sm.avgRpm','Ср. Gross RPM','Avg Gross RPM'],
+['rp.title','Отчёт: финансы, налоги, IFTA','Report: finance, tax, IFTA'],['rp.print','🖨️ PDF / печать','🖨️ PDF / Print'],['rp.csv','⬇️ CSV','⬇️ CSV'],['rp.mode','Тип периода','Period type'],['rp.all','Все сохранённые недели','All saved weeks'],['rp.month','Месяц','Month'],['rp.week','Неделя','Week'],['rp.range','Диапазон дат','Date range'],['rp.from','С даты','From'],['rp.to','По дату','To'],['rp.rate','Per Diem, $/день','Per Diem, $/day'],
+['rp.heading','Hotshot Fleet Hub: финансовый и налоговый отчёт','Hotshot Fleet Hub: financial and tax report'],['rp.period','Период: {p}','Period: {p}'],['rp.pAll','все сохранённые недели','all saved weeks'],['rp.pMonth','месяц {m}','month {m}'],['rp.pRange','с {a} по {b}','from {a} to {b}'],['rp.start','начала','the start'],['rp.today','сегодня','today'],['rp.profile','Профиль','Profile'],['rp.gen','Сформирован: {d}','Generated: {d}'],
+['rp.perdiem','Per Diem (питание в рейсе)','Per Diem (meals on the road)'],['rp.pdDays','{n} дн. × ${r}','{n} d × ${r}'],['rp.ded','Вычитаемо (80%): {a}','Deductible (80%): {a}'],['rp.milesFuel','Пробег и топливо','Miles and fuel'],['rp.milesVal','Всего: {m} mi ({n} нед.)','Total: {m} mi ({n} wk)'],['rp.fuelVal','Топливо: {a}','Fuel: {a}'],['rp.dhNote','Loaded: {a} mi | Deadhead: {b} mi ({p}%)','Loaded: {a} mi | Deadhead: {b} mi ({p}%)'],
+['rp.ifta','Дизель по штатам за период (IFTA)','Diesel by state for the period (IFTA)'],['rp.noIfta','В периоде нет чеков с заправками по штатам.','No fuel receipts with states in this period.'],['rp.weeks','Недели периода','Weeks in period'],['rp.loads','Реестр рейсов','Load registry'],['rp.gP','Gross за период','Gross, period'],['rp.net','Чистая прибыль','Net profit'],['rp.allMiles','Всего миль','Total miles'],
+['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
+['sync.saving','☁️ Сохранение…','☁️ Saving…'],['sync.ok','☁️ Синхронизировано','☁️ Synced'],['sync.local','⚠️ Только локально','⚠️ Local only'],
+['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export']
+];
+var TR={ru:{},en:{}};DICT.forEach(function(r){TR.ru[r[0]]=r[1];TR.en[r[0]]=r[2];});
+var LANG=SafeStorage.get('hs_lang')||(((navigator.language||'en').toLowerCase().indexOf('ru')===0)?'ru':'en');
+function t(k,v){var s=TR[LANG][k];if(s==null)s=TR.en[k];if(s==null)return k;if(v)s=s.replace(/\{(\w+)\}/g,function(m,n){return v[n]!=null?v[n]:m;});return s;}
+
+/* =========================================================
+   Utils
+   ========================================================= */
+var $=function(s,p){return(p||document).querySelector(s);};
+var $$=function(s,p){return Array.prototype.slice.call((p||document).querySelectorAll(s));};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function num(v){var n=parseFloat(String(v==null?'':v).replace(',','.'));return isNaN(n)?0:n;}
+function f0(v){return Math.round(num(v)).toLocaleString('en-US');}
+function f1(v){return num(v).toFixed(1);}
+function f2(v){return num(v).toFixed(2);}
+function money(v,d){d=d==null?2:d;var n=num(v);return(n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);}
+function isoOf(d){var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;}
+function todayISO(){return isoOf(new Date());}
+function addDaysISO(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return isoOf(d);}
+function cssv(n){return getComputedStyle(document.body).getPropertyValue(n).trim()||'#888';}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function toast(msg,ms){var el=$('#toast');el.textContent=msg;el.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(function(){el.style.display='none';},ms||2400);}
+function stateCodes(text){var u=String(text||'').toUpperCase();var m=u.match(/\b[A-Z]{2}\b/g)||[];return m.filter(function(x){return STATE_NAMES[x];});}
+function loadDays(l){if(!l.pickup||!l.delivery)return 0;var a=new Date(l.pickup+'T00:00:00'),b=new Date(l.delivery+'T00:00:00');if(isNaN(a)||isNaN(b)||b<a)return 0;return Math.round((b-a)/864e5)+1;}
+function daysUnion(loads){var set={};(loads||[]).forEach(function(l){if(!l.pickup||!l.delivery)return;var a=new Date(l.pickup+'T00:00:00'),b=new Date(l.delivery+'T00:00:00');if(isNaN(a)||isNaN(b)||b<a)return;var n=0;while(a<=b&&n<62){set[isoOf(a)]=1;a.setDate(a.getDate()+1);n++;}});return Object.keys(set).length;}
+function monthOf(w){var e=w.endDate||w.weekEndDate||'';if(/^\d{4}-\d{2}/.test(e))return e.slice(0,7);var s=w.startDate||'';if(/^\d{4}-\d{2}-\d{2}/.test(s)){var d=new Date(s+'T00:00:00');var dow=d.getDay()||7;d.setDate(d.getDate()+(4-dow));return isoOf(d).slice(0,7);}return w.monthYear||todayISO().slice(0,7);}
+function isMaintItem(name,type){var n=String(name||'').toLowerCase();return type==='cpm'||type==='dlr_mile'||/(^|[^а-яa-z])то([^а-яa-z]|$)/i.test(n)||/maint|ремонт|oil|масл|аморт|reserve|резерв|tire|шин/.test(n);}
+function hav(a,b){var R=3958.8,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lon)*r;var x=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)*Math.sin(dLo/2);return 2*R*Math.asin(Math.sqrt(x));}
+
+/* =========================================================
+   State
+   ========================================================= */
+var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,
+ maintOn:false,maintStart:0,maintInterval:10000,maintBase:0,template:null,loads:[],fuel:[],exps:[],archive:[],archSel:null};
+var LAST={};var CH={};var saveT=null;var mapToken=0;var curPage='week';
+
+function newLoad(o){return Object.assign({id:uid(),pickup:todayISO(),delivery:todayISO(),fromText:'',toText:'',fromGeo:null,toGeo:null,route:'',miles:0,deadhead:0,gross:0,broker:'',unpaid:false},o||{});}
+function normLoad(o){var l=newLoad(o);l.id=uid();if(!l.fromText&&!l.toText&&l.route&&l.route.indexOf('->')>-1){var p=l.route.split('->');l.fromText=p[0].trim();l.toText=(p[1]||'').trim();}return l;}
+function newFuel(o){return Object.assign({id:uid(),loc:'',dieselGal:0,dieselCost:0,defGal:0,defCost:0},o||{});}
+function newExp(o){return Object.assign({id:uid(),name:t('ex.new'),type:'fixed',val:0},o||{});}
+function ownerNameSet(){return[TR.ru['d.truck'],TR.en['d.truck']];}
+function defaultExps(role){
+ if(role==='driver')return[newExp({name:t('d.eld'),type:'fixed',val:0}),newExp({name:t('d.adv'),type:'fixed',val:0})];
+ return[newExp({name:t('d.truck'),type:'fixed',val:350}),newExp({name:t('d.trailer'),type:'fixed',val:350}),newExp({name:t('d.ins'),type:'fixed',val:400}),newExp({name:t('d.comm'),type:'percent',val:12})];
+}
+function activeId(){return S.viewId||(S.user?S.user.id:'guest');}
+function draftKey(){return 'hs6_draft_'+activeId();}
+function tplKey(){return 'hs6_tpl_'+activeId();}
+
+/* =========================================================
+   Geo: ZIP / city lookup, road miles
+   ========================================================= */
+var GEO={};try{GEO=JSON.parse(SafeStorage.get('hs6_geo')||'{}');}catch(e){GEO={};}
+function geoSave(){try{var k=Object.keys(GEO);if(k.length>400){for(var i=0;i<100;i++)delete GEO[k[i]];}SafeStorage.set('hs6_geo',JSON.stringify(GEO));}catch(e){}}
+function stFrom(x){var u=String(x||'').toUpperCase().replace(/\./g,'').trim();if(STATE_NAMES[u])return u;return NAME2ST[String(x||'').toLowerCase().trim()]||'';}
+function parseCityState(raw){
+ var s=raw.replace(/\s+/g,' ').trim(),st='',city='';
+ var parts=s.split(',').map(function(x){return x.trim();}).filter(Boolean);
+ if(parts.length>=2){st=stFrom(parts[parts.length-1].replace(/\s*\d{5}(-\d{4})?$/,''));city=st?parts.slice(0,-1).join(' '):parts[0];}
+ else{
+  var p=parts[0]||'';
+  if(stFrom(p)){st=stFrom(p);}
+  else{
+   var tk=p.split(' ');
+   if(tk.length>=3){var two=tk.slice(-2).join(' ');if(NAME2ST[two.toLowerCase()]){st=NAME2ST[two.toLowerCase()];city=tk.slice(0,-2).join(' ');}}
+   if(!st&&tk.length>=2){var one=stFrom(tk[tk.length-1]);if(one){st=one;city=tk.slice(0,-1).join(' ');}}
+   if(!st)city=p;
+  }
+ }
+ return{city:city,st:st};
+}
+async function fetchJson(url,ms){var c=new AbortController();var tm=setTimeout(function(){c.abort();},ms||7000);try{var r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error('http '+r.status);return await r.json();}finally{clearTimeout(tm);}}
+async function geocodeCity(city,st){
+ var j=await fetchJson('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=30&language=en&format=json');
+ var res=(j&&j.results||[]).filter(function(r){return r.country_code==='US';});
+ var pick=null;
+ if(st){pick=res.filter(function(r){return r.admin1===STATE_NAMES[st];})[0];}
+ else pick=res[0];
+ if(pick){var code=st||NAME2ST[String(pick.admin1||'').toLowerCase()]||'';return{city:pick.name,st:code,zip:'',lat:pick.latitude,lon:pick.longitude};}
+ return null;
+}
+async function resolvePlace(raw){
+ raw=String(raw||'').trim();if(!raw)return null;
+ var key=raw.toLowerCase();if(GEO[key])return GEO[key];
+ var res=null;
+ try{
+  var z=raw.match(/(\d{5})(?:-\d{4})?\s*$/);
+  if(z){
+   try{var j=await fetchJson('https://api.zippopotam.us/us/'+z[1]);var p=j&&j.places&&j.places[0];if(p)res={city:p['place name'],st:p['state abbreviation'],zip:z[1],lat:parseFloat(p.latitude),lon:parseFloat(p.longitude)};}catch(e){}
+  }
+  if(!res){
+   var rest=z?raw.replace(/\d{5}(?:-\d{4})?\s*$/,'').trim():raw;
+   if(rest){
+    var ps=parseCityState(rest);
+    if(ps.city){
+     try{res=await geocodeCity(ps.city,ps.st);}catch(e){res=null;}
+     if(!res&&ps.st&&CENTROID[ps.st]){res={city:ps.city,st:ps.st,zip:'',lat:CENTROID[ps.st][0],lon:CENTROID[ps.st][1],approx:true};}
+    }else if(ps.st&&CENTROID[ps.st]){res={city:'',st:ps.st,zip:'',lat:CENTROID[ps.st][0],lon:CENTROID[ps.st][1],approx:true};}
+   }
+  }
+ }catch(e){res=null;}
+ if(res){res.label=res.city?(res.city+', '+res.st):res.st;GEO[key]=res;GEO[res.label.toLowerCase()]=res;geoSave();}
+ return res;
+}
+var ROAD={},OSRM_OFF=0;
+/* Road miles via OSRM. Only real road results are cached; on failure we return
+   straight-line x1.2 (approx) and skip OSRM for 60s unless force is set. */
+async function roadInfo(a,b,force){
+ if(!a||!b)return{mi:0,approx:true};
+ var k=[a.lat,a.lon,b.lat,b.lon].map(function(x){return(+x).toFixed(3);}).join(',');
+ if(ROAD[k])return ROAD[k];
+ var mi=null;
+ if(force||Date.now()>OSRM_OFF){
+  try{var j=await fetchJson('https://router.project-osrm.org/route/v1/driving/'+a.lon+','+a.lat+';'+b.lon+','+b.lat+'?overview=false',6000);if(j&&j.routes&&j.routes[0]&&isFinite(j.routes[0].distance))mi=j.routes[0].distance/1609.344;}catch(e){}
+  if(mi==null)OSRM_OFF=Date.now()+60000;
+ }
+ if(mi!=null){OSRM_OFF=0;ROAD[k]={mi:Math.round(mi),approx:!!(a.approx||b.approx)};return ROAD[k];}
+ return{mi:Math.round(hav(a,b)*1.2),approx:true};
+}
+async function roadMiles(a,b){return(await roadInfo(a,b)).mi;}
+function pstText(g){if(!g)return'';return'📍 '+(g.zip?t('geo.zip',{z:g.zip}):(g.approx?t('geo.approx'):t('geo.ok')));}
+
+/* =========================================================
+   Calculation
+   ========================================================= */
+function calc(){
+ var isD=S.role==='driver',split=S.milesMode==='split';
+ var loaded=0,dh=0,gross=0,first='',last='',unpaid=0,unpaidN=0;
+ S.loads.forEach(function(l){var m=num(l.miles),d=split?num(l.deadhead):0,g=num(l.gross);loaded+=m;dh+=d;gross+=g;if(l.pickup&&(!first||l.pickup<first))first=l.pickup;if(l.delivery&&(!last||l.delivery>last))last=l.delivery;if(l.unpaid&&g>0){unpaid+=g;unpaidN++;}});
+ var miles=loaded+dh,days=daysUnion(S.loads);
+ var dGal=0,dUsd=0,defUsd=0,fStates={};
+ S.fuel.forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);dGal+=g;dUsd+=c;defUsd+=num(f.defCost);if(g>0||c>0){var sc=stateCodes(f.loc);var k=sc.length?sc[sc.length-1]:'OTHER';if(!fStates[k])fStates[k]={gal:0,cost:0};fStates[k].gal+=g;fStates[k].cost+=c;}});
+ var fuelCost=0;
+ if(!isD){if(S.fuelMode==='mpg')fuelCost=miles/Math.max(0.1,num(S.mpg)||9)*num(S.diesel);else fuelCost=dUsd+defUsd;}
+ var fixed=0,pct=0,cpmS=0,maintAdd=0,list=[];
+ S.exps.forEach(function(e){var v=num(e.val),sub=0;
+  if(e.type==='fixed'){sub=v;fixed+=sub;}else if(e.type==='percent'){sub=gross*v/100;pct+=sub;}else if(e.type==='cpm'){sub=miles*v/100;cpmS+=sub;}else if(e.type==='dlr_mile'){sub=miles*v;cpmS+=sub;}
+  e._sum=sub;if(!isD&&isMaintItem(e.name,e.type))maintAdd+=sub;
+  if(sub>0)list.push({name:e.name,type:e.type,val:v,calculatedSum:sub});});
+ var own=fixed+pct+cpmS;
+ var drvPct=num(S.driverPct)||30,drvPay=gross*drvPct/100;
+ var totalExp=isD?own:fuelCost+own;
+ var net=isD?(drvPay-own):(gross-totalExp);
+ return{weekLabel:S.label||'Week',startDate:first,endDate:last,monthYear:monthOf({endDate:last,startDate:first}),userRole:S.role,driverPct:drvPct,driverGrossPay:drvPay,
+  milesMode:S.milesMode,milesCalc:S.milesCalc,fuelMode:S.fuelMode,loadedMiles:loaded,deadheadMiles:dh,totalMiles:miles,totalGross:gross,totalExpenses:totalExp,netProfit:net,totalDays:days,
+  netRpm:miles>0?net/miles:0,margin:gross>0?net/gross*100:0,cpm:miles>0?totalExp/miles:0,avgRpm:miles>0?gross/miles:0,loadedRpm:loaded>0?gross/loaded:0,fuelCost:fuelCost,
+  fuelLogs:S.fuel.map(function(f){return{loc:f.loc,dieselGal:num(f.dieselGal),dieselCost:num(f.dieselCost),defGal:num(f.defGal),defCost:num(f.defCost)};}),
+  fixedExpenses:fixed,percentExpenses:pct,cpmExpenses:cpmS,maintSaved:maintAdd,expensesList:list,
+  unpaidAmount:unpaid,unpaidCount:unpaidN,_dGal:dGal,_dUsd:dUsd,_fStates:fStates,_own:own};
+}
+
+/* =========================================================
+   Persistence (draft)
+   ========================================================= */
+function draftObj(){
+ return{weekLabel:S.label,userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
+  defaultTemplate:S.template||null,mpg:S.mpg,dieselPrice:S.diesel,taxPct:S.taxPct,perDiem:S.perDiem,
+  loads:S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:num(l.deadhead),gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid};}),
+  fuelLogs:S.fuel.map(function(f){return{loc:f.loc,dieselGal:num(f.dieselGal),dieselCost:num(f.dieselCost),defGal:num(f.defGal),defCost:num(f.defCost)};}),
+  expenses:S.exps.map(function(e){return{name:e.name,type:e.type,val:num(e.val)};}),updatedAt:Date.now()};
+}
+function queueSave(){
+ if(S.ro||!S.user)return;
+ var d=draftObj();SafeStorage.set(draftKey(),JSON.stringify(d));
+ if(!sb)return;
+ var st=$('#sync');st.textContent=t('sync.saving');
+ clearTimeout(saveT);
+ saveT=setTimeout(async function(){
+  try{var r=await sb.from('user_drafts').upsert({user_id:S.user.id,updated_at:new Date().toISOString(),draft_json:d},{onConflict:'user_id'});if(r.error)throw r.error;st.textContent=t('sync.ok');setTimeout(function(){st.textContent='';},2000);}
+  catch(e){st.textContent=t('sync.local');}
+ },800);
+}
+function applyDraft(d){
+ if(!d)return;
+ if(d.defaultTemplate){S.template=d.defaultTemplate;SafeStorage.set(tplKey(),JSON.stringify(d.defaultTemplate));}
+ if(d.weekLabel!=null)S.label=d.weekLabel;
+ S.role=d.userRole==='driver'?'driver':'owner';
+ if(d.driverPct!=null)S.driverPct=num(d.driverPct)||30;
+ S.fuelMode=d.fuelMode==='log'?'log':'mpg';S.milesMode=d.milesMode==='split'?'split':'simple';
+ /* drafts saved before 6.1 have no milesCalc: keep their typed miles (manual) */
+ S.milesCalc=d.milesCalc==='auto'?'auto':'manual';
+ S.startText=String(d.startText||'');S.startGeo=(d.startGeo&&d.startGeo.lat!=null&&d.startGeo.lon!=null)?d.startGeo:null;
+ S.maintOn=!!d.maintEnabled;S.maintStart=num(d.maintStartBal);S.maintInterval=num(d.maintInterval)||10000;S.maintBase=num(d.maintResetBase);
+ if(d.mpg!=null&&d.mpg!=='')S.mpg=num(d.mpg);if(d.dieselPrice!=null&&d.dieselPrice!=='')S.diesel=num(d.dieselPrice);
+ if(d.taxPct!=null)S.taxPct=num(d.taxPct);if(d.perDiem!=null)S.perDiem=num(d.perDiem)||80;
+ if(Array.isArray(d.loads)&&d.loads.length)S.loads=d.loads.map(normLoad);
+ if(Array.isArray(d.fuelLogs))S.fuel=d.fuelLogs.map(function(f){return newFuel(f);});
+ if(Array.isArray(d.expenses)&&d.expenses.length)S.exps=d.expenses.map(function(e){return newExp(e);});
+}
+function loadTemplate(){var raw=SafeStorage.get(tplKey());if(raw){try{S.template=JSON.parse(raw);}catch(e){}}}
+function resetWeek(carryStart){
+ var tpl=S.template,lastDrop=null;
+ /* new week starts where the truck ended: the latest drop of the week being closed */
+ if(carryStart)S.loads.forEach(function(l){if(l.toGeo&&l.toGeo.lat!=null&&(!lastDrop||String(l.delivery||'')>=lastDrop.d))lastDrop={g:l.toGeo,d:String(l.delivery||'')};});
+ S.startGeo=lastDrop?lastDrop.g:null;S.startText=S.startGeo?(S.startGeo.label||''):'';
+ if(tpl&&(tpl.milesCalc==='auto'||tpl.milesCalc==='manual'))S.milesCalc=tpl.milesCalc;
+ S.label=t('wk.defLabel',{d:todayISO()});S.loads=[newLoad()];S.fuel=[];S.maintBase=S.maintBase||0;
+ S.role=(tpl&&tpl.userRole==='driver')?'driver':(tpl?'owner':S.role);
+ if(tpl){S.driverPct=num(tpl.driverPct)||30;if(tpl.mpg!=null&&tpl.mpg!=='')S.mpg=num(tpl.mpg);if(tpl.dieselPrice!=null&&tpl.dieselPrice!=='')S.diesel=num(tpl.dieselPrice);S.milesMode=tpl.milesMode==='split'?'split':'simple';S.maintOn=!!tpl.maintEnabled;if(tpl.maintStartBal!=null)S.maintStart=num(tpl.maintStartBal);if(tpl.maintInterval)S.maintInterval=num(tpl.maintInterval);if(tpl.maintResetBase!=null)S.maintBase=num(tpl.maintResetBase);if(tpl.taxPct!=null)S.taxPct=num(tpl.taxPct);}
+ S.exps=(tpl&&Array.isArray(tpl.expenses)&&tpl.expenses.length)?tpl.expenses.map(function(e){return newExp(e);}):defaultExps(S.role);
+}
+
+/* =========================================================
+   Static i18n + theme
+   ========================================================= */
+function applyI18n(){
+ $$('[data-i18n]').forEach(function(e){e.textContent=t(e.dataset.i18n);});
+ document.documentElement.lang=LANG;
+ var nl=LANG==='ru'?'EN':'RU';$('#btn-lang').textContent=nl;$('#auth-lang').textContent=nl;
+ var ad=$('#auth-db');if(ad)ad.textContent=DB_REF?t('auth.db',{r:DB_REF}):'';
+ if(!sb)noSb();
+ if($('#ev-hint'))evSyncUI();
+}
+function applyTheme(){var light=SafeStorage.get('hs_theme')==='light';document.body.classList.toggle('light',light);$('#meta-theme').setAttribute('content',light?'#e6e9ed':'#0d0f12');}
+
+/* =========================================================
+   Week page rendering
+   ========================================================= */
+function kpi(l,v,cls,s,hl){return'<div class="kpi'+(hl?' hl':'')+'"><div class="l">'+l+'</div><div class="v '+(cls||'')+'">'+v+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';}
+
+function renderStatic(){
+ var isD=S.role==='driver';
+ $('#in-label').value=S.label;$('#in-driverPct').value=S.driverPct;$('#in-mpg').value=S.mpg;$('#in-diesel').value=S.diesel;$('#in-taxPct').value=S.taxPct;
+ $('#in-maintStart').value=S.maintStart;$('#in-maintInterval').value=S.maintInterval;$('#in-perDiem').value=S.perDiem;
+ $$('#seg-role button').forEach(function(b){b.className=(b.dataset.v===S.role?'on':'');});
+ $('#seg-role').classList.toggle('blu',isD);
+ $$('#seg-miles button').forEach(function(b){b.className=(b.dataset.v===S.milesMode?'on':'');});
+ var auto=S.milesCalc==='auto';
+ $$('#seg-mcalc button').forEach(function(b){b.className=(b.dataset.v===S.milesCalc?'on':'');});
+ $('#mc-hint').textContent=t(auto?(S.milesMode==='split'?'mc.hAuto':'mc.hAutoS'):'mc.hManual');
+ $('#wk-start').hidden=!auto;
+ var si=$('#in-start');si.placeholder=t('ld.ph');if(document.activeElement!==si)si.value=S.startText||'';
+ setPst(si.parentElement.querySelector('.pst'),S.startGeo?pstText(S.startGeo):'');
+ $$('#seg-fuel button').forEach(function(b){b.className=(b.dataset.v===S.fuelMode?'on':'');});
+ $$('#seg-maint button').forEach(function(b){b.className=((b.dataset.v==='1')===S.maintOn?'on':'');});
+ var tag=$('#role-tag');tag.textContent=t(isD?'tag.driver':'tag.owner');tag.className='tag'+(isD?' d':'');
+ $('#card-driver').hidden=!isD;$('#card-fuel').hidden=isD;$('#card-maint').hidden=isD;$('#card-tax').hidden=isD;
+ $('#fuel-mpg').hidden=S.fuelMode!=='mpg';$('#fuel-log').hidden=S.fuelMode!=='log';
+ $('#maint-body').hidden=!S.maintOn;
+ $('#ex-title').textContent=t(isD?'ex.t.d':'ex.t.o');$('#ex-sub').hidden=!isD;$('#ex-sub').textContent=t('ex.sub.d');
+ $('#ev-owner').hidden=isD;$('#ev-driver').hidden=!isD;
+ $('#ro-banner').hidden=!S.ro;document.body.classList.toggle('ro',S.ro);
+ renderLoads();renderFuel();renderExps();refresh();
+}
+
+function loadCard(l,i){
+ var split=S.milesMode==='split',auto=S.milesCalc==='auto',cl=auto&&canLd(l),cd=auto&&canDh(i);
+ var tag='<span class="atag">'+t('mc.tag')+'</span>';
+ return'<div class="rc" data-list="loads" data-id="'+l.id+'">'+
+ '<div class="rc-h"><span class="n">'+(i+1)+'</span><span class="rc-sum" data-out></span><button class="x need-write" data-act="del" aria-label="delete">✕</button></div>'+
+ '<div class="f w12 t6"><label>'+t('ld.from')+'</label><input type="text" data-place="from" value="'+esc(l.fromText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(l.fromGeo))+'</div></div>'+
+ '<div class="f w12 t6"><label>'+t('ld.to')+'</label><input type="text" data-place="to" value="'+esc(l.toText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(l.toGeo))+'</div></div>'+
+ '<div class="f t3"><label>'+t('ld.pick')+'</label><input type="date" data-k="pickup" value="'+esc(l.pickup)+'"></div>'+
+ '<div class="f t3"><label>'+t('ld.del')+'</label><input type="date" data-k="delivery" value="'+esc(l.delivery)+'"></div>'+
+ '<div class="f t2'+(cl?' is-auto':'')+'"><label>'+t(split?'ld.mi.l':'ld.mi.s')+tag+'</label><input type="number" inputmode="decimal" data-k="miles" value="'+num(l.miles)+'"'+(cl?' readonly':'')+'></div>'+
+ (split?'<div class="f t2'+(cd?' is-auto':'')+'"><label class="r">'+t('ld.dh')+tag+'</label><input type="number" inputmode="decimal" data-k="deadhead" value="'+num(l.deadhead)+'" style="color:var(--red)"'+(cd?' readonly':'')+'></div>':'')+
+ '<div class="f t2"><label class="g">'+t('ld.gross')+'</label><input type="number" inputmode="decimal" data-k="gross" value="'+num(l.gross)+'" style="color:var(--grn);font-weight:800"></div>'+
+ '<div class="f t4"><label>'+t('ld.broker')+'</label><input type="text" data-k="broker" value="'+esc(l.broker)+'" autocomplete="off"></div>'+
+ '<div class="f t4"><label class="chk"><input type="checkbox" data-k="unpaid"'+(l.unpaid?' checked':'')+'><span>'+t('ld.unpaid')+'</span></label></div>'+
+ '<div class="foot"><button class="btn sm need-write" data-act="recalcMiles">'+(auto?'↻ '+t('mc.recalc'):'📏 '+t('ld.calc'))+'</button></div>'+
+ '</div>';
+}
+function renderLoads(){
+ var box=$('#loads-list');
+ box.innerHTML=S.loads.length?S.loads.map(loadCard).join(''):'<div class="empty">'+t('ld.empty')+'</div>';
+ S.loads.forEach(updateLoadOut);
+}
+function updateLoadOut(l){
+ var card=$('[data-list="loads"][data-id="'+l.id+'"]');if(!card)return;
+ var split=S.milesMode==='split',i=S.loads.indexOf(l);
+ var mi=num(l.miles)+(split?num(l.deadhead):0);
+ var rpm=mi>0?num(l.gross)/mi:0;
+ var a=S.milesCalc==='auto'&&(canLd(l)||(split&&canDh(i)));
+ card.querySelector('[data-out]').textContent=t('ld.d',{n:loadDays(l)})+'  ·  $'+f2(rpm)+'/mi'+(a?'  ·  🤖 '+t('mc.tag')+(l.apx?' ≈':''):'');
+}
+function fuelCard(f){
+ return'<div class="rc" data-list="fuel" data-id="'+f.id+'">'+
+ '<div class="f w12 t4"><label>'+t('fu.loc')+'</label><input type="text" data-k="loc" value="'+esc(f.loc)+'" autocomplete="off"></div>'+
+ '<div class="f t2"><label>'+t('fu.dgal')+'</label><input type="number" inputmode="decimal" step="0.001" data-k="dieselGal" value="'+num(f.dieselGal)+'"></div>'+
+ '<div class="f t2"><label class="g">'+t('fu.dcost')+'</label><input type="number" inputmode="decimal" step="0.01" data-k="dieselCost" value="'+num(f.dieselCost)+'" style="color:var(--grn);font-weight:700"></div>'+
+ '<div class="f t2"><label>'+t('fu.fgal')+'</label><input type="number" inputmode="decimal" step="0.001" data-k="defGal" value="'+num(f.defGal)+'"></div>'+
+ '<div class="f t2"><label class="b">'+t('fu.fcost')+'</label><input type="number" inputmode="decimal" step="0.01" data-k="defCost" value="'+num(f.defCost)+'" style="color:var(--blu);font-weight:700"></div>'+
+ '<div class="foot"><button class="btn dng sm need-write" data-act="del">✕</button></div></div>';
+}
+function renderFuel(){$('#fuel-list').innerHTML=S.fuel.map(fuelCard).join('');}
+function expCard(e){
+ var o=function(v,k){return'<option value="'+v+'"'+(e.type===v?' selected':'')+'>'+t(k)+'</option>';};
+ return'<div class="rc" data-list="exps" data-id="'+e.id+'">'+
+ '<div class="f w12 t4"><label>'+t('ex.name')+'</label><input type="text" data-k="name" value="'+esc(e.name)+'"></div>'+
+ '<div class="f t3"><label>'+t('ex.type')+'</label><select data-k="type">'+o('fixed','ex.fixed')+o('percent','ex.pct')+o('cpm','ex.cpm')+o('dlr_mile','ex.dpm')+'</select></div>'+
+ '<div class="f t2"><label>'+t('ex.val')+'</label><input type="number" inputmode="decimal" data-k="val" value="'+num(e.val)+'"></div>'+
+ '<div class="f t3"><label>'+t('ex.total')+'</label><div class="a" data-sum style="font-family:var(--fd);font-size:24px;font-weight:700;min-height:46px;display:flex;align-items:center">$0.00</div></div>'+
+ '<div class="foot"><button class="btn dng sm need-write" data-act="del">✕</button></div></div>';
+}
+function renderExps(){$('#exp-list').innerHTML=S.exps.map(expCard).join('');}
+
+function refresh(){
+ var R=LAST=calc();var isD=S.role==='driver';
+ // exp sums
+ S.exps.forEach(function(e){var c=$('[data-list="exps"][data-id="'+e.id+'"] [data-sum]');if(c)c.textContent=money(e._sum||0);});
+ S.loads.forEach(updateLoadOut);
+ // hero
+ var prev=S.archive.filter(function(w){return(w.userRole==='driver')===isD;})[0];
+ var dTxt='',dCls='zz';
+ if(prev&&Math.abs(num(prev.netProfit))>0){var dp=(R.netProfit-num(prev.netProfit))/Math.abs(num(prev.netProfit))*100;dCls=dp>=0?'up':'dn';dTxt=(dp>=0?'▲ +':'▼ ')+f0(dp)+'% '+t('h.vs');}
+ var act=Math.max(1,R.totalDays);
+ var ringP=Math.max(0,Math.min(100,R.margin));
+ $('#hero').innerHTML='<div class="hero"><div class="hero-top"><div><div class="hl">'+t(isD?'h.net.d':'h.net.o')+'</div><div class="big'+(R.netProfit<0?' neg':'')+'">'+money(R.netProfit)+'</div>'+(dTxt?'<div class="delta '+dCls+'">'+dTxt+'</div>':'')+'</div>'+
+  '<div class="ring" style="--p:'+ringP.toFixed(0)+'"><div><span class="rv">'+f0(R.margin)+'%</span><span class="rl">'+t(isD?'h.m.d':'h.m.o')+'</span></div></div></div>'+
+  '<div class="chips"><div class="chip"><div class="l">Gross</div><div class="v g">'+money(R.totalGross,0)+'</div></div>'+
+  '<div class="chip"><div class="l">'+t(isD?'k.earned':'k.exp')+'</div><div class="v '+(isD?'b':'r')+'">'+money(isD?R.driverGrossPay:R.totalExpenses,0)+'</div></div>'+
+  '<div class="chip"><div class="l">Net / mi</div><div class="v a">$'+f2(R.netRpm)+'</div></div>'+
+  '<div class="chip"><div class="l">'+t('h.per')+'</div><div class="v">'+money(R.netProfit/act,0)+'</div></div></div></div>';
+ // kpis
+ var dhPct=R.totalMiles>0?R.deadheadMiles/R.totalMiles*100:0;
+ var k=kpi(t('k.rpm'),'$'+f2(R.avgRpm),'',t('k.loaded',{v:'$'+f2(R.loadedRpm)}))+
+  kpi(t('k.miles'),f0(R.totalMiles),'',S.milesMode==='split'?('DH '+f0(R.deadheadMiles)+' ('+f0(dhPct)+'%)'):'')+
+  kpi(t('k.days'),R.totalDays,'b',money(R.totalGross/act,0)+' '+t('h.per'));
+ if(isD)k+=kpi(t('k.exp'),money(R._own,0),'r',t('k.deduct',{a:money(R._own,0)}));
+ else k+=kpi(t('k.cpm'),'$'+f2(R.cpm),'r',t('k.fuel')+' '+money(R.fuelCost,0));
+ k+=R.unpaidCount>0?kpi(t('k.unpaid'),money(R.unpaidAmount,0),'a',t('k.nUnpaid',{n:R.unpaidCount})):'';
+ $('#kpis').innerHTML=k;
+ // loads sum
+ var sb2=$('#loads-sum');sb2.hidden=S.milesMode!=='split';
+ if(S.milesMode==='split')sb2.innerHTML='<span>'+t('ld.sumL')+': <b class="g">'+f0(R.loadedMiles)+' mi</b></span><span>'+t('ld.sumD')+': <b class="r">'+f0(R.deadheadMiles)+' mi ('+f0(dhPct)+'%)</b></span><span>'+t('ld.sumR')+': <b class="a">$'+f2(R.loadedRpm)+'</b></span>';
+ // driver
+ if(isD){$('#dr-gross').textContent=money(R.driverGrossPay);$('#dr-gross-mi').textContent=t('dr.mi',{a:'$'+f2(R.totalMiles>0?R.driverGrossPay/R.totalMiles:0)});$('#dr-net').textContent=money(R.netProfit);$('#dr-net-day').textContent=t('dr.day',{a:money(R.netProfit/act)});}
+ // fuel
+ if(!isD){
+  $('#fuel-est').textContent=money(R.fuelCost);
+  var avg=R._dGal>0?R._dUsd/R._dGal:0,act2=R._dGal>0?R.totalMiles/R._dGal:0;
+  $('#fuel-sum').innerHTML='<span>'+t('fu.total')+': <b class="a">'+money(S.fuel.reduce(function(a,f){return a+num(f.dieselCost)+num(f.defCost);},0))+'</b></span><span>'+f1(R._dGal)+' gal · '+t('fu.avg')+' <b>$'+f2(avg)+'</b></span><span>'+t('fu.actual')+': <b class="b">'+f1(act2)+' MPG</b></span>';
+  var ks=Object.keys(R._fStates);
+  $('#fuel-states').innerHTML=ks.length?ks.map(function(s){return'<span class="pill"><span class="a">'+esc(s)+'</span> '+f1(R._fStates[s].gal)+' gal ('+money(R._fStates[s].cost,0)+')</span>';}).join(''):'<span class="cs">'+t('fu.none')+'</span>';
+ }
+ // maintenance
+ if(!isD&&S.maintOn){
+  var archM=0,archMi=0;S.archive.forEach(function(w){archMi+=num(w.totalMiles);if(w.userRole==='driver')return;archM+=(w.maintSaved!==undefined?num(w.maintSaved):num(w.cpmExpenses));});
+  var interval=num(S.maintInterval)||10000;
+  var since=Math.max(0,archMi+R.totalMiles-(S.maintBase||0)),left=Math.max(0,interval-since),pct=Math.min(100,Math.round(since/interval*100));
+  $('#mt-saved').textContent=money(num(S.maintStart)+archM+R.maintSaved);
+  $('#mt-week').textContent=t('mt.week',{a:money(R.maintSaved)});
+  $('#mt-done').textContent=t('mt.done',{a:f0(since),b:f0(interval)});
+  $('#mt-left').textContent=left>0?t('mt.left',{a:f0(left)}):t('mt.due');
+  var bar=$('#mt-bar');bar.style.width=pct+'%';bar.style.background=pct>=90?'var(--red)':'';
+ }
+ if(!isD){$('#tx-amt').textContent=money(Math.max(0,R.netProfit)*num(S.taxPct)/100);}
+ renderInsights(R,dhPct);
+}
+
+function renderInsights(R,dhPct){
+ var isD=S.role==='driver',out=[];
+ if(R.totalMiles>0){
+  if(dhPct>15&&S.milesMode==='split')out.push(['w',t('i.dh',{p:f0(dhPct)})]);
+  if(!isD&&R.avgRpm<R.cpm)out.push(['w',t('i.below',{r:'$'+f2(R.avgRpm),c:'$'+f2(R.cpm)})]);
+  var lanes={};S.loads.forEach(function(l){var mi=num(l.miles)+(S.milesMode==='split'?num(l.deadhead):0);if(mi>0&&l.route&&num(l.gross)>0){var k=l.route;if(!lanes[k])lanes[k]={m:0,g:0};lanes[k].m+=mi;lanes[k].g+=num(l.gross);}});
+  var best=null;Object.keys(lanes).forEach(function(k){var r=lanes[k].g/lanes[k].m;if(!best||r>best.r)best={l:k,r:r};});
+  if(best&&Object.keys(lanes).length>1)out.push(['o',t('i.lane',{l:esc(best.l),r:'$'+f2(best.r)})]);
+  if(R.unpaidCount>0)out.push(['',t('i.unpaid',{a:money(R.unpaidAmount,0),n:R.unpaidCount})]);
+  if(!isD&&R.netProfit>0&&num(S.taxPct)>0)out.push(['',t('i.tax',{a:money(R.netProfit*num(S.taxPct)/100,0),p:f0(S.taxPct)})]);
+  if(R.netRpm>=(isD?0.65:1.05))out.push(['o',t('i.good',{r:'$'+f2(R.netRpm)})]);
+ }
+ if(!isD&&S.maintOn){var m=$('#mt-left').textContent;if(m&&m.indexOf('⚠')>-1)out.push(['w',t('i.maintDue')]);}
+ $('#ins').innerHTML=out.length?out.map(function(x){return'<div class="'+x[0]+'">'+x[1]+'</div>';}).join(''):'<div style="border-color:var(--line)">'+t('i.empty')+'</div>';
+}
+
+/* =========================================================
+   Place inputs (load rows + evaluator)
+   ========================================================= */
+function setPst(el,text,warn){if(!el)return;el.textContent=text||'';el.classList.toggle('warn',!!warn);}
+async function resolveInto(inp,obj,tk,gk,done){
+ var txt=inp.value.trim();obj[tk]=txt;
+ var st=inp.parentElement.querySelector('.pst');
+ if(!txt){obj[gk]=null;setPst(st,'');done&&done();return;}
+ if(obj[gk]&&obj[gk].label===txt){return;}
+ setPst(st,'…');
+ var g=await resolvePlace(txt);
+ if(inp.value.trim()!==txt)return;
+ if(g){obj[gk]=g;obj[tk]=g.label;inp.value=g.label;setPst(st,pstText(g));}
+ else{obj[gk]=null;setPst(st,'⚠ '+t('geo.nf'),true);}
+ done&&done();
+}
+/* ---- Miles: 'auto' (from addresses, fields locked) or 'manual' (never touched) ----
+   loaded   = From -> To of the load
+   deadhead = previous load's To -> this load's From (1st load: week start -> From)
+   In "total miles" mode an auto load gets loaded + deadhead in one number. */
+function prevGeo(i){return i===0?(S.startGeo||null):((S.loads[i-1]||{}).toGeo||null);}
+function canLd(l){return!!(l&&l.fromGeo&&l.toGeo);}
+function canDh(i){var l=S.loads[i];return!!(l&&l.fromGeo&&prevGeo(i));}
+function setAutoField(inp,on,val){
+ if(!inp)return;
+ inp.parentElement.classList.toggle('is-auto',!!on);inp.readOnly=!!on;
+ if(val!==undefined&&(on||document.activeElement!==inp))inp.value=num(val);
+}
+function syncMilesUI(l){
+ var c=$('[data-list="loads"][data-id="'+l.id+'"]');if(!c)return;
+ var i=S.loads.indexOf(l),auto=S.milesCalc==='auto';
+ setAutoField(c.querySelector('[data-k="miles"]'),auto&&canLd(l),l.miles);
+ setAutoField(c.querySelector('[data-k="deadhead"]'),auto&&canDh(i),l.deadhead);
+ updateLoadOut(l);
+}
+async function ensureGeo(l,side){
+ if(l[side+'Geo'])return l[side+'Geo'];
+ var txt=String(l[side+'Text']||'').trim();if(!txt)return null;
+ var g=await resolvePlace(txt);
+ if(!g||l[side+'Geo']||String(l[side+'Text']||'').trim()!==txt)return l[side+'Geo']||null;
+ l[side+'Geo']=g;l[side+'Text']=g.label;l.route=[l.fromText,l.toText].filter(Boolean).join(' -> ');
+ var c=$('[data-list="loads"][data-id="'+l.id+'"]'),inp=c&&c.querySelector('[data-place="'+side+'"]');
+ if(inp&&document.activeElement!==inp){inp.value=g.label;setPst(inp.parentElement.querySelector('.pst'),pstText(g));}
+ return g;
+}
+/* force: the user tapped the button (works in manual mode too, retries OSRM) */
+async function calcLoadMiles(l,force){
+ if(S.milesCalc!=='auto'&&!force)return;
+ var tok=l._tok=(l._tok||0)+1;
+ var i=S.loads.indexOf(l);if(i<0)return;
+ var p=prevGeo(i),ld=null,dh=null,apx=false,r;
+ if(l.fromGeo&&l.toGeo){r=await roadInfo(l.fromGeo,l.toGeo,force);ld=r.mi;apx=r.approx;}
+ if(p&&l.fromGeo){if(hav(p,l.fromGeo)<8)dh=0;else{r=await roadInfo(p,l.fromGeo,force);dh=r.mi;apx=apx||r.approx;}}
+ if(l._tok!==tok||S.loads.indexOf(l)<0)return;
+ if(S.milesCalc!=='auto'&&!force)return;
+ if(S.milesMode==='split'){if(ld!=null)l.miles=ld;if(dh!=null)l.deadhead=dh;}
+ else if(ld!=null){l.miles=ld+(dh||0);l.deadhead=0;}
+ l.apx=(ld!=null||dh!=null)&&apx;
+ syncMilesUI(l);
+}
+async function calcAllMiles(resolve){
+ if(resolve&&S.startText&&!S.startGeo){var sg=await resolvePlace(S.startText);if(sg&&!S.startGeo){S.startGeo=sg;S.startText=sg.label;}}
+ var list=S.loads.slice();
+ for(var i=0;i<list.length;i++){
+  if(resolve){await ensureGeo(list[i],'from');await ensureGeo(list[i],'to');}
+  await calcLoadMiles(list[i]);
+ }
+ S.loads.forEach(syncMilesUI);refresh();
+}
+async function afterLoadPlace(l){
+ l.route=[l.fromText,l.toText].filter(Boolean).join(' -> ');
+ var i=S.loads.indexOf(l),n=S.loads[i+1];
+ if(S.milesCalc==='auto'){await calcLoadMiles(l);if(n)await calcLoadMiles(n);}
+ syncMilesUI(l);if(n)syncMilesUI(n);
+ refresh();queueSave();
+}
+async function afterStart(){
+ if(S.loads[0]){if(S.milesCalc==='auto')await calcLoadMiles(S.loads[0]);syncMilesUI(S.loads[0]);}
+ refresh();queueSave();
+}
+var EV={pos:{text:'',geo:null},from:{text:'',geo:null},to:{text:'',geo:null},mode:(SafeStorage.get('hs_evcalc')==='manual'?'manual':'auto')};
+function evSyncUI(){
+ $$('#seg-evcalc button').forEach(function(b){b.className=(b.dataset.v===EV.mode?'on':'');});
+ var auto=EV.mode==='auto';
+ setAutoField($('#ev-loaded'),auto&&!!(EV.from.geo&&EV.to.geo));
+ setAutoField($('#ev-dh'),auto&&!!(EV.pos.geo&&EV.from.geo));
+ $('#ev-hint').textContent=t(auto?'tl.autoHint':'tl.manualHint');
+}
+async function evAuto(){
+ if(EV.mode!=='auto')return;
+ var dh=null,ld=null;
+ if(EV.pos.geo&&EV.from.geo)dh=hav(EV.pos.geo,EV.from.geo)<5?0:await roadMiles(EV.pos.geo,EV.from.geo);
+ if(EV.from.geo&&EV.to.geo)ld=await roadMiles(EV.from.geo,EV.to.geo);
+ if(EV.mode!=='auto')return;
+ if(dh!=null)$('#ev-dh').value=dh;if(ld!=null)$('#ev-loaded').value=ld;
+}
+async function evPlace(inp){
+ var key=inp.dataset.evplace,o=EV[key];
+ await resolveInto(inp,o,'text','geo',async function(){await evAuto();evSyncUI();runEval();});
+}
+
+/* =========================================================
+   Evaluator + weight
+   ========================================================= */
+function syncEval(){
+ var isD=S.role==='driver';
+ $('#ev-mpg').value=S.mpg;$('#ev-fuel').value=Math.min(num(S.diesel)||4,9);$('#ev-dpct').value=S.driverPct;
+ var pe=S.exps.filter(function(e){return e.type==='percent'&&num(e.val)>0;})[0];if(pe)$('#ev-pct').value=num(pe.val);
+ if(!syncEval._t){$('#ev-target').value=isD?'0.65':'1.00';}
+ $('#ev-owner').hidden=isD;$('#ev-driver').hidden=!isD;
+ evSyncUI();
+}
+function runEval(){
+ var isD=S.role==='driver';
+ var loaded=num($('#ev-loaded').value),dh=num($('#ev-dh').value),gross=num($('#ev-gross').value),days=Math.max(1,num($('#ev-days').value)||1),mi=loaded+dh,target=num($('#ev-target').value);
+ var net,sub,minG;
+ if(isD){var pct=num($('#ev-dpct').value)||30,exp=num($('#ev-dexp').value);net=gross*pct/100-exp;sub=t('tl.rate',{p:pct,a:money(gross*pct/100,0)});minG=(target*mi+exp)/(pct/100);}
+ else{var fp=num($('#ev-pct').value)/100,oc=num($('#ev-other').value),mpg=Math.max(.1,num($('#ev-mpg').value)||9),fu=num($('#ev-fuel').value);var fuel=mi/mpg*fu;net=gross-gross*fp-fuel-mi*oc;sub=t('tl.fuelOut',{a:money(fuel,0)});minG=(fuel+mi*oc+target*mi)/Math.max(.01,1-fp);}
+ var nrpm=mi>0?net/mi:0;
+ $('#ev-net').textContent=money(net);$('#ev-day').textContent=t('tl.day',{a:money(net/days,0)});
+ $('#ev-all').textContent='$'+f2(mi>0?gross/mi:0);$('#ev-ld').textContent=t('k.loaded',{v:'$'+f2(loaded>0?gross/loaded:0)});
+ $('#ev-nrpm').textContent='$'+f2(nrpm);$('#ev-sub').textContent=sub;
+ $('#ev-min').textContent=money(Math.max(0,minG),0);$('#ev-min-sub').textContent=t('tl.minSub',{r:'$'+f2(loaded>0?Math.max(0,minG)/loaded:0)});
+ var v=$('#ev-verdict'),txt=' · Net '+'$'+f2(nrpm)+'/mi ('+money(net,0)+')';
+ if(net<=0||nrpm<target*0.65){v.className='verdict r';v.textContent=t('tl.bad')+txt;}
+ else if(nrpm<target){v.className='verdict y';v.textContent=t('tl.ok')+txt;}
+ else{v.className='verdict g';v.textContent=t('tl.good')+txt;}
+}
+function runWeight(){
+ var max=num($('#wt-sel').value)||26000,cargo=num($('#wt-cargo').value),truck=num($('#wt-truck').value),trailer=num($('#wt-trailer').value),pin=num($('#wt-pin').value)||20,rawr=num($('#wt-rawr').value)||9750;
+ var empty=truck+trailer,gcw=empty+cargo,maxPay=Math.max(0,max-empty),diff=max-gcw,pinW=(trailer+cargo)*pin/100,axle=truck*0.42+pinW;
+ $('#wt-gcw').textContent=f0(gcw);$('#wt-maxpay').textContent=f0(maxPay);$('#wt-empty').textContent=f0(empty);
+ $('#wt-margin').textContent=diff>=0?t('wt.spare',{a:f0(diff)}):t('wt.overS',{a:f0(-diff)});
+ $('#wt-axle').textContent='~'+f0(axle);$('#wt-pinw').textContent=t('wt.pinw',{a:f0(pinW)});
+ var v=$('#wt-verdict');
+ if(gcw>max){v.className='verdict r';v.textContent=t('wt.over',{a:f0(gcw),b:f0(max),c:f0(gcw-max)});}
+ else if(axle>rawr){v.className='verdict y';v.textContent=t('wt.axle',{a:f0(axle),b:f0(rawr)});}
+ else{v.className='verdict g';v.textContent=t('wt.ok',{a:f0(gcw),b:f0(max),c:f0(diff)});}
+}
+
+/* =========================================================
+   Relay receipt parsing (OCR / PDF / text)
+   ========================================================= */
+function scanStatus(msg,err){var s=$('#scan-st');s.style.display=msg?'block':'none';s.className='scan-st'+(err?' err':'');s.textContent=msg||'';}
+function parseSingleRelay(raw){
+ if(!raw)return null;
+ var lines=raw.split(/\r?\n/).map(function(l){return l.replace(/\|/g,' ').replace(/\s+/g,' ').trim();}).filter(Boolean);
+ var dG=0,dC=0,fG=0,fC=0,loc='',li=-1,i;
+ for(i=0;i<lines.length;i++){if(/\bLocation\b/i.test(lines[i])){li=i;break;}}
+ for(var j=(li!==-1?li:0);j<lines.length;j++){
+  var ln=lines[j];if(li===-1&&/PALOS\s+PARK/i.test(ln))continue;
+  var zm=ln.match(/([A-Za-z\.\-\s]{2,35}?)[,\s]+([A-Z]{2})\s+\d{5}\b/);
+  if(zm){var c=zm[1].replace(/^(Location|Pilot|Flying\s*J|Loves|TA|Petro)\s*/i,'').trim(),s=zm[2].toUpperCase();if(STATE_NAMES[s]&&c.length>=2){loc=c+', '+s;break;}}
+ }
+ if(!loc&&li!==-1){
+  for(var k=li;k<Math.min(lines.length,li+5)&&!loc;k++){var w=lines[k].split(' ');
+   for(var x=w.length-1;x>=0;x--){var cs=w[x].replace(/[^A-Za-z]/g,'').toUpperCase();
+    if(cs.length===2&&STATE_NAMES[cs]){var cp=[];for(var c2=0;c2<x;c2++){if(!/^\d+$/.test(w[c2])&&!/^(Location|Code)$/i.test(w[c2]))cp.push(w[c2]);}loc=(cp.length?cp.join(' ')+', ':'')+cs;break;}}}
+ }
+ function row(rx,after){
+  for(var m=0;m<lines.length;m++){var r=lines[m];
+   if(rx.test(r)||(after.test(r)&&/\/gal/i.test(r))){
+    var rest=r.replace(after,'').trim();
+    var clean=rest.replace(/\$?\d+[\.,]\d+\s*\/\s*gal/gi,' ');
+    var nums=clean.match(/\d+[\.,]\d+/g)||[];
+    if(nums.length<2)nums=rest.match(/\d+[\.,]\d+/g)||[];
+    if(nums.length>=2)return[parseFloat(nums[0].replace(',','.'))||0,parseFloat(nums[nums.length-1].replace(',','.'))||0];
+   }}
+  return null;
+ }
+ var d=row(/^\s*(?:Diesel|ULSD|Clear\s*Diesel)\b/i,/^.*?\b(?:Diesel|ULSD)\b/i);if(d){dG=d[0];dC=d[1];}
+ var f=row(/^\s*Def\b/i,/^.*?\bDef\b/i);if(f){fG=f[0];fC=f[1];}
+ if(dG>0||dC>0||fG>0||fC>0)return{loc:loc||'Relay Stop',dieselGal:+dG.toFixed(3),dieselCost:+dC.toFixed(2),defGal:+fG.toFixed(3),defCost:+fC.toFixed(2)};
+ return null;
+}
+function parseRelayTable(raw){
+ var lines=raw.split(/\r?\n/),entries=[];
+ for(var i=0;i<lines.length;i++){
+  var line=lines[i].replace(/\|/g,' ').replace(/\s+/g,' ').trim();if(!line)continue;
+  if(/^(Grand Total|Qty\s+Total|DEF\s+\d|Diesel\s+\d|Item\s+Gallons)/i.test(line)&&!/\b\d{2}\/\d{2}\/\d{4}\b/.test(line))continue;
+  var pm=line.match(/\b(Diesel|DEF|ULSD|BIO|CLEAR DIESEL)\b/i);if(!pm)continue;
+  var isDef=pm[1].toUpperCase()==='DEF',before=line.slice(0,pm.index).trim(),after=line.slice(pm.index+pm[0].length).trim();
+  var st='US',city='Fuel Stop',tb=before.split(' ');
+  for(var t0=tb.length-1;t0>=0;t0--){var ct=tb[t0].replace(/[^A-Za-z]/g,'').toUpperCase();
+   if(ct.length===2&&STATE_NAMES[ct]){st=ct;var cw=[];for(var c=t0-1;c>=Math.max(0,t0-3);c--){var w=tb[c];if(!w||w.indexOf(')')!==-1||w.indexOf('#')!==-1||/\d/.test(w)||/^(Pilot|FlyingJ|Loves|TA|Petro|Sapp)$/i.test(w))break;cw.unshift(w.replace(/[^A-Za-z\.\-]/g,''));}if(cw.length)city=cw.join(' ');break;}}
+  var ca=after.replace(/\$?\d+[\.,]\d+\s*\/\s*gal/gi,' ').split(' '),all=[],dol=[];
+  for(var n=0;n<ca.length;n++){var isd=ca[n].indexOf('$')!==-1,cn=parseFloat(ca[n].replace(/[^0-9\.]/g,''));if(!isNaN(cn)&&cn>=0){all.push(cn);if(isd)dol.push(cn);}}
+  if(all.length>=2){var q=all[0],cost=dol.length?dol[dol.length-1]:all[all.length-1];
+   if(q>0&&cost>0){var dm=line.match(/\b\d{2}\/\d{2}\/\d{4}\b/);entries.push({dk:dm?dm[0]:('r'+i),loc:(city!=='Fuel Stop'?city+', '+st:st),isDef:isDef,gal:+q.toFixed(3),cost:+cost.toFixed(2)});}}
+ }
+ var merged=[];
+ entries.forEach(function(e){var last=merged[merged.length-1];
+  if(last&&last.dk===e.dk&&last.loc===e.loc){if(e.isDef&&last.defGal===0){last.defGal=e.gal;last.defCost=e.cost;return;}if(!e.isDef&&last.dieselGal===0){last.dieselGal=e.gal;last.dieselCost=e.cost;return;}}
+  merged.push({dk:e.dk,loc:e.loc,dieselGal:e.isDef?0:e.gal,dieselCost:e.isDef?0:e.cost,defGal:e.isDef?e.gal:0,defCost:e.isDef?e.cost:0});});
+ return merged;
+}
+function prepFuelImport(){if($('#chk-replace').checked)S.fuel=[];}
+function pushFuel(o){S.fuel.push(newFuel({loc:o.loc,dieselGal:o.dieselGal,dieselCost:o.dieselCost,defGal:o.defGal,defCost:o.defCost}));}
+function finishFuelImport(n){renderFuel();refresh();queueSave();if(n>0)scanStatus(t('sc.ok',{n:n}));else scanStatus(t('sc.none'),true);}
+function importFuelText(){
+ var raw=$('#fuel-raw').value||'';if(!raw.trim())return scanStatus(t('sc.noText'),true);
+ prepFuelImport();var rows=[];
+ if(/\bLocation\b/i.test(raw)||/\/gal\b/i.test(raw)){var one=parseSingleRelay(raw);if(one)rows.push(one);}
+ if(!rows.length)rows=parseRelayTable(raw);
+ if(!rows.length){var fb=parseSingleRelay(raw);if(fb)rows.push(fb);}
+ rows.forEach(pushFuel);finishFuelImport(rows.length);
+}
+async function handleImages(inp){
+ var files=inp.files;if(!files||!files.length)return;
+ if(!window.Tesseract){inp.value='';return scanStatus(t('sc.wait'),true);}
+ try{
+  prepFuelImport();var added=0,combined='';
+  for(var i=0;i<files.length;i++){
+   scanStatus(t('sc.busy'));
+   var res=await window.Tesseract.recognize(files[i],'eng',{logger:function(m){if(m.status==='recognizing text')scanStatus(t('sc.ocr',{i:i+1,n:files.length,p:Math.round((m.progress||0)*100)}));}});
+   var text=(res&&res.data&&res.data.text)||'';combined+='--- #'+(i+1)+' ---\n'+text+'\n\n';
+   var one=parseSingleRelay(text);if(one){pushFuel(one);added++;}else{parseRelayTable(text).forEach(function(r){pushFuel(r);added++;});}
+  }
+  $('#fuel-raw').value=combined.trim();finishFuelImport(added);
+ }catch(e){scanStatus(t('sc.err',{e:e.message}),true);}finally{inp.value='';}
+}
+async function handlePdf(inp){
+ var file=inp.files&&inp.files[0];if(!file)return;
+ if(!window.pdfjsLib){inp.value='';return scanStatus(t('sc.wait'),true);}
+ try{
+  scanStatus(t('sc.busy'));
+  var pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,full='';
+  for(var p=1;p<=pdf.numPages;p++){
+   var pg=await pdf.getPage(p),tc=await pg.getTextContent(),items=tc.items.slice();
+   items.sort(function(a,b){var y=b.transform[5]-a.transform[5];return Math.abs(y)>4?y:a.transform[4]-b.transform[4];});
+   var cy=null,ls='';
+   items.forEach(function(it){var y=it.transform[5];if(cy!==null&&Math.abs(cy-y)>4){full+=ls.trim()+'\n';ls='';}cy=y;ls+=it.str+' ';});
+   if(ls.trim())full+=ls.trim()+'\n';
+  }
+  $('#fuel-raw').value=full;importFuelText();
+ }catch(e){scanStatus(t('sc.err',{e:e.message}),true);}finally{inp.value='';}
+}
+
+/* =========================================================
+   Archive: load / save / delete
+   ========================================================= */
+async function loadArchive(){
+ if(!sb||!S.user)return;
+ var r=await sb.from('weekly_reports').select('*').eq('user_id',activeId()).order('week_end_date',{ascending:false});
+ if(r.error){console.error(r.error);return;}
+ S.archive=(r.data||[]).map(function(row){var p=row.full_payload||{};p.db_id=row.id;p.weekEndDate=row.week_end_date;p.monthYear=monthOf(p);return p;});
+ fillArchiveControls();refresh();
+}
+async function archiveWeek(){
+ if(S.ro)return toast(t('t.ro'));
+ if(!sb||!S.user)return toast(t('t.login'));
+ var d=calc();
+ if(!confirm(t('wk.confirmArch',{n:d.weekLabel})))return;
+ d.loads=S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:S.milesMode==='split'?num(l.deadhead):0,gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid};});
+ d.startText=S.startText||'';d.startGeo=S.startGeo||null;
+ Object.keys(d).forEach(function(k){if(k.charAt(0)==='_')delete d[k];});
+ var payload={week_end_date:d.endDate||todayISO(),gross_revenue:d.totalGross,total_miles:d.totalMiles,net_profit:d.netProfit,net_per_mile:d.netRpm,fuel_total:d.fuelCost,expenses_total:d.totalExpenses,full_payload:d};
+ var r=await sb.from('weekly_reports').insert([payload]);
+ if(r.error)return toast(t('t.err',{e:r.error.message}),4000);
+ toast(t('t.archived'));await loadArchive();
+ if(confirm(t('wk.confirmNew'))){resetWeek(true);renderStatic();queueSave();}else go('archive');
+}
+async function deleteArchived(){
+ if(S.ro)return;var w=S.archive[S.archSel];if(!w)return;
+ if(!confirm(t('ar.confirmDel',{n:w.weekLabel||''})))return;
+ var r=await sb.from('weekly_reports').delete().eq('id',w.db_id);
+ if(r.error)return toast(t('t.err',{e:r.error.message}),4000);
+ toast(t('t.deleted'));S.archSel=null;await loadArchive();
+}
+
+/* =========================================================
+   Charts
+   ========================================================= */
+function mkChart(id,cfg){if(!window.Chart)return;var c=document.getElementById(id);if(!c)return;if(CH[id])CH[id].destroy();Chart.defaults.color=cssv('--mut');Chart.defaults.borderColor=cssv('--line');Chart.defaults.font.family=cssv('--fb')||'sans-serif';CH[id]=new Chart(c,cfg);}
+function axes(fmt,y1){var s={x:{grid:{color:cssv('--line')},ticks:{font:{size:10}}},y:{grid:{color:cssv('--line')},ticks:{font:{size:10},callback:fmt||function(v){return v;}}}};if(y1)s.y1={position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},callback:y1}};return s;}
+var $$$=function(v){return'$'+f2(v);};
+function legendOpts(pos){return{position:pos||'top',labels:{boxWidth:10,font:{size:10}}};}
+
+/* =========================================================
+   Archive page
+   ========================================================= */
+function fillArchiveControls(){
+ var sel=$('#archive-select'),ms=$('#month-select');
+ if(!S.archive.length){sel.innerHTML='<option value="">'+t('ar.empty')+'</option>';ms.innerHTML='';$('#arch-body').style.display='none';$('#btn-del-arch').hidden=true;renderSummary('ALL');fillReportFilters();return;}
+ sel.innerHTML='<option value="">'+t('ar.pick')+'</option>'+S.archive.map(function(w,i){return'<option value="'+i+'">'+(w.userRole==='driver'?'👨‍✈️ ':'🚚 ')+esc(w.weekLabel||t('c.week.n',{n:i+1}))+' ('+money(w.totalGross,0)+' / '+money(w.netProfit,0)+')</option>';}).join('');
+ var months={};S.archive.forEach(function(w){months[w.monthYear]=1;});
+ var cur=ms.value;
+ ms.innerHTML='<option value="ALL">'+t('sm.all')+'</option><option value="CUSTOM">'+t('sm.custom')+'</option>'+Object.keys(months).sort().reverse().map(function(m){return'<option value="'+m+'">'+t('sm.month',{m:m})+'</option>';}).join('');
+ ms.value=cur&&ms.querySelector('[value="'+cur+'"]')?cur:'ALL';
+ buildCustomList();fillReportFilters();
+ if(S.archSel!=null&&S.archive[S.archSel]){sel.value=S.archSel;showArchived(S.archSel);}else{sel.value='';$('#arch-body').style.display='none';}
+ renderSummary(ms.value);
+}
+function expTypeLabel(type,val){if(type==='fixed')return t('ex.fixed').replace('($)','')+'$'+f0(val);if(type==='percent')return f1(val)+t('ex.pct').replace('%','');if(type==='cpm')return f1(val)+' ¢/mi';if(type==='dlr_mile')return'$'+f2(val)+'/mi';return'';}
+function showArchived(idx){
+ var w=S.archive[idx];var body=$('#arch-body');
+ if(!w){body.style.display='none';$('#btn-del-arch').hidden=true;S.archSel=null;return;}
+ S.archSel=+idx;body.style.display='flex';$('#btn-del-arch').hidden=S.ro;
+ var isD=w.userRole==='driver',mi=num(w.totalMiles),dh=num(w.deadheadMiles),ld=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,mi-dh),hasDh=w.milesMode==='split'||dh>0;
+ var gross=num(w.totalGross),exp=num(w.totalExpenses),net=num(w.netProfit),rpm=mi>0?gross/mi:num(w.avgRpm),ldRpm=ld>0?gross/ld:rpm,cpm=mi>0?exp/mi:num(w.cpm),nrpm=mi>0?net/mi:num(w.netRpm);
+ $('#arch-kpis').innerHTML=kpi('Gross',money(gross),'g')+
+  (isD?kpi(t('k.earned'),money(w.driverGrossPay||net),'b',t('k.deduct',{a:money(exp,0)})):kpi(t('k.exp'),money(exp),'r'))+
+  kpi(t(isD?'h.net.d':'h.net.o'),money(net),'a')+kpi('Net / mi','$'+f2(nrpm),'a','',true)+
+  kpi(t(isD?'h.m.d':'h.m.o'),f1(w.margin)+'%')+kpi(t('k.miles'),f0(mi),'',hasDh?('DH '+f0(dh)+' ('+f0(mi>0?dh/mi*100:0)+'%)'):(num(w.totalDays)+' d'))+kpi(t('k.rpm'),'$'+f2(rpm));
+ // expenses breakdown
+ var items=[],palette=['#8b7cff','#ff6fae','#4cc9f0','#b36bff','#ff5a7a','#2dd4bf','#5b8cff'];
+ var fuel=num(w.fuelCost);
+ if(!isD&&fuel>0)items.push({name:t('ar.fuelItem'),type:'',sum:fuel,color:'#ffc400'});
+ else if(isD){var os=Math.max(0,gross-num(w.driverGrossPay||net));items.push({name:t('ar.ownerShare'),type:(100-num(w.driverPct||30))+'%',sum:os,color:'#6c7480'});}
+ if(Array.isArray(w.expensesList)&&w.expensesList.length){w.expensesList.forEach(function(e,i){var s=num(e.calculatedSum);if(!s){var v=num(e.val);s=e.type==='fixed'?v:e.type==='percent'?gross*v/100:e.type==='cpm'?mi*v/100:mi*v;}if(s>0)items.push({name:e.name||('#'+(i+1)),type:expTypeLabel(e.type,e.val),sum:s,color:palette[i%palette.length]});});}
+ else if(!isD){[['ar.fixed',w.fixedExpenses,'#8b7cff'],['ar.percent',w.percentExpenses,'#4cc9f0'],['ar.permile',w.cpmExpenses,'#ff6fae']].forEach(function(a){if(num(a[1])>0)items.push({name:t(a[0]),type:'',sum:num(a[1]),color:a[2]});});}
+ items.forEach(function(x){x.cpm=mi>0?x.sum/mi:0;x.pg=gross>0?x.sum/gross*100:0;});
+ items.sort(function(a,b){return b.sum-a.sum;});
+ $('#t-exp tbody').innerHTML=items.map(function(x){return'<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+x.color+';margin-right:6px"></span><b>'+esc(x.name)+'</b></td><td class="muted">'+esc(x.type)+'</td><td class="ar r">'+money(x.sum)+'</td><td class="ar a">$'+f2(x.cpm)+'</td><td class="ar">'+f1(x.pg)+'%</td></tr>';}).join('');
+ // anatomy
+ $('#arch-rpm').textContent='$'+f2(rpm);$('#arch-be').textContent=isD?t('ar.be.d',{c:'$'+f2(nrpm)}):t('ar.be',{c:'$'+f2(cpm)});
+ var base=Math.max(rpm,cpm,0.01),bar='',leg='';
+ items.forEach(function(x){if(x.cpm<=0)return;var wd=Math.max(2,x.cpm/base*100);bar+='<i style="width:'+wd+'%;background:'+x.color+'" title="'+esc(x.name)+'">'+(wd>10?'$'+f2(x.cpm):'')+'</i>';leg+='<span><span class="d" style="background:'+x.color+'"></span>'+esc(x.name)+' <b>$'+f2(x.cpm)+'</b></span>';});
+ if(nrpm>0){var nw=Math.max(4,nrpm/base*100);bar+='<i style="width:'+nw+'%;background:var(--grn)">'+(nw>9?'+$'+f2(nrpm):'')+'</i>';leg+='<span class="g"><span class="d" style="background:var(--grn)"></span>Net <b>$'+f2(nrpm)+'</b></span>';}
+ $('#anat').innerHTML=bar;$('#anat-legend').innerHTML=leg;
+ // loads table + chart data
+ var loads=Array.isArray(w.loads)?w.loads:[],labels=[],rp=[],be=[],rows='';
+ if(!loads.length){rows='<tr><td>'+esc((w.startDate||'')+' - '+(w.endDate||''))+'</td><td>'+t('ar.sumLoad')+'</td><td>'+f0(mi)+'</td><td class="r">'+f0(dh)+'</td><td class="g">'+money(gross)+'</td><td>$'+f2(rpm)+'</td><td class="a">'+money(net)+'</td><td></td></tr>';labels.push(t('ar.sumLoad'));rp.push(+f2(rpm));be.push(+f2(cpm));}
+ else loads.forEach(function(l,k){var lm=num(l.miles)+num(l.deadhead),lg=num(l.gross),lr=lm>0?lg/lm:0,ln=isD?lg*num(w.driverPct||30)/100:lg-lm*cpm;
+  rows+='<tr><td>'+esc((l.pickup||'')+' - '+(l.delivery||''))+'</td><td><b>'+esc(l.route||('#'+(k+1)))+'</b></td><td>'+f0(lm)+'</td><td class="r">'+f0(l.deadhead)+'</td><td class="g">'+money(lg)+'</td><td>$'+f2(lr)+'</td><td style="color:'+(ln>=0?'var(--acc)':'var(--red)')+'">'+money(ln)+'</td><td>'+esc(l.broker||'')+(l.unpaid?' ⏳':'')+'</td></tr>';
+  labels.push(l.route?l.route.slice(0,18):('#'+(k+1)));rp.push(+f2(lr));be.push(+f2(cpm));});
+ $('#t-loads tbody').innerHTML=rows;
+ // charts
+ $('#arch-dh').style.display=hasDh?'grid':'none';
+ if(hasDh){
+  mkChart('c-dhpie',{type:'doughnut',data:{labels:[t('ld.sumL'),t('ld.sumD')],datasets:[{data:[Math.round(ld),Math.round(dh)],backgroundColor:['#3ddc97','#ff5a5f'],borderColor:cssv('--card2'),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:legendOpts('bottom')}}});
+  mkChart('c-dhrpm',{type:'bar',data:{labels:['Loaded','All-miles','Net'],datasets:[{data:[+f2(ldRpm),+f2(rpm),+f2(nrpm)],backgroundColor:['#5cc8ff','#3ddc97','#ffc400'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:axes($$$)}});
+ }
+ mkChart('c-cpm',{type:'bar',data:{labels:items.map(function(x){return x.name;}),datasets:[{data:items.map(function(x){return+f2(x.cpm);}),backgroundColor:items.map(function(x){return x.color;}),borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:cssv('--line')},ticks:{callback:$$$,font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+ mkChart('c-loadsrpm',{type:'bar',data:{labels:labels,datasets:[{label:'RPM',data:rp,backgroundColor:'#3ddc97',borderRadius:6,order:2},{label:'CPM',data:be,type:'line',borderColor:'#ff5a5f',borderWidth:2,borderDash:[5,5],pointRadius:3,fill:false,order:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legendOpts()},scales:axes($$$)}});
+ var sl=items.map(function(x){return x.name;}),sd=items.map(function(x){return+f2(x.sum);}),sc=items.map(function(x){return x.color;});
+ if(net>0){sl.push(t('ar.netItem'));sd.push(+f2(net));sc.push('#3ddc97');}
+ mkChart('c-split',{type:'doughnut',data:{labels:sl,datasets:[{data:sd,backgroundColor:sc,borderColor:cssv('--card2'),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:legendOpts('bottom')}}});
+ renderMap(w);
+}
+
+/* =========================================================
+   US route map
+   ========================================================= */
+var TOPO=null;
+function getTopo(){
+ if(TOPO)return TOPO;
+ TOPO=fetchJson('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json',15000).catch(function(e){TOPO=null;throw e;});
+ return TOPO;
+}
+function loadSide(l,side){return side==='from'?(l.fromText||(l.route||'').split('->')[0]||'').trim():(l.toText||(l.route||'').split('->')[1]||'').trim();}
+async function geoOfLoad(l,side){var g=l[side+'Geo'];if(g&&g.lat!=null)return g;var txt=loadSide(l,side);if(!txt)return null;return await resolvePlace(txt);}
+function arcPath(p,q,k){var mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2,dx=q[0]-p[0],dy=q[1]-p[1],len=Math.hypot(dx,dy)||1,off=Math.min(70,len*0.18)*k;return'M'+p[0].toFixed(1)+','+p[1].toFixed(1)+' Q'+(mx-dy/len*off).toFixed(1)+','+(my+dx/len*off).toFixed(1)+' '+q[0].toFixed(1)+','+q[1].toFixed(1);}
+async function renderMap(w){
+ var box=$('#map-box'),info=$('#map-info'),token=++mapToken;
+ box.innerHTML='<div class="muted pad">'+t('map.loading')+'</div>';info.innerHTML='';
+ var loads=(Array.isArray(w.loads)?w.loads:[]).slice().sort(function(a,b){return String(a.pickup||'').localeCompare(String(b.pickup||''));});
+ var segs=[],stops=[],last=null,missing=0;
+ var st0=(w.startGeo&&w.startGeo.lat!=null&&w.startGeo.lon!=null)?w.startGeo:null;
+ function addStop(g){var s=stops[stops.length-1];if(!s||hav(s.g,g)>5)stops.push({g:g});}
+ for(var i=0;i<loads.length;i++){
+  var l=loads[i],A=await geoOfLoad(l,'from'),B=await geoOfLoad(l,'to');
+  if(token!==mapToken)return;
+  if(!A||!B){if(!A&&loadSide(l,'from'))missing++;if(!B&&loadSide(l,'to'))missing++;continue;}
+  if(!last&&st0&&hav(st0,A)>25){addStop(st0);segs.push({t:'dh',a:st0,b:A});}
+  else if(last&&hav(last,A)>25)segs.push({t:'dh',a:last,b:A});
+  addStop(A);segs.push({t:'ld',a:A,b:B});addStop(B);last=B;
+ }
+ if(!segs.length){box.innerHTML='<div class="muted pad">'+t('map.none')+'</div>';if(missing)info.innerHTML='<div class="cs">'+t('map.missing',{n:missing})+'</div>';return;}
+ var topo;
+ try{if(!window.d3||!window.topojson)throw new Error('lib');topo=await getTopo();}catch(e){if(token===mapToken)box.innerHTML='<div class="muted pad">'+t('map.fail')+'</div>';return;}
+ if(token!==mapToken)return;
+ var fc=topojson.feature(topo,topo.objects.states),W=960,H=600;
+ var proj=d3.geoAlbersUsa().fitExtent([[10,10],[W-10,H-10]],fc),path=d3.geoPath(proj);
+ var stopSt={},crossSt={};
+ stops.forEach(function(s){if(s.g.st)stopSt[s.g.st]=1;});
+ var hit=null;
+ segs.forEach(function(s){if(s.t!=='ld')return;var it=d3.geoInterpolate([s.a.lon,s.a.lat],[s.b.lon,s.b.lat]);
+  for(var k=0;k<=30;k++){var pt=it(k/30),f=null;
+   if(hit&&d3.geoContains(hit,pt))f=hit;else{for(var q=0;q<fc.features.length;q++){if(d3.geoContains(fc.features[q],pt)){f=fc.features[q];break;}}}
+   if(f){hit=f;var code=NAME2ST[String(f.properties.name).toLowerCase()];if(code)crossSt[code]=1;}}});
+ var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="route map">';
+ fc.features.forEach(function(f){var code=NAME2ST[String(f.properties.name).toLowerCase()],cls='st'+(stopSt[code]?' s':(crossSt[code]?' x':''));svg+='<path class="'+cls+'" d="'+(path(f)||'')+'"/>';});
+ var d=0,paths='',skipped=0;
+ segs.forEach(function(s,i){var p=proj([s.a.lon,s.a.lat]),q=proj([s.b.lon,s.b.lat]);if(!p||!q){skipped++;return;}
+  paths+='<path class="'+(s.t==='ld'?'seg-ld':'seg-dh')+'"'+(s.t==='ld'?' pathLength="1"':'')+' style="--d:'+(d).toFixed(2)+'s" d="'+arcPath(p,q,i%2?-1:1)+'"/>';d+=0.7;});
+ svg+=paths;
+ stops.forEach(function(s,i){var p=proj([s.g.lon,s.g.lat]);if(!p)return;var nm=s.g.city?s.g.city.slice(0,14):s.g.st;
+  svg+='<g class="mk" style="--d:'+(Math.min(i*0.7,d)).toFixed(2)+'s"><circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="16"/><text class="mn" x="'+p[0].toFixed(1)+'" y="'+(p[1]+6.5).toFixed(1)+'">'+(i+1)+'</text><text class="ml" x="'+(p[0]+22).toFixed(1)+'" y="'+(p[1]+9).toFixed(1)+'">'+esc(nm)+'</text></g>';});
+ svg+='</svg>';
+ box.innerHTML=svg;box._svg=svg;
+ var ldMi=num(w.loadedMiles!==undefined?w.loadedMiles:w.totalMiles),dhMi=num(w.deadheadMiles);
+ var cs=Object.keys(crossSt).concat(Object.keys(stopSt).filter(function(x){return!crossSt[x];})).sort();
+ info.innerHTML='<div class="row wrap" style="margin-bottom:8px"><span class="pill"><span class="g">━</span> '+t('map.loaded')+'</span><span class="pill"><span class="r">┅</span> '+t('map.dh')+'</span><span class="pill">'+t('map.stops')+': <b>'+stops.length+'</b></span><span class="pill">'+t('map.states')+': <b>'+cs.length+'</b></span><span class="pill">'+f0(ldMi)+' mi'+(dhMi>0?' + '+f0(dhMi)+' DH':'')+'</span></div>'+
+  '<div class="cs" style="margin-bottom:6px">'+t('map.crossed')+'</div><div class="row wrap">'+cs.map(function(s){return'<span class="pill'+(stopSt[s]?' a':'')+'">'+s+'</span>';}).join('')+'</div>'+((missing+skipped)?'<div class="cs" style="margin-top:8px">'+t('map.missing',{n:missing+skipped})+'</div>':'');
+}
+
+/* =========================================================
+   Summary (monthly / all time / custom)
+   ========================================================= */
+function buildCustomList(){
+ $('#custom-list').innerHTML=S.archive.map(function(w,i){return'<label class="rc" style="display:flex;align-items:center;gap:10px;margin:0;padding:10px;cursor:pointer;color:var(--tx);font-size:13px"><input type="checkbox" class="chk-w" value="'+i+'" checked><div style="min-width:0"><b>'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</b><div class="cs">Gross <span class="g">'+money(w.totalGross,0)+'</span> · Net <span class="a">'+money(w.netProfit,0)+'</span></div></div></label>';}).join('');
+}
+function renderSummary(val){
+ val=val||$('#month-select').value||'ALL';
+ var all=val==='ALL',custom=val==='CUSTOM',list=[];
+ $('#custom-panel').style.display=custom?'block':'none';
+ if(custom){$$('.chk-w').forEach(function(c){if(c.checked&&S.archive[+c.value])list.push(S.archive[+c.value]);});$('#custom-count').textContent=t('sm.sel',{a:list.length,b:S.archive.length});}
+ else S.archive.forEach(function(w){if(all||w.monthYear===val)list.push(w);});
+ var G=0,E=0,N=0,M=0,DH=0,D=0,anyDh=false,unpaid=0,unpaidN=0;
+ var lab=[],dG=[],dE=[],dN=[],dM=[],dR=[],dC=[],dNR=[],dL=[],dD=[],dP=[],sF=0,sX=0,sP=0,sC=0;
+ var hs={c:0,g:0,m:0},hm={c:0,g:0,m:0},hl={c:0,g:0,m:0},lanes={};
+ var tb=$('#t-mweeks tbody');tb.innerHTML='';
+ list.forEach(function(w,i){
+  var wm=num(w.totalMiles),wd=num(w.deadheadMiles),wl=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd);
+  if(w.milesMode==='split'||wd>0)anyDh=true;
+  G+=num(w.totalGross);E+=num(w.totalExpenses);N+=num(w.netProfit);M+=wm;DH+=wd;D+=num(w.totalDays);
+  sF+=num(w.fuelCost);sX+=num(w.fixedExpenses);sP+=num(w.percentExpenses);sC+=num(w.cpmExpenses);
+  lab.push((w.weekLabel&&w.weekLabel.indexOf('(')>-1)?w.weekLabel.split('(')[0].trim():('W'+(i+1)));
+  dG.push(num(w.totalGross));dE.push(num(w.totalExpenses));dN.push(num(w.netProfit));dM.push(num(w.margin));dR.push(num(w.avgRpm));dC.push(num(w.cpm));dNR.push(num(w.netRpm));dL.push(wl);dD.push(wd);dP.push(wm>0?+f1(wd/wm*100):0);
+  var loads=Array.isArray(w.loads)?w.loads:[];
+  if(loads.length){loads.forEach(function(l){var mi=num(l.miles)+num(l.deadhead),gr=num(l.gross),b=mi<600?hs:(mi<=1200?hm:hl);b.c++;b.g+=gr;b.m+=mi;
+   if(l.unpaid&&gr>0){unpaid+=gr;unpaidN++;}
+   var sa=stateCodes(l.route),key=sa.length>=2?sa[0]+' ➔ '+sa[sa.length-1]:(sa.length===1?'● '+sa[0]:(l.route||'').trim().slice(0,22));
+   if(key&&mi>0){if(!lanes[key])lanes[key]={c:0,m:0,g:0};lanes[key].c++;lanes[key].m+=mi;lanes[key].g+=gr;}});}
+  else{var b2=wm<600?hs:(wm<=1200?hm:hl);b2.c++;b2.g+=num(w.totalGross);b2.m+=wm;}
+  tb.innerHTML+='<tr><td><b>'+esc(w.weekLabel||'')+'</b></td><td>'+f0(wm)+'</td><td class="r">'+f0(wd)+'</td><td class="g">'+money(w.totalGross)+'</td><td class="r">'+money(w.totalExpenses)+'</td><td class="a"><b>'+money(w.netProfit)+'</b></td><td>'+f1(w.margin)+'%</td><td>$'+f2(w.netRpm)+'</td></tr>';
+ });
+ var ll=Object.keys(lanes).map(function(k){return{k:k,c:lanes[k].c,m:lanes[k].m,g:lanes[k].g,r:lanes[k].m>0?lanes[k].g/lanes[k].m:0};}).sort(function(a,b){return b.r-a.r;});
+ $('#t-lanes tbody').innerHTML=ll.length?ll.map(function(x){return'<tr><td><b>'+esc(x.k)+'</b></td><td>'+x.c+'</td><td class="ar">'+f0(x.m)+' mi</td><td class="ar a">'+money(x.g,0)+'</td><td class="ar g"><b>$'+f2(x.r)+'</b></td></tr>';}).join(''):'<tr><td colspan="5" class="muted" style="text-align:center">'+t('sm.hint')+'</td></tr>';
+ // goal
+ window._monthNet=N;updateGoal();
+ // utilization
+ var multi=all||custom,calDays=multi?list.length*7:30;
+ if(!multi&&val.indexOf('-')>-1){var pp=val.split('-');calDays=new Date(+pp[0],+pp[1],0).getDate();}
+ $('#ut-days').textContent=t('sm.days',{n:D});$('#ut-rate').textContent=multi?t('sm.weeksN',{n:list.length}):t('sm.load',{p:Math.round(D/Math.max(1,calDays)*100)});
+ $('#ut-day').textContent=t('sm.perday',{a:money(D>0?N/D:0)});$('#ut-pd').textContent=t('sm.pd',{r:num(S.perDiem)||80,a:money(D*(num(S.perDiem)||80),0)});
+ // kpis
+ var mm=G>0?N/G*100:0;
+ $('#m-kpis').innerHTML=kpi(all?t('sm.gAll'):(custom?t('sm.gSel'):t('sm.gMonth')),money(G),'g')+kpi(t('sm.expD'),money(E),'r')+kpi(t('sm.net'),money(N),'a')+kpi(t('sm.nrpm'),'$'+f2(M>0?N/M:0),'a','',true)+kpi(t('sm.margin'),f1(mm)+'%')+kpi(t('sm.miles'),f0(M),'',anyDh?('DH '+f0(DH)+' ('+f0(M>0?DH/M*100:0)+'%)'):'')+kpi(t('sm.avgRpm'),'$'+f2(M>0?G/M:0))+(unpaid>0?kpi(t('k.unpaid'),money(unpaid,0),'a',t('k.nUnpaid',{n:unpaidN})):'');
+ // charts
+ $('#m-dh-box').style.display=anyDh?'block':'none';
+ if(anyDh)mkChart('c-mdh',{type:'bar',data:{labels:lab,datasets:[{label:'Loaded',data:dL,backgroundColor:'#3ddc97',borderRadius:4},{label:'Deadhead',data:dD,backgroundColor:'#ff5a5f',borderRadius:4},{label:'DH %',data:dP,type:'line',borderColor:'#ffc400',borderWidth:2,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legendOpts()},scales:Object.assign(axes(null,function(v){return v+'%';}),{x:{stacked:true,grid:{color:cssv('--line')},ticks:{font:{size:10}}},y:{stacked:true,grid:{color:cssv('--line')},ticks:{font:{size:10}}}})}});
+ mkChart('c-dyn',{type:'bar',data:{labels:lab,datasets:[{label:'Gross',data:dG,backgroundColor:'#3ddc97',borderRadius:4},{label:t('k.exp'),data:dE,backgroundColor:'#ff5a5f',borderRadius:4},{label:'Net',data:dN,backgroundColor:'#ffc400',borderRadius:4},{label:'%',data:dM,type:'line',borderColor:'#5cc8ff',borderWidth:2,tension:.3,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legendOpts()},scales:axes(function(v){return'$'+f0(v);},function(v){return v+'%';})}});
+ var sd=[sF,sX,sP,sC];if(sd.reduce(function(a,b){return a+b;},0)===0)sd=[1,1,1,1];
+ mkChart('c-struct',{type:'doughnut',data:{labels:[t('k.fuel'),t('ar.fixed'),t('ar.percent'),t('ar.permile')],datasets:[{data:sd,backgroundColor:['#ffc400','#8b7cff','#4cc9f0','#ff6fae'],borderColor:cssv('--card2'),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:legendOpts('bottom')}}});
+ mkChart('c-corr',{type:'line',data:{labels:lab,datasets:[{label:'Gross RPM',data:dR,borderColor:'#3ddc97',tension:.3},{label:'Net RPM',data:dNR,borderColor:'#ffc400',backgroundColor:'rgba(255,196,0,.15)',tension:.3,fill:true},{label:'CPM',data:dC,borderColor:'#ff5a5f',borderDash:[4,4],tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legendOpts()},scales:axes($$$)}});
+ mkChart('c-hauls',{type:'bar',data:{labels:['< 600','600-1200','> 1200'],datasets:[{label:t('th.trips'),data:[hs.c,hm.c,hl.c],backgroundColor:'#5cc8ff',borderRadius:4,yAxisID:'y'},{label:'RPM',data:[hs.m?hs.g/hs.m:0,hm.m?hm.g/hm.m:0,hl.m?hl.g/hl.m:0],backgroundColor:'#3ddc97',borderRadius:4,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legendOpts()},scales:axes(null,$$$)}});
+ var top=ll.slice(0,7);
+ mkChart('c-lanes',{type:'bar',data:{labels:top.map(function(x){return x.k;}),datasets:[{label:'RPM',data:top.map(function(x){return+f2(x.r);}),backgroundColor:'#3ddc97',borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:cssv('--line')},ticks:{callback:$$$,font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+}
+function updateGoal(){
+ var g=num($('#goal-in').value)||10000,n=window._monthNet||0,p=Math.round(n/g*100);
+ $('#goal-amt').textContent=money(n,0)+' / '+money(g,0);$('#goal-pct').textContent=p+'%';$('#goal-bar').style.width=Math.min(100,Math.max(0,p))+'%';
+}
+
+/* =========================================================
+   Reports
+   ========================================================= */
+function fillReportFilters(){
+ var ms=$('#rp-month'),ws=$('#rp-week'),months={};
+ ws.innerHTML=S.archive.map(function(w,i){months[w.monthYear]=1;return'<option value="'+i+'">'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</option>';}).join('');
+ ms.innerHTML=Object.keys(months).sort().reverse().map(function(m){return'<option value="'+m+'">'+m+'</option>';}).join('');
+}
+function reportList(){
+ var mode=$('#rp-mode').value,list=[],sub=t('rp.pAll');
+ if(mode==='all')list=S.archive.slice();
+ else if(mode==='month'){var m=$('#rp-month').value;sub=t('rp.pMonth',{m:m});list=S.archive.filter(function(w){return w.monthYear===m;});}
+ else if(mode==='week'){var i=$('#rp-week').value;if(i!==''&&S.archive[i]){list=[S.archive[i]];sub=S.archive[i].weekLabel||'';}}
+ else{var a=$('#rp-from').value,b=$('#rp-to').value;sub=t('rp.pRange',{a:a||t('rp.start'),b:b||t('rp.today')});list=S.archive.filter(function(w){var r=w.weekEndDate||w.endDate||w.startDate||'';return(!a||r>=a)&&(!b||r<=b);});}
+ return{list:list,sub:sub};
+}
+function renderReport(){
+ var rl=reportList(),list=rl.list,rate=num(S.perDiem)||80;
+ $('#rp-sub').textContent=t('rp.period',{p:rl.sub});$('#rp-email').textContent=S.user?S.user.email:'';$('#rp-date').textContent=t('rp.gen',{d:todayISO()});
+ var G=0,E=0,N=0,M=0,LD=0,DH=0,D=0,F=0,st={};
+ var tw=$('#rp-t-weeks tbody'),tl=$('#rp-t-loads tbody');tw.innerHTML='';tl.innerHTML='';
+ list.forEach(function(w,i){
+  var wm=num(w.totalMiles),wd=num(w.deadheadMiles),wl=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd);
+  G+=num(w.totalGross);E+=num(w.totalExpenses);N+=num(w.netProfit);M+=wm;LD+=wl;DH+=wd;D+=num(w.totalDays);F+=num(w.fuelCost);
+  (w.fuelLogs||[]).forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);if(g>0||c>0){var sc=stateCodes(f.loc),k=sc.length?sc[sc.length-1]:'OTHER';if(!st[k])st[k]={g:0,c:0};st[k].g+=g;st[k].c+=c;}});
+  tw.innerHTML+='<tr><td><b>'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</b></td><td>'+esc((w.startDate||'')+' — '+(w.endDate||w.weekEndDate||''))+'</td><td>'+f0(wm)+'</td><td>'+num(w.totalDays)+'</td><td class="g">'+money(w.totalGross)+'</td><td class="r">'+money(w.totalExpenses)+'</td><td class="a"><b>'+money(w.netProfit)+'</b></td><td>$'+f2(wm>0?num(w.netProfit)/wm:0)+'</td></tr>';
+  (w.loads||[]).forEach(function(l){var lm=num(l.miles),ld=num(l.deadhead),lg=num(l.gross);tl.innerHTML+='<tr><td>'+esc((w.weekLabel||'').split('(')[0])+'</td><td>'+esc((l.pickup||'')+' — '+(l.delivery||''))+'</td><td><b>'+esc(l.route||'')+'</b></td><td>'+f0(lm)+'</td><td>'+f0(ld)+'</td><td class="g">'+money(lg)+'</td><td>$'+f2(lm+ld>0?lg/(lm+ld):0)+'</td><td>'+esc(l.broker||'')+(l.unpaid?' ⏳':'')+'</td></tr>';});
+ });
+ var ks=Object.keys(st).sort();
+ $('#rp-ifta').innerHTML=ks.length?ks.map(function(k){return'<span class="pill"><span class="a">'+esc(k)+'</span> '+f1(st[k].g)+' gal ('+money(st[k].c)+')</span>';}).join(''):'<span class="cs">'+t('rp.noIfta')+'</span>';
+ $('#rp-kpis').innerHTML=kpi(t('rp.gP'),money(G),'g')+kpi(t('sm.expD'),money(E),'r')+kpi(t('rp.net'),money(N),'a')+kpi('Net RPM','$'+f2(M>0?N/M:0),'a','',true)+kpi(t('sm.margin'),f1(G>0?N/G*100:0)+'%')+kpi(t('rp.allMiles'),f0(M))+kpi(t('k.rpm'),'$'+f2(M>0?G/M:0),'','CPM $'+f2(M>0?E/M:0));
+ $('#rp-pd').textContent=money(D*rate);$('#rp-pd-d').textContent=t('rp.pdDays',{n:D,r:rate});$('#rp-pd-ded').textContent=t('rp.ded',{a:money(D*rate*0.8)});
+ $('#rp-mi').textContent=t('rp.milesVal',{m:f0(M),n:list.length});$('#rp-fuel').textContent=t('rp.fuelVal',{a:money(F)});
+ $('#rp-dh').textContent=t('rp.dhNote',{a:f0(LD),b:f0(DH),p:f1(M>0?DH/M*100:0)});
+}
+function csvExport(){
+ var rl=reportList(),rows=[['Week','Pickup','Delivery','Route','Loaded mi','Deadhead mi','Gross','Broker','Awaiting payment']];
+ rl.list.forEach(function(w){(w.loads||[]).forEach(function(l){rows.push([w.weekLabel||'',l.pickup||'',l.delivery||'',l.route||'',num(l.miles),num(l.deadhead),num(l.gross),l.broker||'',l.unpaid?'yes':'']);});});
+ if(rows.length<2)return toast(t('t.nodata'));
+ var csv=rows.map(function(r){return r.map(function(c){var s=String(c);return/[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',');}).join('\n');
+ download('hotshot-loads-'+todayISO()+'.csv','\uFEFF'+csv,'text/csv;charset=utf-8');
+}
+function download(name,text,type){var b=new Blob([text],{type:type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove();},800);}
+
+/* =========================================================
+   Navigation + actions
+   ========================================================= */
+function go(p){
+ curPage=p;
+ $$('.page').forEach(function(x){if(x.id&&x.id.indexOf('page-')===0)x.classList.toggle('active',x.id==='page-'+p);});
+ $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===p);});
+ window.scrollTo(0,0);
+ if(p==='tools'){syncEval();runEval();runWeight();}
+ if(p==='archive'&&S.archSel!=null)showArchived(S.archSel);
+ if(p==='summary')renderSummary();
+ if(p==='reports')renderReport();
+}
+function guardWrite(){if(S.ro){toast(t('t.ro'));return false;}return true;}
+function changed(){refresh();queueSave();}
+function findItem(card){var arr=S[card.dataset.list];return arr&&arr.find(function(x){return x.id===card.dataset.id;});}
+
+var ACT={
+ lang:function(){LANG=LANG==='ru'?'en':'ru';SafeStorage.set('hs_lang',LANG);rerender();},
+ theme:function(){var l=!document.body.classList.contains('light');SafeStorage.set('hs_theme',l?'light':'dark');applyTheme();go(curPage);},
+ menu:function(){$('#menu-email').textContent=S.user?S.user.email:'';$('#app-ver').textContent='Hotshot Fleet Hub '+APP_VER+(DB_REF?' · '+t('auth.db',{r:DB_REF}):'');$('#menu-bg').hidden=false;},
+ closeMenu:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#menu-bg').hidden=true;},
+ page:function(b){go(b.dataset.v);},
+ role:function(b){if(!guardWrite())return;var r=b.dataset.v;if(r===S.role)return;S.role=r;
+  var names=ownerNameSet();if(r==='driver'&&S.exps.length===4&&S.exps.some(function(e){return names.indexOf(e.name)>-1;}))S.exps=defaultExps('driver');
+  if(r==='owner'&&S.exps.length===2&&S.exps.every(function(e){return num(e.val)===0;}))S.exps=defaultExps('owner');
+  renderStatic();queueSave();},
+ milesMode:async function(b){if(!guardWrite())return;if(b.dataset.v===S.milesMode)return;S.milesMode=b.dataset.v;renderStatic();queueSave();
+  if(S.milesCalc==='auto'){await calcAllMiles(false);queueSave();}},
+ milesCalc:async function(b){if(!guardWrite())return;var v=b.dataset.v==='manual'?'manual':'auto';if(v===S.milesCalc)return;
+  if(v==='auto'&&S.loads.some(function(l){return num(l.miles)>0||num(l.deadhead)>0;})&&!confirm(t('mc.confirm')))return;
+  S.milesCalc=v;renderStatic();queueSave();
+  if(v==='auto'){toast(t('mc.done'));await calcAllMiles(true);queueSave();}else toast(t('mc.manualOn'));},
+ evCalc:async function(b){EV.mode=b.dataset.v==='manual'?'manual':'auto';SafeStorage.set('hs_evcalc',EV.mode);evSyncUI();
+  if(EV.mode==='auto'){var ks=['pos','from','to'];for(var k=0;k<ks.length;k++){var inp=$('#ev-'+ks[k]);if(inp&&inp.value.trim()&&!EV[ks[k]].geo)await resolveInto(inp,EV[ks[k]],'text','geo');}await evAuto();evSyncUI();}
+  runEval();},
+ fuelMode:function(b){if(!guardWrite())return;S.fuelMode=b.dataset.v;renderStatic();queueSave();},
+ maint:function(b){if(!guardWrite())return;S.maintOn=b.dataset.v==='1';renderStatic();queueSave();},
+ addLoad:function(){if(!guardWrite())return;var prev=S.loads[S.loads.length-1];S.loads.push(newLoad(prev?{pickup:prev.delivery||todayISO(),delivery:prev.delivery||todayISO()}:{}));renderLoads();changed();var c=$$('[data-list="loads"]').pop();if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},
+ addFuel:function(){if(!guardWrite())return;S.fuel.push(newFuel());renderFuel();changed();},
+ addExp:function(){if(!guardWrite())return;S.exps.push(newExp());renderExps();changed();},
+ del:async function(b){if(!guardWrite())return;var c=b.closest('[data-list]');if(!c)return;var key=c.dataset.list;S[key]=S[key].filter(function(x){return x.id!==c.dataset.id;});if(key==='loads'&&!S.loads.length)S.loads=[newLoad()];if(key==='loads')renderLoads();else if(key==='fuel')renderFuel();else renderExps();changed();
+  if(key==='loads'&&S.milesCalc==='auto'){await calcAllMiles(false);queueSave();}},
+ recalcMiles:async function(b){if(!guardWrite())return;var c=b.closest('[data-list]'),l=findItem(c);if(!l)return;
+  b.disabled=true;
+  try{
+   var fi=c.querySelector('[data-place="from"]'),ti=c.querySelector('[data-place="to"]');
+   if(fi&&fi.value.trim()&&!l.fromGeo)await resolveInto(fi,l,'fromText','fromGeo');
+   if(ti&&ti.value.trim()&&!l.toGeo)await resolveInto(ti,l,'toText','toGeo');
+   l.route=[l.fromText,l.toText].filter(Boolean).join(' -> ');
+   if(S.loads.indexOf(l)===0&&S.startText&&!S.startGeo){var sg=await resolvePlace(S.startText);if(sg){S.startGeo=sg;S.startText=sg.label;}}
+   if(!canLd(l)&&!canDh(S.loads.indexOf(l))){toast(t('mc.need'),3200);return;}
+   await calcLoadMiles(l,true);
+  }finally{b.disabled=false;}
+  changed();},
+ archiveWeek:archiveWeek,
+ newWeek:function(){if(!guardWrite())return;if(!confirm(t('wk.confirmNew')))return;resetWeek(true);renderStatic();queueSave();},
+ saveTpl:function(){if(!guardWrite())return;S.template={userRole:S.role,driverPct:num(S.driverPct)||30,mpg:S.mpg,dieselPrice:S.diesel,milesMode:S.milesMode,milesCalc:S.milesCalc,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,taxPct:S.taxPct,expenses:S.exps.map(function(e){return{name:e.name,type:e.type,val:num(e.val)};})};SafeStorage.set(tplKey(),JSON.stringify(S.template));queueSave();toast(t('ex.saved'),3200);},
+ resetMaint:function(){if(!guardWrite())return;if(!confirm(t('mt.confirm')))return;var a=0;S.archive.forEach(function(w){a+=num(w.totalMiles);});S.maintBase=a+LAST.totalMiles;changed();},
+ clearRaw:function(){$('#fuel-raw').value='';},
+ parseRaw:function(){if(!guardWrite())return;importFuelText();},
+ delArchive:deleteArchived,
+ replay:function(){var box=$('#map-box');if(box._svg){box.innerHTML='';requestAnimationFrame(function(){box.innerHTML=box._svg;});}},
+ selAll:function(){$$('.chk-w').forEach(function(c){c.checked=true;});renderSummary('CUSTOM');},
+ selNone:function(){$$('.chk-w').forEach(function(c){c.checked=false;});renderSummary('CUSTOM');},
+ print:function(){window.print();},
+ csv:csvExport,
+ backup:function(){download('hotshot-backup-'+todayISO()+'.json',JSON.stringify({exportedAt:new Date().toISOString(),draft:draftObj(),archive:S.archive},null,1),'application/json');},
+ logout:async function(){$('#menu-bg').hidden=true;if(sb)await sb.auth.signOut();handleSession(null);},
+ login:authLogin,signup:authSignup,forgot:authForgot,
+ evBook:function(){
+  if(!guardWrite())return;
+  var dh=num($('#ev-dh').value),days=Math.max(1,num($('#ev-days').value)||1),td=todayISO();
+  if(dh>0&&S.milesMode!=='split')S.milesMode='split';
+  var o={pickup:td,delivery:addDaysISO(td,days-1),miles:num($('#ev-loaded').value),deadhead:dh,gross:num($('#ev-gross').value),fromText:EV.from.geo?EV.from.geo.label:EV.from.text,toText:EV.to.geo?EV.to.geo.label:EV.to.text,fromGeo:EV.from.geo,toGeo:EV.to.geo};
+  o.route=[o.fromText,o.toText].filter(Boolean).join(' -> ');
+  if(S.loads.length===1&&!num(S.loads[0].gross)&&!num(S.loads[0].miles)&&!S.loads[0].fromText)S.loads=[];
+  var nl=newLoad(o);S.loads.push(nl);
+  if(S.milesCalc==='auto'&&S.loads.length===1&&!S.startGeo&&EV.pos.geo){S.startGeo=EV.pos.geo;S.startText=EV.pos.geo.label||'';}
+  renderStatic();queueSave();toast(t('tl.booked'));go('week');
+  if(S.milesCalc==='auto')calcLoadMiles(nl).then(function(){refresh();queueSave();});
+ }
+};
+document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b)return;var fn=ACT[b.dataset.act];if(fn)fn(b,e);});
+
+document.addEventListener('input',function(e){
+ var el=e.target;
+ if(el.dataset.set){var k=el.dataset.set;S[k]=(k==='label')?el.value:num(el.value);if(k==='perDiem'){renderReport();}changed();return;}
+ if(el.dataset.evplace){if(/^\d{5}$/.test(el.value.trim()))evPlace(el);return;}
+ if(el.dataset.wplace){S.startText=el.value;if(/^\d{5}$/.test(el.value.trim()))resolveInto(el,S,'startText','startGeo',afterStart);return;}
+ if(el.closest('#page-tools')){if(el.id==='ev-target')syncEval._t=1;if(el.id==='wt-sel'||el.id.indexOf('wt-')===0)runWeight();else runEval();return;}
+ if(el.id==='goal-in'){updateGoal();return;}
+ var card=el.closest('[data-list]');if(!card)return;
+ var it=findItem(card);if(!it)return;
+ if(el.dataset.place){var side=el.dataset.place;it[side+'Text']=el.value;if(/^\d{5}$/.test(el.value.trim())){resolveInto(el,it,side+'Text',side+'Geo',function(){afterLoadPlace(it);});}return;}
+ var k2=el.dataset.k;if(!k2)return;
+ if(el.readOnly)return;
+ if(el.type==='checkbox')it[k2]=el.checked;else if(el.type==='number')it[k2]=el.value===''?0:num(el.value);else it[k2]=el.value;
+ changed();
+});
+document.addEventListener('change',function(e){
+ var el=e.target;
+ if(el.dataset.file==='img'){handleImages(el);return;}
+ if(el.dataset.file==='pdf'){handlePdf(el);return;}
+ if(el.dataset.evplace){evPlace(el);return;}
+ if(el.dataset.wplace){resolveInto(el,S,'startText','startGeo',afterStart);return;}
+ if(el.id==='archive-select'){showArchived(el.value);return;}
+ if(el.id==='month-select'){renderSummary(el.value);return;}
+ if(el.id==='admin-select'){switchAdmin(el.value);return;}
+ if(el.id==='rp-mode'){var m=el.value;$('#rp-w-month').hidden=m!=='month';$('#rp-w-week').hidden=m!=='week';$('#rp-w-from').hidden=m!=='range';$('#rp-w-to').hidden=m!=='range';renderReport();return;}
+ if(el.id==='rp-month'||el.id==='rp-week'||el.id==='rp-from'||el.id==='rp-to'){renderReport();return;}
+ if(el.classList&&el.classList.contains('chk-w')){renderSummary('CUSTOM');return;}
+ if(el.dataset.place){var card=el.closest('[data-list]'),it=card&&findItem(card);if(it){var side=el.dataset.place;resolveInto(el,it,side+'Text',side+'Geo',function(){afterLoadPlace(it);});}return;}
+ if(el.closest&&el.closest('[data-list]')&&el.tagName==='SELECT'){var c2=el.closest('[data-list]'),it2=findItem(c2);if(it2){it2[el.dataset.k]=el.value;changed();}}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset&&(e.target.dataset.place||e.target.dataset.evplace||e.target.dataset.wplace)){e.preventDefault();e.target.blur();}});
+
+/* =========================================================
+   Auth
+   ========================================================= */
+function authMsg(kind,msg){var er=$('#auth-err'),ok=$('#auth-info');er.className='msg';ok.className='msg';er.textContent='';ok.textContent='';if(kind==='err'){er.textContent=msg;er.className='msg err';}else if(kind==='ok'){ok.textContent=msg;ok.className='msg ok';}}
+function noSb(){authMsg('err',t(CFG_OK?'auth.nosdk':'auth.cfg'));}
+function siteUrl(){return location.href.split('#')[0].split('?')[0];}
+async function authLogin(){
+ if(!sb)return noSb();
+ var e=$('#auth-email').value.trim(),p=$('#auth-pass').value;if(!e||!p)return authMsg('err',t('auth.need'));
+ var r=await sb.auth.signInWithPassword({email:e,password:p});
+ if(r.error)authMsg('err',r.error.message);else handleSession(r.data.session);
+}
+async function authSignup(){
+ if(!sb)return noSb();
+ var e=$('#auth-email').value.trim(),p=$('#auth-pass').value;if(!e||!p)return authMsg('err',t('auth.need'));
+ var opts=/^https?:/.test(location.protocol)?{emailRedirectTo:siteUrl()}:undefined;
+ var r=await sb.auth.signUp({email:e,password:p,options:opts});
+ if(r.error)authMsg('err',r.error.message);else authMsg('ok',t('auth.signed'));
+}
+async function askNewPass(){
+ var p=prompt(t('auth.newPass'));if(p==null)return;
+ if(p.length<6){toast(t('auth.short'),3000);return askNewPass();}
+ var r=await sb.auth.updateUser({password:p});
+ toast(r.error?t('t.err',{e:r.error.message}):t('auth.passOk'),4000);
+}
+async function authForgot(){
+ if(!sb)return noSb();
+ var e=$('#auth-email').value.trim();if(!e)return authMsg('err',t('auth.needEmail'));
+ var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:siteUrl()});
+ if(r.error)authMsg('err',r.error.message);else authMsg('ok',t('auth.reset'));
+}
+async function handleSession(session){
+ if(session&&session.user){
+  S.user=session.user;S.viewId=session.user.id;S.ro=false;
+  $('#auth').hidden=true;$('#app').hidden=false;
+  var admin=session.user.email&&session.user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase();
+  $('#admin-wrap').hidden=!admin;if(admin)loadAdminUsers();
+  await openProfile();
+ }else{S.user=null;S.viewId=null;$('#app').hidden=true;$('#auth').hidden=false;}
+}
+async function openProfile(){
+ S.template=null;S.archive=[];S.archSel=null;S.milesMode='split';S.milesCalc='auto';loadTemplate();resetWeek();
+ var local=null;try{local=JSON.parse(SafeStorage.get(draftKey())||'null');}catch(e){}
+ if(!S.ro&&local)applyDraft(local);
+ renderStatic();
+ if(sb){
+  try{var r=await sb.from('user_drafts').select('draft_json,updated_at').eq('user_id',activeId()).maybeSingle();
+   if(r.data&&r.data.draft_json){var cloudT=new Date(r.data.updated_at||0).getTime(),localT=local?num(local.updatedAt):0;if(S.ro||cloudT>=localT||!local){applyDraft(r.data.draft_json);if(!S.ro)SafeStorage.set(draftKey(),JSON.stringify(r.data.draft_json));}}}catch(e){}
+  renderStatic();await loadArchive();
+ }
+}
+async function loadAdminUsers(){
+ try{var r=await sb.rpc('get_all_users_for_admin');if(r.error||!r.data)return;var sel=$('#admin-select');
+  sel.innerHTML=r.data.map(function(u){var me=S.user&&u.id===S.user.id;return'<option value="'+esc(u.id)+'">'+(me?'⭐ ':'👤 ')+esc(u.email)+'</option>';}).join('');if(S.user)sel.value=S.user.id;}catch(e){}
+}
+async function switchAdmin(uidv){
+ if(!S.user)return;S.viewId=uidv||S.user.id;S.ro=S.viewId!==S.user.id;$('#menu-bg').hidden=true;
+ await openProfile();go('week');
+}
+
+/* =========================================================
+   Rerender (language / theme)
+   ========================================================= */
+function rerender(){
+ applyI18n();
+ if(S.user){
+  if(!S.exps.length)S.exps=defaultExps(S.role);
+  renderStatic();fillArchiveControls();go(curPage);
+ }
+}
+
+/* =========================================================
+   Init
+   ========================================================= */
+function init(){
+ applyTheme();applyI18n();
+ S.label=t('wk.defLabel',{d:todayISO()});S.loads=[newLoad()];S.exps=defaultExps('owner');
+ $('#auth-db').textContent=DB_REF?t('auth.db',{r:DB_REF}):'';
+ if(!sb){noSb();}
+ else{
+  sb.auth.getSession().then(function(r){handleSession(r.data&&r.data.session);});
+  sb.auth.onAuthStateChange(function(ev,s){
+   if(ev==='PASSWORD_RECOVERY')setTimeout(askNewPass,600);
+   if(!s&&S.user)handleSession(null);
+   else if(s&&s.user&&(!S.user||S.user.id!==s.user.id))handleSession(s);
+  });
+ }
+ $('#auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')authLogin();});
+ evSyncUI();runEval();runWeight();
+ window.__hs={S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
+}
+init();
+})();
+</script>
+</body>
+</html>
