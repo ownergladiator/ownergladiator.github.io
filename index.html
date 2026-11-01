@@ -6,12 +6,9 @@
 <!-- =====================================================================
      НАСТРОЙКА ПОДКЛЮЧЕНИЯ / CONNECTION SETTINGS
      Supabase → кнопка «Connect» вверху проекта (или Settings → API Keys):
-       SUPABASE_URL = Project URL       пример: https://abcdefgh.supabase.co
-       SUPABASE_KEY = Publishable key   пример: sb_publishable_xxxxxxxx
-     Удобнее держать их в отдельном файле config.js рядом с index.html
-     (тот же блок window.HS_CONFIG = {...}). Тогда при обновлении сайта
-     меняется только index.html, а ключи остаются в config.js.
-     Можно и по-старому: вписать значения прямо в блок ниже.
+       SUPABASE_URL = Project URL
+       SUPABASE_KEY = Publishable key (его можно держать в открытом виде,
+                      данные защищают правила доступа в базе)
      ===================================================================== -->
 <script>
 window.HS_CONFIG = {
@@ -20,8 +17,7 @@ window.HS_CONFIG = {
   ADMIN_EMAIL:  'mihastya@gmail.com'
 };
 </script>
-<script src="config.js"></script>
-<title>Hotshot Fleet Hub 6.2</title>
+<title>Hotshot Fleet Hub 6.3</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hotshot Hub">
@@ -247,6 +243,8 @@ body.ro .need-write{display:none!important}
 .tval{text-align:right;min-width:84px}
 .tval .v{font-family:var(--fd);font-size:22px;font-weight:700;line-height:1.1}
 #card-maint>.ch{margin-bottom:0}#maint-body{margin-top:12px}
+.imp-it{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;margin:0;cursor:pointer;color:var(--tx);font-size:14px}
+.imp-it input{margin-top:1px}.imp-it.dup{opacity:.55;cursor:default}
 @media(max-width:560px){
  main{padding:10px 10px calc(84px + var(--sb))}
  .page{gap:12px}
@@ -720,9 +718,29 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
   <div class="sheet" id="menu-sheet">
     <div class="row between"><b style="font-size:16px" id="menu-email"></b><button class="icon-btn" data-act="closeMenu">✕</button></div>
     <div id="admin-wrap" hidden><label data-i18n="menu.admin"></label><select id="admin-select"></select></div>
+    <button class="btn block need-write" data-act="impOpen" data-i18n="menu.import"></button>
     <button class="btn block" data-act="backup" data-i18n="menu.backup"></button>
     <button class="btn dng block" data-act="logout" data-i18n="menu.logout"></button>
-    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.2</div>
+    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.3</div>
+  </div>
+</div>
+<!-- import weeks from the old site (another Supabase project) -->
+<div id="imp-bg" class="sheet-bg" hidden data-act="closeImp">
+  <div class="sheet" id="imp-sheet">
+    <div class="row between"><b style="font-size:16px" data-i18n="imp.title"></b><button class="icon-btn" data-act="closeImp">✕</button></div>
+    <div class="cs" data-i18n="imp.desc"></div>
+    <div><label data-i18n="imp.email"></label><input type="email" id="imp-email" autocomplete="off" autocapitalize="none" inputmode="email"></div>
+    <div><label data-i18n="imp.pass"></label><input type="password" id="imp-pass" autocomplete="off"></div>
+    <details><summary data-i18n="imp.adv"></summary>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <div><label>Project URL</label><input type="text" id="imp-url" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+        <div><label>Publishable key</label><input type="text" id="imp-key" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+      </div>
+    </details>
+    <div id="imp-msg" class="msg"></div>
+    <button class="btn block" data-act="impFind" id="imp-find" data-i18n="imp.find"></button>
+    <div id="imp-list" class="tlist"></div>
+    <button class="btn pri block" data-act="impRun" id="imp-run" hidden data-i18n="imp.run"></button>
   </div>
 </div>
 <div id="toast"></div>
@@ -735,7 +753,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='6.2';
+var APP_VER='6.3';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -759,9 +777,9 @@ var DICT=[
 ['nav.week','Неделя','Week'],['nav.tools','Грузы','Loads'],['nav.archive','Архив','Archive'],['nav.summary','Итоги','Summary'],['nav.reports','Отчёты','Reports'],
 ['auth.sub','Вход для водителей и владельцев траков','Sign in for drivers and truck owners'],['auth.email','Email','Email'],['auth.pass','Пароль','Password'],['auth.login','Войти','Sign in'],['auth.signup','Создать аккаунт','Create account'],['auth.forgot','Забыли пароль?','Forgot password?'],
 ['auth.need','Введите email и пароль','Enter email and password'],['auth.needEmail','Введите email','Enter your email'],['auth.signed','Готово! Если включено подтверждение почты, проверьте входящие.','Done! If email confirmation is on, check your inbox.'],['auth.reset','Письмо для сброса пароля отправлено.','Password reset email sent.'],['auth.nosdk','Не загрузился Supabase SDK. Проверьте интернет.','Supabase SDK did not load. Check your connection.'],
-['auth.cfg','Сайт ещё не подключён к базе. Положите рядом с index.html файл config.js с Project URL и Publishable key из Supabase (или впишите их в начале index.html).','The site is not connected to a database yet. Put a config.js file with the Supabase Project URL and Publishable key next to index.html (or paste them at the top of index.html).'],
+['auth.cfg','Сайт не подключён к базе: в начале index.html, в блоке «НАСТРОЙКА ПОДКЛЮЧЕНИЯ», должны стоять Project URL и Publishable key из Supabase.','The site is not connected to a database: the CONNECTION SETTINGS block at the top of index.html must contain the Supabase Project URL and Publishable key.'],
 ['auth.newPass','Введите новый пароль (не короче 6 символов):','Enter a new password (at least 6 characters):'],['auth.short','Пароль слишком короткий','Password is too short'],['auth.passOk','✅ Пароль изменён','✅ Password updated'],['auth.db','база: {r}','database: {r}'],
-['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.logout','Выйти','Sign out'],
+['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.import','📥 Перенести недели со старого сайта','📥 Import weeks from the old site'],['imp.title','Перенос со старого сайта','Import from the old site'],['imp.desc','Войдите почтой и паролем от СТАРОГО сайта. Недели скопируются сюда, на старом сайте ничего не изменится.','Sign in with your OLD site email and password. Your weeks are copied here; nothing changes on the old site.'],['imp.email','Почта на старом сайте','Old site email'],['imp.pass','Пароль от старого сайта','Old site password'],['imp.adv','Адрес старой базы (менять не нужно)','Old database address (no need to change)'],['imp.find','🔎 Найти мои недели','🔎 Find my weeks'],['imp.busy','⏳ Подключаюсь к старой базе…','⏳ Connecting to the old database…'],['imp.found','Найдено недель в архиве: {n}','Archived weeks found: {n}'],['imp.loads','рейсов: {n}','loads: {n}'],['imp.empty','У этого аккаунта на старом сайте нет сохранённых недель.','This account has no saved weeks on the old site.'],['imp.dup','уже есть здесь','already here'],['imp.draftT','Незакрытая неделя','Open week'],['imp.draft','«{l}», рейсов: {n}. Станет текущей неделей здесь.','“{l}”, loads: {n}. Becomes the current week here.'],['imp.draftWarn','Здесь уже есть данные текущей недели — они заменятся.','This site already has current-week data — it will be replaced.'],['imp.run','📥 Перенести выбранное','📥 Import selected'],['imp.none','Ничего не выбрано','Nothing selected'],['imp.done','✅ Перенесено недель: {n}','✅ Weeks imported: {n}'],['imp.doneDraft','✅ Незакрытая неделя перенесена','✅ Open week imported'],['imp.badLogin','Неверная почта или пароль от старого сайта.','Wrong email or password for the old site.'],['imp.unconf','Почта на старом сайте не подтверждена.','This email is not confirmed on the old site.'],['imp.net','Не удалось связаться со старой базой. Проверьте интернет. Если старым сайтом давно не пользовались, его проект Supabase мог уснуть — включите его в панели Supabase и попробуйте снова.','Could not reach the old database. Check your connection. If the old site has not been used for a while, its Supabase project may be paused — resume it in the Supabase dashboard and try again.'],['imp.same','Это адрес новой базы. Укажите адрес старой.','That is the new database. Enter the old one.'],['imp.badCfg','Проверьте адрес и ключ старой базы.','Check the old database address and key.'],['menu.logout','Выйти','Sign out'],
 ['ro.banner','Вы смотрите чужой профиль: только чтение, изменения не сохраняются.','You are viewing another profile: read-only, changes are not saved.'],
 ['wk.label','Название недели / период','Week name / period'],['wk.archive','Завершить и в архив','Finish and archive'],['wk.new','Новая неделя','New week'],['wk.evalBtn','Проверить груз','Check a load'],
 ['wk.defLabel','Неделя от {d}','Week of {d}'],['wk.confirmNew','Начать новую неделю? Рейсы и чеки очистятся, настройки по умолчанию сохранятся.','Start a new week? Loads and receipts will be cleared; your defaults stay.'],['wk.confirmArch','Сохранить неделю «{n}» в архив?','Save week «{n}» to the archive?'],
@@ -1478,6 +1496,101 @@ async function deleteArchived(){
 }
 
 /* =========================================================
+   Import weeks from the old site (its own Supabase project).
+   Signs in to the OLD project with the old email/password,
+   reads that user's weekly_reports (+ open-week draft) and
+   copies the chosen ones into THIS project. Old data is untouched.
+   ========================================================= */
+var OLD_DB={url:'https://afbjigodaicrfvgbjrln.supabase.co',key:'sb_publishable_wjS5FeZqiRGQebhylZbB3A_lYozb-em'};
+var IMP={rows:[],draft:null};
+function impMsg(kind,msg){var m=$('#imp-msg');m.className='msg'+(kind&&msg?' '+kind:'');m.textContent=msg||'';}
+function numOrNull(v){if(v===null||v===undefined||v==='')return null;var n=parseFloat(v);return isNaN(n)?null:n;}
+function parseObj(v){if(v&&typeof v==='object')return v;if(typeof v==='string'){try{var o=JSON.parse(v);return o&&typeof o==='object'?o:null;}catch(e){}}return null;}
+function impKey(p,wed){return[String(wed||p.endDate||''),String(p.weekLabel||'').trim().toLowerCase(),Math.round(num(p.totalGross))].join('|');}
+function realLoad(l){return num(l.gross)>0||num(l.miles)>0||!!String(l.route||l.fromText||'').trim();}
+function weekIsEmpty(){return!S.loads.some(function(l){return!isBlankLoad(l);})&&!S.fuel.length;}
+function impErr(e){
+ var m=String((e&&(e.message||e.error_description||e.msg))||e||'');
+ if(/invalid login|invalid_grant|credentials/i.test(m))return t('imp.badLogin');
+ if(/not confirmed/i.test(m))return t('imp.unconf');
+ if(/fetch|network|load failed|timeout|abort/i.test(m))return t('imp.net');
+ return t('t.err',{e:m});
+}
+function impOpen(){
+ if(!guardWrite())return;
+ $('#menu-bg').hidden=true;
+ $('#imp-email').value=(S.user&&S.user.email)||'';$('#imp-pass').value='';
+ $('#imp-url').value=OLD_DB.url;$('#imp-key').value=OLD_DB.key;
+ IMP.rows=[];IMP.draft=null;$('#imp-list').innerHTML='';$('#imp-run').hidden=true;impMsg('','');
+ $('#imp-bg').hidden=false;
+}
+async function impFind(){
+ if(!guardWrite())return;
+ var url=$('#imp-url').value.trim().replace(/\/+$/,''),key=$('#imp-key').value.trim(),em=$('#imp-email').value.trim(),pw=$('#imp-pass').value;
+ if(!em||!pw)return impMsg('err',t('auth.need'));
+ if(!/^https:\/\/\S+$/i.test(url)||key.length<20)return impMsg('err',t('imp.badCfg'));
+ if(url.toLowerCase()===SUPABASE_URL.toLowerCase())return impMsg('err',t('imp.same'));
+ if(!window.supabase||!window.supabase.createClient)return impMsg('err',t('auth.nosdk'));
+ var btn=$('#imp-find'),c=null;btn.disabled=true;$('#imp-list').innerHTML='';$('#imp-run').hidden=true;impMsg('ok',t('imp.busy'));
+ try{
+  c=window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'hs_import_old'}});
+  var r=await withTimeout(c.auth.signInWithPassword({email:em,password:pw}),20000);
+  if(r.error)throw r.error;
+  var ouid=r.data&&r.data.user&&r.data.user.id;if(!ouid)throw new Error('no user');
+  var w=await withTimeout(c.from('weekly_reports').select('*').eq('user_id',ouid).order('week_end_date',{ascending:true}),20000);
+  if(w.error)throw w.error;
+  var d=null;try{d=await withTimeout(c.from('user_drafts').select('draft_json,updated_at').eq('user_id',ouid).maybeSingle(),20000);}catch(e){d=null;}
+  IMP.rows=(w.data||[]).map(function(row){return{row:row,p:parseObj(row.full_payload)||{}};});
+  var dj=d&&d.data&&parseObj(d.data.draft_json);
+  IMP.draft=(dj&&Array.isArray(dj.loads)&&dj.loads.some(realLoad))?dj:null;
+  renderImpList();
+ }catch(e){impMsg('err',impErr(e));}
+ finally{btn.disabled=false;if(c){try{var so=c.auth.signOut({scope:'local'});if(so&&so.catch)so.catch(function(){});}catch(e){}}}
+}
+function renderImpList(){
+ var have={};S.archive.forEach(function(w){have[impKey(w,w.weekEndDate)]=1;});
+ var html='',fresh=0,empty=weekIsEmpty();
+ IMP.rows.forEach(function(it,i){
+  var p=it.p,dup=!!have[impKey(p,it.row.week_end_date)];if(!dup)fresh++;
+  var dates=[p.startDate,p.endDate||it.row.week_end_date].filter(Boolean).join(' – ');
+  var g=p.totalGross!=null?p.totalGross:it.row.gross_revenue,n=p.netProfit!=null?p.netProfit:it.row.net_profit;
+  html+='<label class="imp-it'+(dup?' dup':'')+'"><input type="checkbox" class="imp-chk" data-i="'+i+'"'+(dup?' disabled':' checked')+'><span class="grow"><b>'+esc(p.weekLabel||it.row.week_end_date||t('c.week'))+'</b>'+
+   '<span class="cs" style="display:block">'+esc(dates)+' · Gross '+money(g,0)+' · Net '+money(n,0)+(Array.isArray(p.loads)?' · '+t('imp.loads',{n:p.loads.length}):'')+(dup?' · '+t('imp.dup'):'')+'</span></span></label>';
+ });
+ if(IMP.draft){
+  var dl=IMP.draft.loads.filter(realLoad).length;
+  html+='<label class="imp-it"><input type="checkbox" id="imp-draft"'+(empty?' checked':'')+'><span class="grow"><b>📝 '+t('imp.draftT')+'</b>'+
+   '<span class="cs" style="display:block">'+esc(t('imp.draft',{l:IMP.draft.weekLabel||'—',n:dl}))+(empty?'':' '+t('imp.draftWarn'))+'</span></span></label>';
+ }
+ $('#imp-list').innerHTML=html;
+ if(!IMP.rows.length&&!IMP.draft)impMsg('err',t('imp.empty'));
+ else impMsg('ok',t('imp.found',{n:IMP.rows.length})+(IMP.draft?' + '+t('imp.draftT').toLowerCase():''));
+ $('#imp-run').hidden=!(fresh||IMP.draft);
+}
+async function impRun(){
+ if(!guardWrite())return;
+ var pick=$$('#imp-list .imp-chk').filter(function(c){return c.checked&&!c.disabled;}).map(function(c){return IMP.rows[+c.dataset.i];});
+ var dc=$('#imp-draft'),useDraft=!!(IMP.draft&&dc&&dc.checked);
+ if(!pick.length&&!useDraft)return impMsg('err',t('imp.none'));
+ var btn=$('#imp-run');btn.disabled=true;
+ try{
+  if(pick.length){
+   if(!sb||!S.user)throw new Error(t('t.login'));
+   var rows=pick.map(function(it){var r=it.row,p=it.p,v=function(a,b){return numOrNull(a!=null&&a!==''?a:b);};
+    return{week_end_date:r.week_end_date||p.endDate||null,gross_revenue:v(r.gross_revenue,p.totalGross),total_miles:v(r.total_miles,p.totalMiles),net_profit:v(r.net_profit,p.netProfit),
+     net_per_mile:v(r.net_per_mile,p.netRpm),fuel_total:v(r.fuel_total,p.fuelCost),expenses_total:v(r.expenses_total,p.totalExpenses),full_payload:p};});
+   var ins=await sb.from('weekly_reports').insert(rows);if(ins.error)throw ins.error;
+  }
+  if(useDraft){applyDraft(IMP.draft);S.loads.forEach(function(l){l._open=false;});renderStatic();queueSave();}
+  await loadArchive();
+  $('#imp-bg').hidden=true;$('#imp-pass').value='';
+  toast(pick.length?t('imp.done',{n:pick.length})+(useDraft?' · '+t('imp.doneDraft'):''):t('imp.doneDraft'),4000);
+  go(pick.length?'archive':'week');
+ }catch(e){impMsg('err',impErr(e));}
+ finally{btn.disabled=false;}
+}
+
+/* =========================================================
    Charts
    ========================================================= */
 function mkChart(id,cfg){if(!window.Chart)return;var c=document.getElementById(id);if(!c)return;if(CH[id])CH[id].destroy();Chart.defaults.color=cssv('--mut');Chart.defaults.borderColor=cssv('--line');Chart.defaults.font.family=cssv('--fb')||'sans-serif';CH[id]=new Chart(c,cfg);}
@@ -1797,6 +1910,8 @@ var ACT={
  ldToggle:function(b){var c=b.closest('[data-list]'),l=c&&findItem(c);if(!l)return;l._open=!l._open;c.classList.toggle('open',l._open);b.setAttribute('aria-expanded',l._open?'true':'false');
   if(l._open){var r=c.getBoundingClientRect();if(r.bottom>window.innerHeight-80)c.scrollIntoView({behavior:'smooth',block:'nearest'});}},
  mapRetry:function(){var w=S.archive[S.archSel];if(w)renderMap(w);},
+ impOpen:impOpen,impFind:impFind,impRun:impRun,
+ closeImp:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#imp-bg').hidden=true;},
  addFuel:function(){if(!guardWrite())return;S.fuel.push(newFuel());renderFuel();changed();},
  addExp:function(){if(!guardWrite())return;S.exps.push(newExp());renderExps();changed();},
  del:async function(b){if(!guardWrite())return;var c=b.closest('[data-list]');if(!c)return;var key=c.dataset.list;S[key]=S[key].filter(function(x){return x.id!==c.dataset.id;});if(key==='loads'&&!S.loads.length)S.loads=[newLoad()];if(key==='loads')renderLoads();else if(key==='fuel')renderFuel();else renderExps();changed();
