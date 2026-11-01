@@ -17,7 +17,7 @@ window.HS_CONFIG = {
   ADMIN_EMAIL:  'mihastya@gmail.com'
 };
 </script>
-<title>Hotshot Fleet Hub 6.3</title>
+<title>Hotshot Fleet Hub 6.4</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hotshot Hub">
@@ -302,6 +302,18 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
 .mk circle{fill:var(--acc);stroke:var(--bg);stroke-width:3}
 .mk .mn{fill:var(--ink);font:800 19px var(--fd);text-anchor:middle}
 .mk .ml{fill:var(--tx);font:700 25px var(--fb);paint-order:stroke;stroke:var(--bg2);stroke-width:7px;stroke-linejoin:round}
+/* period map (Summary): heat by stops, merged lanes */
+.map-wrap .st.h1{fill:color-mix(in srgb,var(--acc) 20%,var(--card2))}
+.map-wrap .st.h2{fill:color-mix(in srgb,var(--acc) 34%,var(--card2))}
+.map-wrap .st.h3{fill:color-mix(in srgb,var(--acc) 50%,var(--card2))}
+.lane-ld{fill:none;stroke:var(--grn);stroke-linecap:round;opacity:.85;stroke-dasharray:1;stroke-dashoffset:1;animation:draw .8s ease forwards;animation-delay:var(--d)}
+.lane-dh{fill:none;stroke:var(--red);stroke-linecap:round;stroke-dasharray:8 7;opacity:0;animation:fade .5s ease forwards;animation-delay:var(--d)}
+.mk2{opacity:0;animation:fade .4s ease forwards;animation-delay:var(--d)}
+.mk2 circle{fill:var(--acc);stroke:var(--bg);stroke-width:2.5}
+.mk2 .ml{fill:var(--tx);font:700 23px var(--fb);paint-order:stroke;stroke:var(--bg2);stroke-width:7px;stroke-linejoin:round}
+.tl-row{display:flex;gap:10px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line)}
+.tl-row:last-child{border-bottom:0}.tl-row .grow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(prefers-reduced-motion:reduce){.lane-ld{stroke-dashoffset:0;animation:none}.lane-dh,.mk2{opacity:1;animation:none}}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes fade{to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.seg-ld{stroke-dashoffset:0;animation:none}.seg-dh,.mk{opacity:1;animation:none}}
@@ -658,6 +670,12 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
           </div>
         </div>
         <div class="kpis" id="m-kpis"></div>
+        <div class="card" id="sum-map-card">
+          <div class="ch"><div><span class="ct" data-i18n="sm.map"></span><div class="cs" data-i18n="sm.mapSub"></div></div>
+            <button class="btn sm" data-act="sumReplay">▶ <span data-i18n="map.replay"></span></button></div>
+          <div class="map-wrap" id="sum-map-box"></div>
+          <div id="sum-map-info" style="margin-top:10px"></div>
+        </div>
         <div class="cbox" id="m-dh-box" style="display:none"><div class="cbt" data-i18n="sm.dhdyn"></div><div class="cw" style="height:230px"><canvas id="c-mdh"></canvas></div></div>
         <div class="grid2">
           <div class="cbox"><div class="cbt" data-i18n="sm.dyn"></div><div class="cw"><canvas id="c-dyn"></canvas></div></div>
@@ -721,7 +739,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
     <button class="btn block need-write" data-act="impOpen" data-i18n="menu.import"></button>
     <button class="btn block" data-act="backup" data-i18n="menu.backup"></button>
     <button class="btn dng block" data-act="logout" data-i18n="menu.logout"></button>
-    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.3</div>
+    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.4</div>
   </div>
 </div>
 <!-- import weeks from the old site (another Supabase project) -->
@@ -753,7 +771,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='6.3';
+var APP_VER='6.4';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -827,7 +845,7 @@ var DICT=[
 ['wt.ok','✅ ВЕС В НОРМЕ: {a} / {b} lbs (запас {c})','✅ WITHIN LIMIT: {a} / {b} lbs ({c} spare)'],['wt.over','🚨 ПЕРЕГРУЗ {c} lbs ({a} / {b})','🚨 OVERWEIGHT by {c} lbs ({a} / {b})'],['wt.axle','⚠️ Общий вес в норме, но задняя ось перегружена ({a} > {b}). Сдвиньте груз назад.','⚠️ Total is fine, but the drive axle is overloaded ({a} > {b}). Shift cargo rearward.'],
 ['wt.gcw','Общий вес','Gross weight'],['wt.maxpay','Макс. груз','Max payload'],['wt.drive','Задняя ось','Drive axle'],['wt.pinw','На шар: ~{a} lbs','On pin: ~{a} lbs'],['wt.empty','Пустая сцепка','Empty combo'],['wt.spare','Запас: +{a}','Spare: +{a}'],['wt.overS','Перегруз: {a}','Over: {a}'],
 ['ar.title','Архив недель','Weeks archive'],['ar.pick','— выберите неделю —','— choose a week —'],['ar.empty','В архиве пока нет недель','No archived weeks yet'],['ar.delete','Удалить','Delete'],['ar.confirmDel','Удалить неделю «{n}» навсегда?','Delete week «{n}» forever?'],
-['ar.map','Маршрут недели','Week route'],['ar.mapSub','Карта США по вашим рейсам: груженые и пустые перегоны','US map of your loads: loaded legs and deadhead'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет.','The map did not load. Check your connection.'],['map.retry','Повторить','Retry'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в рейсах.','No route data. Fill in From and To on the loads.'],
+['ar.map','Маршрут недели','Week route'],['ar.mapSub','Карта США по вашим рейсам: груженые и пустые перегоны','US map of your loads: loaded legs and deadhead'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет.','The map did not load. Check your connection.'],['map.retry','Повторить','Retry'],['sm.map','🗺️ Карта маршрутов за период','🗺️ Routes map for the period'],['sm.mapSub','Все рейсы выбранных недель. Толще линия — чаще направление, ярче штат — больше остановок.','All loads of the selected weeks. Thicker line = more frequent lane, brighter state = more stops.'],['map.noneSum','За этот период недель нет.','No weeks in this period.'],['map.progress','Ищем места на карте: {i} из {n}…','Locating places: {i} of {n}…'],['map.weeks','Недель','Weeks'],['map.loads','Грузов','Loads'],['map.places','Городов','Places'],['map.top','Частые направления','Top lanes'],['map.legend','толще линия = чаще','thicker = more often'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в рейсах.','No route data. Fill in From and To on the loads.'],
 ['map.replay','Повтор','Replay'],['map.loaded','Груженый','Loaded'],['map.dh','Пустой','Deadhead'],['map.stops','Остановок','Stops'],['map.states','Штатов на пути','States crossed'],['map.crossed','Штаты на пути (примерно)','States on the way (approx.)'],['map.missing','Не удалось найти мест: {n}','Places not found: {n}'],
 ['ar.anat','Анатомия одной мили','Anatomy of one mile'],['ar.be','Себестоимость мили (CPM): {c}/mi','Cost per mile (CPM): {c}/mi'],['ar.be.d','Чистыми водителю: {c}/mi','Driver net: {c}/mi'],['ar.dhpie','Loaded и Deadhead мили','Loaded vs deadhead miles'],['ar.dhrpm','Ставка: Loaded, All-miles, Net','Rate: Loaded, All-miles, Net'],['ar.cpm','CPM по статьям, $/mi','CPM by item, $/mi'],['ar.loadsrpm','RPM рейсов и CPM','Load RPM vs CPM'],['ar.split','Куда ушла выручка','Where revenue went'],['ar.expDetail','Расходы и удержания','Expenses and deductions'],['ar.loads','Рейсы недели','Loads of the week'],
 ['ar.fuelItem','⛽ Дизель и DEF','⛽ Diesel and DEF'],['ar.ownerShare','🏢 Доля овнера / компании','🏢 Owner / company share'],['ar.netItem','💰 Чистая прибыль','💰 Net profit'],['ar.sumLoad','Сводный рейс недели','Week summary load'],['ar.fixed','Фиксированные','Fixed'],['ar.percent','Процентные','Percent-based'],['ar.permile','Помильные','Per-mile'],
@@ -1763,6 +1781,97 @@ async function drawMap(w,box,info,token){
 }
 
 /* =========================================================
+   Routes map for a period (Summary tab): many weeks at once.
+   Same lanes are merged (thicker = more often), states are shaded by
+   number of stops, only the most visited cities are labelled.
+   ========================================================= */
+var sumMapToken=0,sumMapT=null,sumMapList=[];
+function queueSumMap(list){sumMapList=list;clearTimeout(sumMapT);if(curPage!=='summary')return;sumMapT=setTimeout(function(){renderSumMap(sumMapList);},250);}
+async function renderSumMap(list){
+ var box=$('#sum-map-box'),info=$('#sum-map-info'),token=++sumMapToken;
+ if(!box)return;
+ info.innerHTML='';
+ if(!list.length){box.innerHTML='<div class="muted pad">'+t('map.noneSum')+'</div>';box._svg='';return;}
+ box.innerHTML='<div class="muted pad">'+t('map.loading')+'</div>';
+ try{await drawSumMap(list,box,info,token);}
+ catch(e){
+  if(window.console)console.warn('summary map:',e);
+  if(token===sumMapToken)box.innerHTML='<div class="muted pad">'+t('map.fail')+' <button type="button" class="btn sm" data-act="sumMapRetry">↻ '+t('map.retry')+'</button></div>';
+ }
+}
+async function resolveTexts(texts,onProgress){
+ var keys=Object.keys(texts),out={},i=0,done=0;
+ async function worker(){while(i<keys.length){var k=keys[i++];try{out[k]=await resolvePlace(k);}catch(e){out[k]=null;}done++;if(onProgress)onProgress(done,keys.length);}}
+ var ws=[];for(var j=0;j<Math.min(4,keys.length);j++)ws.push(worker());
+ await Promise.all(ws);return out;
+}
+async function drawSumMap(list,box,info,token){
+ var libs=withTimeout(Promise.all([ensureD3(),getTopo()]),25000);libs.catch(function(){});
+ var okG=function(g){return g&&g.lat!=null&&g.lon!=null;};
+ var weeks=list.slice().sort(function(a,b){return String(a.endDate||a.weekEndDate||'').localeCompare(String(b.endDate||b.weekEndDate||''));});
+ /* 1. look up places that have no saved coordinates (old weeks), a few at a time */
+ var need={};
+ weeks.forEach(function(w){(Array.isArray(w.loads)?w.loads:[]).forEach(function(l){['from','to'].forEach(function(sd){if(!okG(l[sd+'Geo'])){var tx=loadSide(l,sd);if(tx)need[tx]=1;}});});});
+ var nNeed=Object.keys(need).length;
+ var found=nNeed?await resolveTexts(need,function(d,n){if(token===sumMapToken&&n>3)box.innerHTML='<div class="muted pad">'+t('map.progress',{i:d,n:n})+'</div>';}):{};
+ if(token!==sumMapToken)return;
+ var geoOf=function(l,sd){var g=l[sd+'Geo'];if(okG(g))return g;var tx=loadSide(l,sd);return tx?(found[tx]||null):null;};
+ /* 2. places (merged within 15 mi), lanes (merged by place pair) */
+ var places=[],lanes={},missing=0,nLoads=0,LD=0,DHm=0;
+ function place(g){for(var k=0;k<places.length;k++){if(hav(places[k].g,g)<=15)return k;}places.push({g:g,v:0});return places.length-1;}
+ function lane(ty,a,b,l){if(a===b)return;var key=ty+'|'+a+'|'+b,x=lanes[key];if(!x)x=lanes[key]={t:ty,a:a,b:b,c:0,g:0,m:0};x.c++;if(l){x.g+=num(l.gross);x.m+=num(l.miles)+num(l.deadhead);}}
+ weeks.forEach(function(w){
+  var wm=num(w.totalMiles),wd=num(w.deadheadMiles);LD+=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd);DHm+=wd;
+  var loads=(Array.isArray(w.loads)?w.loads:[]).slice().sort(function(a,b){return String(a.pickup||'').localeCompare(String(b.pickup||''));});
+  var last=null,st0=okG(w.startGeo)?w.startGeo:null;
+  loads.forEach(function(l){
+   var A=geoOf(l,'from'),B=geoOf(l,'to');
+   if(!A||!B){if(!A&&loadSide(l,'from'))missing++;if(!B&&loadSide(l,'to'))missing++;return;}
+   nLoads++;
+   var pa=place(A),pb=place(B);
+   if(!last&&st0&&hav(st0,A)>25)lane('dh',place(st0),pa,null);
+   else if(last&&hav(last.g,A)>25)lane('dh',last.p,pa,null);
+   places[pa].v++;places[pb].v++;lane('ld',pa,pb,l);last={g:B,p:pb};
+  });
+ });
+ var LL=Object.keys(lanes).map(function(k){return lanes[k];});
+ if(!LL.length){box.innerHTML='<div class="muted pad">'+t('map.none')+'</div>';box._svg='';if(missing)info.innerHTML='<div class="cs">'+t('map.missing',{n:missing})+'</div>';return;}
+ /* 3. draw */
+ var topo=(await libs)[1];
+ if(token!==sumMapToken)return;
+ var fc=topoFeature(topo,topo.objects.states),W=960,H=600;
+ var proj=d3.geoAlbersUsa().fitExtent([[10,10],[W-10,H-10]],fc),path=d3.geoPath(proj);
+ var stopSt={},crossSt={},vmax=1;
+ places.forEach(function(p){var s=p.g.st;if(s&&p.v){stopSt[s]=(stopSt[s]||0)+p.v;if(stopSt[s]>vmax)vmax=stopSt[s];}});
+ var hit=null;
+ LL.forEach(function(x){if(x.t!=='ld')return;var a=places[x.a].g,b=places[x.b].g,it=d3.geoInterpolate([a.lon,a.lat],[b.lon,b.lat]);
+  for(var k=0;k<=20;k++){var pt=it(k/20),f=null;
+   if(hit&&d3.geoContains(hit,pt))f=hit;else{for(var q=0;q<fc.features.length;q++){if(d3.geoContains(fc.features[q],pt)){f=fc.features[q];break;}}}
+   if(f){hit=f;var code=NAME2ST[String(f.properties.name).toLowerCase()];if(code)crossSt[code]=1;}}});
+ var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="routes map">';
+ fc.features.forEach(function(f){var code=NAME2ST[String(f.properties.name).toLowerCase()],v=stopSt[code]||0,cls='st'+(v?' h'+Math.max(1,Math.ceil(3*v/vmax)):(crossSt[code]?' x':''));svg+='<path class="'+cls+'" d="'+(path(f)||'')+'"/>';});
+ var nm=function(p){return p.g.city?p.g.city:(p.g.st||'');},lbl=function(x){return nm(places[x.a])+' → '+nm(places[x.b]);};
+ var step=Math.min(0.25,2.4/Math.max(1,LL.length)),d=0,paths='',skipped=0;
+ LL.sort(function(x,y){return(x.t===y.t)?0:(x.t==='dh'?-1:1);});
+ LL.forEach(function(x,i){var a=places[x.a].g,b=places[x.b].g,p=proj([a.lon,a.lat]),q=proj([b.lon,b.lat]);if(!p||!q){skipped++;return;}
+  var lw=x.t==='ld'?Math.min(9,3+1.6*Math.log2(x.c)):Math.min(6,2+Math.log2(x.c));
+  paths+='<path class="'+(x.t==='ld'?'lane-ld':'lane-dh')+'"'+(x.t==='ld'?' pathLength="1"':'')+' style="--d:'+d.toFixed(2)+'s;stroke-width:'+lw.toFixed(1)+'" d="'+arcPath(p,q,i%2?-1:1)+'"><title>'+esc(lbl(x))+(x.c>1?' ×'+x.c:'')+'</title></path>';d+=step;});
+ svg+=paths;
+ var order=places.map(function(p,i){return i;}).sort(function(i,j){return places[j].v-places[i].v;}),top={};
+ order.slice(0,places.length<=12?12:8).forEach(function(i){top[i]=1;});
+ places.forEach(function(pl,i){var p=proj([pl.g.lon,pl.g.lat]);if(!p)return;var r=Math.min(14,6+2*Math.sqrt(Math.max(1,pl.v)));
+  svg+='<g class="mk2" style="--d:'+Math.min(d,1.2+i*0.03).toFixed(2)+'s"><circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+r.toFixed(1)+'"/>'+(top[i]?'<text class="ml" x="'+(p[0]+r+5).toFixed(1)+'" y="'+(p[1]+8).toFixed(1)+'">'+esc(nm(pl).slice(0,14))+'</text>':'')+'</g>';});
+ svg+='</svg>';
+ box.innerHTML=svg;box._svg=svg;
+ var cs=Object.keys(crossSt).concat(Object.keys(stopSt).filter(function(x){return!crossSt[x];}));
+ var topL=LL.filter(function(x){return x.t==='ld';}).sort(function(x,y){return(y.c-x.c)||(y.g-x.g);}).slice(0,5);
+ info.innerHTML='<div class="row wrap" style="margin-bottom:8px"><span class="pill">'+t('map.weeks')+': <b>'+weeks.length+'</b></span><span class="pill">'+t('map.loads')+': <b>'+nLoads+'</b></span><span class="pill">'+t('map.states')+': <b>'+cs.length+'</b></span><span class="pill">'+t('map.places')+': <b>'+places.length+'</b></span><span class="pill">'+f0(LD)+' mi'+(DHm>0?' + '+f0(DHm)+' DH':'')+'</span></div>'+
+  '<div class="row wrap" style="margin-bottom:8px"><span class="pill"><span class="g">━</span> '+t('map.loaded')+'</span><span class="pill"><span class="r">┅</span> '+t('map.dh')+'</span><span class="cs">'+t('map.legend')+'</span></div>'+
+  (topL.length?'<div class="cs" style="margin:4px 0 4px;font-weight:700">'+t('map.top')+'</div>'+topL.map(function(x){return'<div class="tl-row"><span class="grow">'+esc(lbl(x))+'</span><b>×'+x.c+'</b><span class="g">'+(x.m>0?'$'+f2(x.g/x.m)+'/mi':'')+'</span></div>';}).join(''):'')+
+  ((missing+skipped)?'<div class="cs" style="margin-top:8px">'+t('map.missing',{n:missing+skipped})+'</div>':'');
+}
+
+/* =========================================================
    Summary (monthly / all time / custom)
    ========================================================= */
 function buildCustomList(){
@@ -1774,6 +1883,7 @@ function renderSummary(val){
  $('#custom-panel').style.display=custom?'block':'none';
  if(custom){$$('.chk-w').forEach(function(c){if(c.checked&&S.archive[+c.value])list.push(S.archive[+c.value]);});$('#custom-count').textContent=t('sm.sel',{a:list.length,b:S.archive.length});}
  else S.archive.forEach(function(w){if(all||w.monthYear===val)list.push(w);});
+ queueSumMap(list);
  var G=0,E=0,N=0,M=0,DH=0,D=0,anyDh=false,unpaid=0,unpaidN=0;
  var lab=[],dG=[],dE=[],dN=[],dM=[],dR=[],dC=[],dNR=[],dL=[],dD=[],dP=[],sF=0,sX=0,sP=0,sC=0;
  var hs={c:0,g:0,m:0},hm={c:0,g:0,m:0},hl={c:0,g:0,m:0},lanes={};
@@ -1910,6 +2020,8 @@ var ACT={
  ldToggle:function(b){var c=b.closest('[data-list]'),l=c&&findItem(c);if(!l)return;l._open=!l._open;c.classList.toggle('open',l._open);b.setAttribute('aria-expanded',l._open?'true':'false');
   if(l._open){var r=c.getBoundingClientRect();if(r.bottom>window.innerHeight-80)c.scrollIntoView({behavior:'smooth',block:'nearest'});}},
  mapRetry:function(){var w=S.archive[S.archSel];if(w)renderMap(w);},
+ sumMapRetry:function(){renderSumMap(sumMapList);},
+ sumReplay:function(){var box=$('#sum-map-box');if(box._svg){box.innerHTML='';requestAnimationFrame(function(){box.innerHTML=box._svg;});}},
  impOpen:impOpen,impFind:impFind,impRun:impRun,
  closeImp:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#imp-bg').hidden=true;},
  addFuel:function(){if(!guardWrite())return;S.fuel.push(newFuel());renderFuel();changed();},
