@@ -4,22 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- =====================================================================
-     НАСТРОЙКА ПОДКЛЮЧЕНИЯ / CONNECTION SETTINGS  (меняется только здесь)
+     НАСТРОЙКА ПОДКЛЮЧЕНИЯ / CONNECTION SETTINGS
      Supabase → кнопка «Connect» вверху проекта (или Settings → API Keys):
        SUPABASE_URL = Project URL       пример: https://abcdefgh.supabase.co
        SUPABASE_KEY = Publishable key   пример: sb_publishable_xxxxxxxx
-     Вставьте значения между кавычками и сохраните файл.
-     NEXT_PUBLIC_SUPABASE_URL=https://cbbqnocjrcalatlcjvzz.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3
+     Удобнее держать их в отдельном файле config.js рядом с index.html
+     (тот же блок window.HS_CONFIG = {...}). Тогда при обновлении сайта
+     меняется только index.html, а ключи остаются в config.js.
+     Можно и по-старому: вписать значения прямо в блок ниже.
      ===================================================================== -->
 <script>
 window.HS_CONFIG = {
-  SUPABASE_URL: 'https://cbbqnocjrcalatlcjvzz.supabase.co',
-  SUPABASE_KEY: 'sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3',
+  SUPABASE_URL: 'ВСТАВЬТЕ_PROJECT_URL',
+  SUPABASE_KEY: 'ВСТАВЬТЕ_PUBLISHABLE_KEY',
   ADMIN_EMAIL:  'mihastya@gmail.com'
 };
 </script>
-<title>Hotshot Fleet Hub 6.1</title>
+<script src="config.js"></script>
+<title>Hotshot Fleet Hub 6.2</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hotshot Hub">
@@ -31,13 +33,12 @@ window.HS_CONFIG = {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3-array@3/dist/d3-array.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<!-- map libraries (d3-array, then d3-geo) are loaded on demand in ensureD3() -->
+
 <style>
 :root{color-scheme:dark;
 --bg:#0d0f12;--bg2:#101318;--card:#15181d;--card2:#1b1f26;--line:#2a2f38;--tx:#f4f4f2;--mut:#9aa1ad;--dim:#6c7480;
@@ -71,6 +72,8 @@ a{color:var(--acc)}
 label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px;font-weight:500}
 input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--tx);padding:10px 12px;border-radius:11px;font-size:16px;font-family:var(--fb);outline:none;min-height:46px;min-width:0}
 input[type=date]{-webkit-appearance:none;appearance:none;text-align:left}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--acc);flex:none}
 input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,196,0,.18)}
 textarea{min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
@@ -89,8 +92,12 @@ textarea{min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:13px
 .mset>div{min-width:0;max-width:100%}
 .mlbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 0 5px 2px}
 .mhint{margin:2px 2px 12px;line-height:1.45}
-.wstart{background:var(--bg2);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px}
-.wstart .pst{font-size:11px;color:var(--grn);min-height:15px;margin-top:3px}
+.wstart{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px dashed var(--line);border-radius:12px;padding:8px 10px;margin-bottom:10px}
+.wstart>label{flex:0 1 auto;max-width:44%;margin:0;font-size:12px;line-height:1.25;color:var(--tx);font-weight:600}
+.wstart>label small{display:block;font-size:10.5px;color:var(--dim);font-weight:500}
+.wstart input{min-height:40px;padding:7px 10px}
+.wstart .pst{font-size:10.5px;color:var(--grn);margin-top:2px}
+.wstart .pst:empty{display:none}
 .wstart .pst.warn{color:var(--red)}
 .atag{display:none;margin-left:6px;font-size:10px;font-weight:800;letter-spacing:.05em;padding:1px 6px;border-radius:6px;background:color-mix(in srgb,var(--grn) 18%,transparent);color:var(--grn);vertical-align:1px;text-transform:uppercase}
 .is-auto .atag{display:inline-block}
@@ -185,6 +192,73 @@ body.ro .need-write{display:none!important}
 .rc .foot{grid-column:span 12;display:flex;gap:8px;flex-wrap:wrap}
 @media(min-width:760px){
  .rc>.f.t2{grid-column:span 2}.rc>.f.t3{grid-column:span 3}.rc>.f.t4{grid-column:span 4}.rc>.f.t6{grid-column:span 6}
+}
+/* compact inputs inside lists */
+.cmp label{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp input,.cmp select{min-height:40px;padding:7px 9px;border-radius:9px}
+.cmp input[type=number]{font-family:var(--fd);font-size:17px;font-weight:600}
+.cmp input[type=text]{text-overflow:ellipsis}
+.cmp input.g{color:var(--grn);font-weight:700}.cmp input.r{color:var(--red)}.cmp input.b{color:var(--blu)}
+.x{flex:none;width:32px;height:32px;border-radius:9px;border:1px solid rgba(255,90,95,.35);background:rgba(255,90,95,.08);color:var(--red);font-size:13px;cursor:pointer;display:grid;place-items:center;padding:0}
+/* loads: one-line summary, tap to edit */
+.ld{background:var(--card2);border:1px solid var(--line);border-radius:12px;min-width:0}
+.ld.open{border-color:color-mix(in srgb,var(--acc) 50%,var(--line))}
+.ld-h{width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;background:transparent;border:0;border-radius:12px;text-align:left;cursor:pointer;min-height:52px;color:var(--tx)}
+.ld-h .n{font-family:var(--fd);background:var(--acc);color:var(--ink);font-weight:800;border-radius:7px;min-width:26px;height:26px;display:grid;place-items:center;font-size:15px;flex:none}
+.ld-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ld-route{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-route.dim{color:var(--dim);font-weight:600}
+.ld-meta{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-gross{flex:none;font-family:var(--fd);font-weight:700;font-size:19px;color:var(--grn)}
+.ld-gross.z{color:var(--dim);font-size:16px}
+.ld-chev{flex:none;color:var(--dim);font-size:11px;transition:transform .2s}
+.ld.open .ld-chev{transform:rotate(180deg)}
+.ld-b{display:none;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:0 10px 10px}
+.ld.open .ld-b{display:grid}
+.ld-b>.f{min-width:0;grid-column:span 3}
+.ld-b>.f.cw-num{grid-column:span 2}.ld-b>.f.cw-num.wide{grid-column:span 3}
+.ld-b .pst{font-size:10.5px;color:var(--grn);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-b .pst:empty{display:none}.ld-b .pst.warn{color:var(--red)}
+.ld-b .chk{display:flex;align-items:center;gap:8px;min-height:40px;font-size:13px;color:var(--tx);margin:0;cursor:pointer;white-space:normal;line-height:1.2}
+.ld-b .cw-chk{align-self:end}
+.ld-foot{grid-column:1/-1;display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+@media(min-width:760px){
+ .ld-b{grid-template-columns:repeat(12,minmax(0,1fr))}
+ .ld-b>.f{grid-column:span 3}.ld-b>.f.cw-num{grid-column:span 2}.ld-b>.f.cw-num.wide{grid-column:span 3}
+}
+/* fuel + expenses: table-like rows that fit the screen */
+.tlist{display:flex;flex-direction:column}
+.tlist>*{border-bottom:1px solid var(--line)}.tlist>:last-child{border-bottom:0}
+.fhead,.frow{display:grid;grid-template-columns:minmax(0,1fr) 60px 68px 52px 32px;gap:5px;align-items:center}
+.fhead{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;padding:0 2px 5px;white-space:nowrap}
+.fhead span{overflow:hidden;text-overflow:ellipsis}
+.frow{padding:6px 0}
+.frow input[type=number]{padding:6px 4px;text-align:right;font-size:16px}
+.fhead .c-fgal,.frow .c-fgal{display:none}
+@media(min-width:600px){.fhead,.frow{grid-template-columns:minmax(0,1fr) 84px 92px 84px 84px 34px;gap:8px}.fhead .c-fgal,.frow .c-fgal{display:block}}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) 100px 32px;grid-template-areas:"nm tot x" "ty vl vl";gap:6px 8px;align-items:center;padding:8px 0}
+.erow .e-name{grid-area:nm;font-weight:600}.erow .e-type{grid-area:ty}.erow .e-val{grid-area:vl}.erow .x{grid-area:x}
+.erow .e-tot{grid-area:tot;font-family:var(--fd);font-size:20px;font-weight:700;text-align:right;white-space:nowrap}
+@media(min-width:760px){.erow{grid-template-columns:minmax(0,3fr) minmax(0,2fr) 110px 120px 34px;grid-template-areas:"nm ty vl tot x"}}
+/* small one-line cards */
+.crow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pctin{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--mut)}
+.pctin input{width:66px;min-height:40px;padding:6px 8px;text-align:right;font-family:var(--fd);font-size:18px;font-weight:700}
+.tval{text-align:right;min-width:84px}
+.tval .v{font-family:var(--fd);font-size:22px;font-weight:700;line-height:1.1}
+#card-maint>.ch{margin-bottom:0}#maint-body{margin-top:12px}
+@media(max-width:560px){
+ main{padding:10px 10px calc(84px + var(--sb))}
+ .page{gap:12px}
+ .card{padding:12px;border-radius:14px}
+ .ct{font-size:18px}
+ .ch{margin-bottom:10px}
+ input,select{min-height:42px}
+ .btn{min-height:42px}.btn.sm{min-height:34px}
+ .seg button{min-height:34px;padding:0 11px;font-size:12.5px}
+ .mlbl{display:none}
+ .mset{gap:8px}
+ .kpi{padding:10px 11px}
 }
 .sumbar{display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between;font-size:13px;color:var(--mut);background:var(--bg2);border-radius:11px;padding:10px 12px;margin-top:10px}
 .sumbar b{color:var(--tx)}
@@ -344,9 +418,8 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
           </div>
           <div class="cs mhint" id="mc-hint"></div>
           <div class="wstart" id="wk-start" hidden>
-            <label for="in-start" data-i18n="mc.start"></label>
-            <input type="text" id="in-start" data-wplace="start" autocomplete="off" autocapitalize="words" enterkeyhint="done">
-            <div class="pst"></div>
+            <label for="in-start"><span data-i18n="mc.start"></span><small data-i18n="mc.startSub"></small></label>
+            <div class="grow"><input type="text" id="in-start" data-wplace="start" autocomplete="off" autocapitalize="words" enterkeyhint="done"><div class="pst"></div></div>
           </div>
           <div class="list" id="loads-list"></div>
           <div class="sumbar" id="loads-sum" hidden></div>
@@ -398,7 +471,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
                 </div>
               </details>
             </div>
-            <div class="list" id="fuel-list"></div>
+            <div class="tlist" id="fuel-list"></div>
             <div class="sumbar" id="fuel-sum"></div>
             <div style="margin-top:10px"><div class="cs" style="margin-bottom:6px" data-i18n="fu.byState"></div><div class="row wrap" id="fuel-states"></div></div>
           </div>
@@ -429,10 +502,10 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
 
         <!-- tax -->
         <div class="card" id="card-tax">
-          <div class="ch"><span class="ct" data-i18n="tx.title"></span><span class="cs" data-i18n="tx.sub"></span></div>
-          <div class="grid2">
-            <div><label data-i18n="tx.pct"></label><input type="number" inputmode="decimal" id="in-taxPct" data-set="taxPct"></div>
-            <div class="chip"><div class="l" data-i18n="tx.amount"></div><div class="v a" id="tx-amt">$0</div></div>
+          <div class="crow">
+            <div class="grow"><div class="ct" data-i18n="tx.title"></div><div class="cs" data-i18n="tx.sub"></div></div>
+            <label class="pctin" style="margin:0"><input type="number" inputmode="decimal" id="in-taxPct" data-set="taxPct" aria-label="%">%</label>
+            <div class="tval"><div class="cs" data-i18n="tx.amount"></div><div class="v a" id="tx-amt">$0</div></div>
           </div>
         </div>
 
@@ -445,7 +518,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
               <button class="btn sm pri" data-act="addExp" data-i18n="ex.add"></button>
             </div>
           </div>
-          <div class="list" id="exp-list"></div>
+          <div class="tlist" id="exp-list"></div>
         </div>
       </section>
 
@@ -649,7 +722,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
     <div id="admin-wrap" hidden><label data-i18n="menu.admin"></label><select id="admin-select"></select></div>
     <button class="btn block" data-act="backup" data-i18n="menu.backup"></button>
     <button class="btn dng block" data-act="logout" data-i18n="menu.logout"></button>
-    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.1</div>
+    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.2</div>
   </div>
 </div>
 <div id="toast"></div>
@@ -662,7 +735,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='6.1';
+var APP_VER='6.2';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -686,7 +759,7 @@ var DICT=[
 ['nav.week','Неделя','Week'],['nav.tools','Грузы','Loads'],['nav.archive','Архив','Archive'],['nav.summary','Итоги','Summary'],['nav.reports','Отчёты','Reports'],
 ['auth.sub','Вход для водителей и владельцев траков','Sign in for drivers and truck owners'],['auth.email','Email','Email'],['auth.pass','Пароль','Password'],['auth.login','Войти','Sign in'],['auth.signup','Создать аккаунт','Create account'],['auth.forgot','Забыли пароль?','Forgot password?'],
 ['auth.need','Введите email и пароль','Enter email and password'],['auth.needEmail','Введите email','Enter your email'],['auth.signed','Готово! Если включено подтверждение почты, проверьте входящие.','Done! If email confirmation is on, check your inbox.'],['auth.reset','Письмо для сброса пароля отправлено.','Password reset email sent.'],['auth.nosdk','Не загрузился Supabase SDK. Проверьте интернет.','Supabase SDK did not load. Check your connection.'],
-['auth.cfg','Сайт ещё не подключён к базе. Откройте index.html в блокноте и вставьте Project URL и Publishable key из Supabase в блок «НАСТРОЙКА ПОДКЛЮЧЕНИЯ» в начале файла.','The site is not connected to a database yet. Open index.html in a text editor and paste the Supabase Project URL and Publishable key into the CONNECTION SETTINGS block at the top of the file.'],
+['auth.cfg','Сайт ещё не подключён к базе. Положите рядом с index.html файл config.js с Project URL и Publishable key из Supabase (или впишите их в начале index.html).','The site is not connected to a database yet. Put a config.js file with the Supabase Project URL and Publishable key next to index.html (or paste them at the top of index.html).'],
 ['auth.newPass','Введите новый пароль (не короче 6 символов):','Enter a new password (at least 6 characters):'],['auth.short','Пароль слишком короткий','Password is too short'],['auth.passOk','✅ Пароль изменён','✅ Password updated'],['auth.db','база: {r}','database: {r}'],
 ['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.logout','Выйти','Sign out'],
 ['ro.banner','Вы смотрите чужой профиль: только чтение, изменения не сохраняются.','You are viewing another profile: read-only, changes are not saved.'],
@@ -702,15 +775,15 @@ var DICT=[
 ['i.lane','Лучшее направление недели: {l}, {r}/mi.','Best lane this week: {l}, {r}/mi.'],['i.unpaid','Не оплачено брокерами: {a} ({n} гр.).','Unpaid by brokers: {a} ({n} load(s)).'],
 ['i.maint','До ТО осталось {m} mi.','{m} mi left until service.'],['i.maintDue','Пора на ТО!','Service is due!'],['i.tax','Отложите {a} на налоги ({p}% от чистой).','Set aside {a} for taxes ({p}% of net).'],['i.good','Сильная неделя: Net {r}/mi.','Strong week: Net {r}/mi.'],
 ['ld.title','Журнал рейсов','Load log'],['ld.add','+ Рейс','+ Load'],['ld.mode.simple','Всего миль','Total miles'],['ld.mode.split','Loaded + Deadhead','Loaded + Deadhead'],
-['ld.from','Откуда: город, ШТ или ZIP','From: city, ST or ZIP'],['ld.to','Куда: город, ШТ или ZIP','To: city, ST or ZIP'],['ld.ph','Dallas, TX или 75201','Dallas, TX or 75201'],
-['ld.pick','Pick up','Pick up'],['ld.del','Delivery','Delivery'],['ld.mi.s','Мили (всего)','Miles (total)'],['ld.mi.l','Loaded (mi)','Loaded (mi)'],['ld.dh','Deadhead (mi)','Deadhead (mi)'],['ld.gross','Gross ($)','Gross ($)'],
-['ld.broker','Брокер / Load #','Broker / Load #'],['ld.unpaid','Ждёт оплаты','Awaiting payment'],['ld.calc','Рассчитать мили','Calculate miles'],['ld.d','{n} дн.','{n} d'],['ld.empty','Рейсов пока нет','No loads yet'],
+['ld.from','Откуда','From'],['ld.to','Куда','To'],['ld.ph','Dallas, TX или 75201','Dallas, TX or 75201'],
+['ld.pick','Pick up','Pick up'],['ld.del','Delivery','Delivery'],['ld.mi.s','Мили всего','Total miles'],['ld.mi.l','Loaded, mi','Loaded, mi'],['ld.dh','DH, mi','DH, mi'],['ld.gross','Gross, $','Gross, $'],
+['ld.broker','Брокер / Load #','Broker / Load #'],['ld.unpaid','Ждёт оплаты','Awaiting payment'],['ld.calc','Рассчитать мили','Calculate miles'],['ld.d','{n} дн.','{n} d'],['ld.empty','Рейсов пока нет','No loads yet'],['ld.new','Новый рейс — нажмите, чтобы заполнить','New load — tap to fill in'],
 ['ld.sumL','Loaded','Loaded'],['ld.sumD','Deadhead','Deadhead'],['ld.sumR','Loaded RPM','Loaded RPM'],['ld.auto','≈ авто','≈ auto'],
 ['mc.what','Учёт миль','Miles tracked'],['mc.how','Ввод миль','Miles entry'],['mc.auto','🤖 Авто','🤖 Auto'],['mc.manual','✍️ Вручную','✍️ Manual'],['mc.tag','авто','auto'],
-['mc.hAuto','🤖 Мили считаются по дорогам: груженые — «Откуда» → «Куда», пустые — от прошлой выгрузки до следующей загрузки. Поля с меткой АВТО заблокированы. Где нет адреса — впишите мили сами.','🤖 Miles are calculated by road: loaded = From → To, deadhead = previous drop → next pickup. Fields tagged AUTO are locked. Where an address is missing, type the miles yourself.'],
-['mc.hAutoS','🤖 Мили считаются по дорогам: путь груза плюс пустой перегон от прошлой выгрузки. Поля с меткой АВТО заблокированы. Где нет адреса — впишите мили сами.','🤖 Miles are calculated by road: the load route plus deadhead from the previous drop. Fields tagged AUTO are locked. Where an address is missing, type the miles yourself.'],
-['mc.hManual','✍️ Мили вписываете сами — сайт их не меняет. Кнопка «📏 Рассчитать мили» в рейсе посчитает по адресам, только если её нажать.','✍️ You type the miles and the site never changes them. The 📏 Calculate miles button on a load fills them from addresses only when you tap it.'],
-['mc.start','🏁 Откуда начали неделю (для пустых миль до 1-го груза)','🏁 Week start location (for deadhead to the 1st load)'],
+['mc.hAuto','🤖 Считаем по адресам: груженые — «Откуда» → «Куда», пустые — от прошлой выгрузки. Поля АВТО заблокированы.','🤖 Calculated from addresses: loaded = From → To, deadhead = from the previous drop. AUTO fields are locked.'],
+['mc.hAutoS','🤖 Считаем по адресам: путь груза + пустой перегон от прошлой выгрузки. Поля АВТО заблокированы.','🤖 Calculated from addresses: load route + deadhead from the previous drop. AUTO fields are locked.'],
+['mc.hManual','✍️ Мили вписываете сами — сайт их не меняет. «📏 Рассчитать мили» в рейсе считает по адресам только по нажатию.','✍️ You type the miles and the site never changes them. 📏 Calculate miles on a load fills them from addresses only when tapped.'],
+['mc.start','🏁 Старт недели','🏁 Week start'],['mc.startSub','для пустых миль к 1-му грузу','for deadhead to the 1st load'],
 ['mc.confirm','Пересчитать мили по адресам? Мили, которые можно посчитать, заменятся автоматическими, остальные останутся как есть.','Recalculate miles from addresses? Miles that can be calculated will be replaced; the rest stay as they are.'],
 ['mc.done','🤖 Мили посчитаны по адресам','🤖 Miles calculated from addresses'],['mc.manualOn','✍️ Ручной ввод миль включён','✍️ Manual miles entry is on'],['mc.recalc','Пересчитать','Recalculate'],
 ['mc.need','Укажите «Откуда» и «Куда»: город, ШТ или ZIP','Fill in From and To: city, ST or ZIP'],
@@ -718,11 +791,11 @@ var DICT=[
 ['dr.title','Заработок водителя','Driver pay'],['dr.sub','Топливо и трак оплачивает овнер','Fuel and truck are paid by the owner'],['dr.pct','Ваш процент от Gross, %','Your % of gross'],['dr.gross','Начислено до вычетов','Earned before deductions'],['dr.net','На руки','Take-home'],['dr.mi','{a} / миля','{a} / mile'],['dr.day','{a} / день','{a} / day'],
 ['fu.title','Топливо и IFTA','Fuel and IFTA'],['fu.mpg','По MPG','By MPG'],['fu.log','По чекам','By receipts'],['fu.mpgLbl','Расход (MPG)','Fuel economy (MPG)'],['fu.price','Цена дизеля, $/gal','Diesel price, $/gal'],['fu.est','Расчётное топливо','Estimated fuel'],
 ['fu.scanTitle','🤖 Авто-чтение чеков Relay (скриншот или PDF)','🤖 Auto-read Relay receipts (screenshot or PDF)'],['fu.scan','Скан чека','Scan receipt'],['fu.pdf','PDF','PDF'],['fu.manual','Чек','Receipt'],['fu.replace','Очистить старые строки перед импортом','Clear existing rows before import'],
-['fu.text','Вставить текст чека вручную','Paste receipt text manually'],['fu.parse','Распознать текст','Parse text'],['fu.loc','Город, ШТ','City, ST'],['fu.dgal','Дизель, gal','Diesel, gal'],['fu.dcost','Дизель, $','Diesel, $'],['fu.fgal','DEF, gal','DEF, gal'],['fu.fcost','DEF, $','DEF, $'],
+['fu.text','Вставить текст чека вручную','Paste receipt text manually'],['fu.parse','Распознать текст','Parse text'],['fu.loc','Город, ШТ','City, ST'],['fu.dgal','Дизель, gal','Diesel, gal'],['fu.dcost','Дизель, $','Diesel, $'],['fu.fgal','DEF, gal','DEF, gal'],['fu.fcost','DEF, $','DEF, $'],['fu.hLoc','Заправка','Stop'],['fu.hGal','Gal','Gal'],['fu.hCost','Дизель $','Diesel $'],['fu.hDefGal','DEF gal','DEF gal'],['fu.hDef','DEF $','DEF $'],
 ['fu.total','Итого по чекам','Receipts total'],['fu.avg','Ср. цена','Avg price'],['fu.actual','Факт. расход','Actual MPG'],['fu.byState','Дизель по штатам (IFTA)','Diesel by state (IFTA)'],['fu.none','Нет данных по штатам','No state data'],
 ['sc.busy','⏳ Читаю файл…','⏳ Reading file…'],['sc.ocr','🔍 Чек {i}/{n}: {p}%','🔍 Receipt {i}/{n}: {p}%'],['sc.ok','✅ Добавлено заправок: {n}','✅ Fuel stops added: {n}'],['sc.none','⚠️ Текст считан, но галлоны и суммы не найдены. Проверьте текст ниже.','⚠️ Text was read, but gallons and amounts were not found. Check the text below.'],['sc.err','❌ Ошибка: {e}','❌ Error: {e}'],['sc.noText','⚠️ Загрузите скриншот/PDF или вставьте текст чека.','⚠️ Upload a screenshot/PDF or paste the receipt text.'],['sc.wait','Библиотека ещё загружается, попробуйте через секунду.','The library is still loading, try again in a second.'],
 ['mt.title','Копилка на ТО','Maintenance fund'],['mt.saved','Накоплено, $','Saved, $'],['mt.week','+{a} за неделю','+{a} this week'],['mt.interval','Интервал ТО, mi','Service interval, mi'],['mt.reset','Сбросить ТО','Reset service'],['mt.done','Пройдено: {a} / {b} mi','Driven: {a} / {b} mi'],['mt.left','Осталось: {a} mi','Left: {a} mi'],['mt.due','⚠️ Пора на ТО!','⚠️ Service due!'],['mt.confirm','Сбросить счётчик до ТО? Отсчёт начнётся с нуля.','Reset the service counter? It will start from zero.'],
-['tx.title','Налоговая копилка','Tax set-aside'],['tx.sub','Подушка под налоги, только для овнера','A buffer for taxes, owner mode only'],['tx.pct','Откладывать, % от чистой','Set aside, % of net'],['tx.amount','Отложить за неделю','Set aside this week'],
+['tx.title','Налоговая копилка','Tax set-aside'],['tx.sub','% от чистой — подушка под налоги','% of net set aside for taxes'],['tx.pct','Откладывать, % от чистой','Set aside, % of net'],['tx.amount','Отложить за неделю','Set aside this week'],
 ['ex.t.o','Статьи расходов','Expenses'],['ex.t.d','Личные вычеты','Personal deductions'],['ex.sub.d','Вычитаются из вашего заработка: аванс, ELD, питание…','Deducted from your pay: advance, ELD, meals…'],['ex.add','+ Расход','+ Expense'],['ex.save','📌 Запомнить как шаблон','📌 Save as default'],
 ['ex.name','Название','Name'],['ex.type','Тип расчёта','Calculation'],['ex.val','Значение','Value'],['ex.fixed','Фикс ($)','Fixed ($)'],['ex.pct','% от Gross','% of gross'],['ex.cpm','¢ / миля','¢ / mile'],['ex.dpm','$ / миля','$ / mile'],['ex.total','Итого','Total'],['ex.new','Новый расход','New expense'],['ex.saved','Шаблон сохранён: режим, процент и статьи расходов','Default saved: mode, percent and expense items'],
 ['d.truck','Аренда трака','Truck payment'],['d.trailer','Аренда прицепа','Trailer payment'],['d.ins','Страховка','Insurance'],['d.comm','Комиссия компании (%)','Company fee (%)'],['d.eld','ELD / Logbook','ELD / Logbook'],['d.adv','Аванс / личные расходы','Advance / personal costs'],
@@ -736,7 +809,7 @@ var DICT=[
 ['wt.ok','✅ ВЕС В НОРМЕ: {a} / {b} lbs (запас {c})','✅ WITHIN LIMIT: {a} / {b} lbs ({c} spare)'],['wt.over','🚨 ПЕРЕГРУЗ {c} lbs ({a} / {b})','🚨 OVERWEIGHT by {c} lbs ({a} / {b})'],['wt.axle','⚠️ Общий вес в норме, но задняя ось перегружена ({a} > {b}). Сдвиньте груз назад.','⚠️ Total is fine, but the drive axle is overloaded ({a} > {b}). Shift cargo rearward.'],
 ['wt.gcw','Общий вес','Gross weight'],['wt.maxpay','Макс. груз','Max payload'],['wt.drive','Задняя ось','Drive axle'],['wt.pinw','На шар: ~{a} lbs','On pin: ~{a} lbs'],['wt.empty','Пустая сцепка','Empty combo'],['wt.spare','Запас: +{a}','Spare: +{a}'],['wt.overS','Перегруз: {a}','Over: {a}'],
 ['ar.title','Архив недель','Weeks archive'],['ar.pick','— выберите неделю —','— choose a week —'],['ar.empty','В архиве пока нет недель','No archived weeks yet'],['ar.delete','Удалить','Delete'],['ar.confirmDel','Удалить неделю «{n}» навсегда?','Delete week «{n}» forever?'],
-['ar.map','Маршрут недели','Week route'],['ar.mapSub','Карта США по вашим рейсам: груженые и пустые перегоны','US map of your loads: loaded legs and deadhead'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет и обновите страницу.','The map failed to load. Check your connection and reload.'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в рейсах.','No route data. Fill in From and To on the loads.'],
+['ar.map','Маршрут недели','Week route'],['ar.mapSub','Карта США по вашим рейсам: груженые и пустые перегоны','US map of your loads: loaded legs and deadhead'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет.','The map did not load. Check your connection.'],['map.retry','Повторить','Retry'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в рейсах.','No route data. Fill in From and To on the loads.'],
 ['map.replay','Повтор','Replay'],['map.loaded','Груженый','Loaded'],['map.dh','Пустой','Deadhead'],['map.stops','Остановок','Stops'],['map.states','Штатов на пути','States crossed'],['map.crossed','Штаты на пути (примерно)','States on the way (approx.)'],['map.missing','Не удалось найти мест: {n}','Places not found: {n}'],
 ['ar.anat','Анатомия одной мили','Anatomy of one mile'],['ar.be','Себестоимость мили (CPM): {c}/mi','Cost per mile (CPM): {c}/mi'],['ar.be.d','Чистыми водителю: {c}/mi','Driver net: {c}/mi'],['ar.dhpie','Loaded и Deadhead мили','Loaded vs deadhead miles'],['ar.dhrpm','Ставка: Loaded, All-miles, Net','Rate: Loaded, All-miles, Net'],['ar.cpm','CPM по статьям, $/mi','CPM by item, $/mi'],['ar.loadsrpm','RPM рейсов и CPM','Load RPM vs CPM'],['ar.split','Куда ушла выручка','Where revenue went'],['ar.expDetail','Расходы и удержания','Expenses and deductions'],['ar.loads','Рейсы недели','Loads of the week'],
 ['ar.fuelItem','⛽ Дизель и DEF','⛽ Diesel and DEF'],['ar.ownerShare','🏢 Доля овнера / компании','🏢 Owner / company share'],['ar.netItem','💰 Чистая прибыль','💰 Net profit'],['ar.sumLoad','Сводный рейс недели','Week summary load'],['ar.fixed','Фиксированные','Fixed'],['ar.percent','Процентные','Percent-based'],['ar.permile','Помильные','Per-mile'],
@@ -749,7 +822,7 @@ var DICT=[
 ['rp.heading','Hotshot Fleet Hub: финансовый и налоговый отчёт','Hotshot Fleet Hub: financial and tax report'],['rp.period','Период: {p}','Period: {p}'],['rp.pAll','все сохранённые недели','all saved weeks'],['rp.pMonth','месяц {m}','month {m}'],['rp.pRange','с {a} по {b}','from {a} to {b}'],['rp.start','начала','the start'],['rp.today','сегодня','today'],['rp.profile','Профиль','Profile'],['rp.gen','Сформирован: {d}','Generated: {d}'],
 ['rp.perdiem','Per Diem (питание в рейсе)','Per Diem (meals on the road)'],['rp.pdDays','{n} дн. × ${r}','{n} d × ${r}'],['rp.ded','Вычитаемо (80%): {a}','Deductible (80%): {a}'],['rp.milesFuel','Пробег и топливо','Miles and fuel'],['rp.milesVal','Всего: {m} mi ({n} нед.)','Total: {m} mi ({n} wk)'],['rp.fuelVal','Топливо: {a}','Fuel: {a}'],['rp.dhNote','Loaded: {a} mi | Deadhead: {b} mi ({p}%)','Loaded: {a} mi | Deadhead: {b} mi ({p}%)'],
 ['rp.ifta','Дизель по штатам за период (IFTA)','Diesel by state for the period (IFTA)'],['rp.noIfta','В периоде нет чеков с заправками по штатам.','No fuel receipts with states in this period.'],['rp.weeks','Недели периода','Weeks in period'],['rp.loads','Реестр рейсов','Load registry'],['rp.gP','Gross за период','Gross, period'],['rp.net','Чистая прибыль','Net profit'],['rp.allMiles','Всего миль','Total miles'],
-['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
+['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.del','Удалить','Delete'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
 ['sync.saving','☁️ Сохранение…','☁️ Saving…'],['sync.ok','☁️ Синхронизировано','☁️ Synced'],['sync.local','⚠️ Только локально','⚠️ Local only'],
 ['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export']
 ];
@@ -790,7 +863,7 @@ var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'
 var LAST={};var CH={};var saveT=null;var mapToken=0;var curPage='week';
 
 function newLoad(o){return Object.assign({id:uid(),pickup:todayISO(),delivery:todayISO(),fromText:'',toText:'',fromGeo:null,toGeo:null,route:'',miles:0,deadhead:0,gross:0,broker:'',unpaid:false},o||{});}
-function normLoad(o){var l=newLoad(o);l.id=uid();if(!l.fromText&&!l.toText&&l.route&&l.route.indexOf('->')>-1){var p=l.route.split('->');l.fromText=p[0].trim();l.toText=(p[1]||'').trim();}return l;}
+function normLoad(o){var l=newLoad(o);l.id=uid();if(!l.fromText&&!l.toText&&l.route){var p=routeParts(l.route);if(p[1]){l.fromText=p[0];l.toText=p[1];}}return l;}
 function newFuel(o){return Object.assign({id:uid(),loc:'',dieselGal:0,dieselCost:0,defGal:0,defCost:0},o||{});}
 function newExp(o){return Object.assign({id:uid(),name:t('ex.new'),type:'fixed',val:0},o||{});}
 function ownerNameSet(){return[TR.ru['d.truck'],TR.en['d.truck']];}
@@ -998,22 +1071,28 @@ function renderStatic(){
  renderLoads();renderFuel();renderExps();refresh();
 }
 
+function isBlankLoad(l){return!String(l.fromText||'').trim()&&!String(l.toText||'').trim()&&!String(l.route||'').trim()&&!num(l.gross)&&!num(l.miles);}
+function shortDate(iso){var p=String(iso||'').split('-');if(p.length<3)return String(iso||'');return LANG==='ru'?(p[2]+'.'+p[1]):(p[1]+'/'+p[2]);}
+/* A load is a one-line summary (route, dates, miles, $) that opens into a compact editor */
 function loadCard(l,i){
+ if(l._open===undefined)l._open=isBlankLoad(l);
  var split=S.milesMode==='split',auto=S.milesCalc==='auto',cl=auto&&canLd(l),cd=auto&&canDh(i);
  var tag='<span class="atag">'+t('mc.tag')+'</span>';
- return'<div class="rc" data-list="loads" data-id="'+l.id+'">'+
- '<div class="rc-h"><span class="n">'+(i+1)+'</span><span class="rc-sum" data-out></span><button class="x need-write" data-act="del" aria-label="delete">✕</button></div>'+
- '<div class="f w12 t6"><label>'+t('ld.from')+'</label><input type="text" data-place="from" value="'+esc(l.fromText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(l.fromGeo))+'</div></div>'+
- '<div class="f w12 t6"><label>'+t('ld.to')+'</label><input type="text" data-place="to" value="'+esc(l.toText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(l.toGeo))+'</div></div>'+
- '<div class="f t3"><label>'+t('ld.pick')+'</label><input type="date" data-k="pickup" value="'+esc(l.pickup)+'"></div>'+
- '<div class="f t3"><label>'+t('ld.del')+'</label><input type="date" data-k="delivery" value="'+esc(l.delivery)+'"></div>'+
- '<div class="f t2'+(cl?' is-auto':'')+'"><label>'+t(split?'ld.mi.l':'ld.mi.s')+tag+'</label><input type="number" inputmode="decimal" data-k="miles" value="'+num(l.miles)+'"'+(cl?' readonly':'')+'></div>'+
- (split?'<div class="f t2'+(cd?' is-auto':'')+'"><label class="r">'+t('ld.dh')+tag+'</label><input type="number" inputmode="decimal" data-k="deadhead" value="'+num(l.deadhead)+'" style="color:var(--red)"'+(cd?' readonly':'')+'></div>':'')+
- '<div class="f t2"><label class="g">'+t('ld.gross')+'</label><input type="number" inputmode="decimal" data-k="gross" value="'+num(l.gross)+'" style="color:var(--grn);font-weight:800"></div>'+
- '<div class="f t4"><label>'+t('ld.broker')+'</label><input type="text" data-k="broker" value="'+esc(l.broker)+'" autocomplete="off"></div>'+
- '<div class="f t4"><label class="chk"><input type="checkbox" data-k="unpaid"'+(l.unpaid?' checked':'')+'><span>'+t('ld.unpaid')+'</span></label></div>'+
- '<div class="foot"><button class="btn sm need-write" data-act="recalcMiles">'+(auto?'↻ '+t('mc.recalc'):'📏 '+t('ld.calc'))+'</button></div>'+
- '</div>';
+ return'<div class="ld'+(l._open?' open':'')+'" data-list="loads" data-id="'+l.id+'">'+
+ '<button type="button" class="ld-h" data-act="ldToggle" aria-expanded="'+(l._open?'true':'false')+'"><span class="n">'+(i+1)+'</span>'+
+ '<span class="ld-main"><span class="ld-route"></span><span class="ld-meta" data-out></span></span><span class="ld-gross"></span><span class="ld-chev">▼</span></button>'+
+ '<div class="ld-b cmp">'+
+ '<div class="f cw-place"><label>'+t('ld.from')+'</label><input type="text" data-place="from" value="'+esc(l.fromText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(l.fromGeo))+'</div></div>'+
+ '<div class="f cw-place"><label>'+t('ld.to')+'</label><input type="text" data-place="to" value="'+esc(l.toText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(l.toGeo))+'</div></div>'+
+ '<div class="f cw-date"><label>'+t('ld.pick')+'</label><input type="date" data-k="pickup" value="'+esc(l.pickup)+'"></div>'+
+ '<div class="f cw-date"><label>'+t('ld.del')+'</label><input type="date" data-k="delivery" value="'+esc(l.delivery)+'"></div>'+
+ '<div class="f cw-num'+(split?'':' wide')+(cl?' is-auto':'')+'"><label>'+t(split?'ld.mi.l':'ld.mi.s')+tag+'</label><input type="number" inputmode="decimal" data-k="miles" value="'+num(l.miles)+'"'+(cl?' readonly':'')+'></div>'+
+ (split?'<div class="f cw-num'+(cd?' is-auto':'')+'"><label class="r">'+t('ld.dh')+tag+'</label><input type="number" inputmode="decimal" data-k="deadhead" value="'+num(l.deadhead)+'" class="r"'+(cd?' readonly':'')+'></div>':'')+
+ '<div class="f cw-num'+(split?'':' wide')+'"><label class="g">'+t('ld.gross')+'</label><input type="number" inputmode="decimal" data-k="gross" value="'+num(l.gross)+'" class="g"></div>'+
+ '<div class="f cw-brk"><label>'+t('ld.broker')+'</label><input type="text" data-k="broker" value="'+esc(l.broker)+'" autocomplete="off"></div>'+
+ '<div class="f cw-chk"><label class="chk"><input type="checkbox" data-k="unpaid"'+(l.unpaid?' checked':'')+'><span>⏳ '+t('ld.unpaid')+'</span></label></div>'+
+ '<div class="ld-foot need-write"><button type="button" class="btn sm" data-act="recalcMiles">'+(auto?'↻ '+t('mc.recalc'):'📏 '+t('ld.calc'))+'</button><button type="button" class="btn sm dng" data-act="del">🗑 '+t('c.del')+'</button></div>'+
+ '</div></div>';
 }
 function renderLoads(){
  var box=$('#loads-list');
@@ -1023,29 +1102,38 @@ function renderLoads(){
 function updateLoadOut(l){
  var card=$('[data-list="loads"][data-id="'+l.id+'"]');if(!card)return;
  var split=S.milesMode==='split',i=S.loads.indexOf(l);
- var mi=num(l.miles)+(split?num(l.deadhead):0);
- var rpm=mi>0?num(l.gross)/mi:0;
+ var lm=num(l.miles),dm=split?num(l.deadhead):0,mi=lm+dm,g=num(l.gross),rpm=mi>0?g/mi:0;
  var a=S.milesCalc==='auto'&&(canLd(l)||(split&&canDh(i)));
- card.querySelector('[data-out]').textContent=t('ld.d',{n:loadDays(l)})+'  ·  $'+f2(rpm)+'/mi'+(a?'  ·  🤖 '+t('mc.tag')+(l.apx?' ≈':''):'');
+ var route=[String(l.fromText||'').trim(),String(l.toText||'').trim()].filter(Boolean).join(' → ')||String(l.route||'').replace(/\s*->\s*/g,' → ').trim();
+ var dates=l.pickup?(shortDate(l.pickup)+(l.delivery&&l.delivery!==l.pickup?'–'+shortDate(l.delivery):'')):'';
+ var parts=[dates,(split&&dm>0?f0(lm)+' + '+f0(dm)+' DH':f0(mi))+' mi'];
+ if(mi>0&&g>0)parts.push('$'+f2(rpm)+'/mi');
+ if(a)parts.push('🤖'+(l.apx?'≈':''));
+ if(l.unpaid&&g>0)parts.push('⏳');
+ if(String(l.broker||'').trim())parts.push(String(l.broker).trim());
+ var re=card.querySelector('.ld-route');re.textContent=route||t('ld.new');re.classList.toggle('dim',!route);
+ card.querySelector('[data-out]').textContent=parts.filter(Boolean).join(' · ');
+ var ge=card.querySelector('.ld-gross');ge.textContent=g>0?money(g,0):'—';ge.classList.toggle('z',!(g>0));
 }
+/* fuel and expenses: one table-like row each, sized to fit a phone screen */
 function fuelCard(f){
- return'<div class="rc" data-list="fuel" data-id="'+f.id+'">'+
- '<div class="f w12 t4"><label>'+t('fu.loc')+'</label><input type="text" data-k="loc" value="'+esc(f.loc)+'" autocomplete="off"></div>'+
- '<div class="f t2"><label>'+t('fu.dgal')+'</label><input type="number" inputmode="decimal" step="0.001" data-k="dieselGal" value="'+num(f.dieselGal)+'"></div>'+
- '<div class="f t2"><label class="g">'+t('fu.dcost')+'</label><input type="number" inputmode="decimal" step="0.01" data-k="dieselCost" value="'+num(f.dieselCost)+'" style="color:var(--grn);font-weight:700"></div>'+
- '<div class="f t2"><label>'+t('fu.fgal')+'</label><input type="number" inputmode="decimal" step="0.001" data-k="defGal" value="'+num(f.defGal)+'"></div>'+
- '<div class="f t2"><label class="b">'+t('fu.fcost')+'</label><input type="number" inputmode="decimal" step="0.01" data-k="defCost" value="'+num(f.defCost)+'" style="color:var(--blu);font-weight:700"></div>'+
- '<div class="foot"><button class="btn dng sm need-write" data-act="del">✕</button></div></div>';
+ var n=function(k,cls,step,lbl){return'<input type="number" class="'+cls+'" inputmode="decimal" step="'+step+'" data-k="'+k+'" value="'+num(f[k])+'" aria-label="'+esc(t(lbl))+'">';};
+ return'<div class="frow cmp" data-list="fuel" data-id="'+f.id+'">'+
+ '<input type="text" data-k="loc" value="'+esc(f.loc)+'" placeholder="'+esc(t('fu.loc'))+'" autocomplete="off" aria-label="'+esc(t('fu.loc'))+'">'+
+ n('dieselGal','',0.001,'fu.dgal')+n('dieselCost','g',0.01,'fu.dcost')+n('defGal','c-fgal',0.001,'fu.fgal')+n('defCost','b',0.01,'fu.fcost')+
+ '<button type="button" class="x need-write" data-act="del" aria-label="delete">✕</button></div>';
 }
-function renderFuel(){$('#fuel-list').innerHTML=S.fuel.map(fuelCard).join('');}
+function renderFuel(){
+ $('#fuel-list').innerHTML=S.fuel.length?'<div class="fhead"><span>'+t('fu.hLoc')+'</span><span>'+t('fu.hGal')+'</span><span>'+t('fu.hCost')+'</span><span class="c-fgal">'+t('fu.hDefGal')+'</span><span>'+t('fu.hDef')+'</span><span></span></div>'+S.fuel.map(fuelCard).join(''):'';
+}
 function expCard(e){
  var o=function(v,k){return'<option value="'+v+'"'+(e.type===v?' selected':'')+'>'+t(k)+'</option>';};
- return'<div class="rc" data-list="exps" data-id="'+e.id+'">'+
- '<div class="f w12 t4"><label>'+t('ex.name')+'</label><input type="text" data-k="name" value="'+esc(e.name)+'"></div>'+
- '<div class="f t3"><label>'+t('ex.type')+'</label><select data-k="type">'+o('fixed','ex.fixed')+o('percent','ex.pct')+o('cpm','ex.cpm')+o('dlr_mile','ex.dpm')+'</select></div>'+
- '<div class="f t2"><label>'+t('ex.val')+'</label><input type="number" inputmode="decimal" data-k="val" value="'+num(e.val)+'"></div>'+
- '<div class="f t3"><label>'+t('ex.total')+'</label><div class="a" data-sum style="font-family:var(--fd);font-size:24px;font-weight:700;min-height:46px;display:flex;align-items:center">$0.00</div></div>'+
- '<div class="foot"><button class="btn dng sm need-write" data-act="del">✕</button></div></div>';
+ return'<div class="erow cmp" data-list="exps" data-id="'+e.id+'">'+
+ '<input type="text" class="e-name" data-k="name" value="'+esc(e.name)+'" aria-label="'+esc(t('ex.name'))+'">'+
+ '<select class="e-type" data-k="type" aria-label="'+esc(t('ex.type'))+'">'+o('fixed','ex.fixed')+o('percent','ex.pct')+o('cpm','ex.cpm')+o('dlr_mile','ex.dpm')+'</select>'+
+ '<input type="number" class="e-val" inputmode="decimal" data-k="val" value="'+num(e.val)+'" aria-label="'+esc(t('ex.val'))+'">'+
+ '<div class="e-tot a" data-sum>$0.00</div>'+
+ '<button type="button" class="x need-write" data-act="del" aria-label="delete">✕</button></div>';
 }
 function renderExps(){$('#exp-list').innerHTML=S.exps.map(expCard).join('');}
 
@@ -1463,18 +1551,64 @@ function showArchived(idx){
 /* =========================================================
    US route map
    ========================================================= */
-var TOPO=null;
+var TOPO=null,D3P=null;
+var D3_SRC=['https://cdn.jsdelivr.net/npm/d3-array@3.2.4/dist/d3-array.min.js','https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/dist/d3-geo.min.js'];
+function withTimeout(p,ms){return Promise.race([p,new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},ms);})]);}
+function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=false;s.onload=function(){res();};s.onerror=function(){s.remove();rej(new Error('load '+src));};document.head.appendChild(s);});}
+function d3Ready(){return!!(window.d3&&typeof d3.geoAlbersUsa==='function'&&typeof d3.geoPath==='function'&&typeof d3.geoContains==='function'&&typeof d3.geoInterpolate==='function');}
+/* d3-geo calls into d3-array while it loads, so d3-array MUST be loaded first.
+   (6.0/6.1 loaded them in the wrong order and the map hung on "Drawing the map…") */
+function ensureD3(){
+ if(d3Ready())return Promise.resolve();
+ if(!D3P)D3P=loadScript(D3_SRC[0]).then(function(){return loadScript(D3_SRC[1]);}).then(function(){if(!d3Ready())throw new Error('d3-geo not ready');}).catch(function(e){D3P=null;throw e;});
+ return D3P;
+}
 function getTopo(){
  if(TOPO)return TOPO;
  TOPO=fetchJson('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json',15000).catch(function(e){TOPO=null;throw e;});
  return TOPO;
 }
-function loadSide(l,side){return side==='from'?(l.fromText||(l.route||'').split('->')[0]||'').trim():(l.toText||(l.route||'').split('->')[1]||'').trim();}
+/* Minimal TopoJSON -> GeoJSON (same result as topojson-client's feature(), no extra library) */
+function topoFeature(topo,obj){
+ var tf=topo.transform,arcs=topo.arcs,cache={};
+ function arc(i){var k=i<0?~i:i,pts=cache[k];
+  if(!pts){var a=arcs[k],x=0,y=0;pts=new Array(a.length);
+   for(var j=0;j<a.length;j++){if(tf){x+=a[j][0];y+=a[j][1];pts[j]=[x*tf.scale[0]+tf.translate[0],y*tf.scale[1]+tf.translate[1]];}else pts[j]=[a[j][0],a[j][1]];}
+   cache[k]=pts;}
+  return i<0?pts.slice().reverse():pts;}
+ function ring(ids){var out=[];for(var n=0;n<ids.length;n++){var p=arc(ids[n]);if(out.length)out.pop();for(var m=0;m<p.length;m++)out.push(p[m]);}while(out.length&&out.length<4)out.push(out[0]);return out;}
+ function geom(g){if(!g)return null;
+  if(g.type==='Polygon')return{type:'Polygon',coordinates:g.arcs.map(ring)};
+  if(g.type==='MultiPolygon')return{type:'MultiPolygon',coordinates:g.arcs.map(function(p){return p.map(ring);})};
+  if(g.type==='GeometryCollection')return{type:'GeometryCollection',geometries:g.geometries.map(geom)};
+  return null;}
+ var list=obj.type==='GeometryCollection'?obj.geometries:[obj];
+ return{type:'FeatureCollection',features:list.map(function(g){return{type:'Feature',id:g.id,properties:g.properties||{},geometry:geom(g)};}).filter(function(f){return f.geometry;})};
+}
+/* "Dallas, TX -> Atlanta, GA", "A → B", "A - B", "A to B", old "MI-NH" */
+function routeParts(r){
+ r=String(r||'').trim();if(!r)return['',''];
+ var m=r.split(/\s*(?:->|→|=>|—|–|\s-\s|\bto\b)\s*/i).filter(Boolean);
+ if(m.length>=2)return[m[0].trim(),m[m.length-1].trim()];
+ var s=r.match(/^([A-Za-z]{2})\s*-\s*([A-Za-z]{2})$/);
+ if(s)return[s[1].toUpperCase(),s[2].toUpperCase()];
+ return[r,''];
+}
+function loadSide(l,side){var p=routeParts(l.route),v=side==='from'?(l.fromText||p[0]):(l.toText||p[1]);return String(v||'').trim();}
 async function geoOfLoad(l,side){var g=l[side+'Geo'];if(g&&g.lat!=null)return g;var txt=loadSide(l,side);if(!txt)return null;return await resolvePlace(txt);}
 function arcPath(p,q,k){var mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2,dx=q[0]-p[0],dy=q[1]-p[1],len=Math.hypot(dx,dy)||1,off=Math.min(70,len*0.18)*k;return'M'+p[0].toFixed(1)+','+p[1].toFixed(1)+' Q'+(mx-dy/len*off).toFixed(1)+','+(my+dx/len*off).toFixed(1)+' '+q[0].toFixed(1)+','+q[1].toFixed(1);}
 async function renderMap(w){
  var box=$('#map-box'),info=$('#map-info'),token=++mapToken;
  box.innerHTML='<div class="muted pad">'+t('map.loading')+'</div>';info.innerHTML='';
+ try{await drawMap(w,box,info,token);}
+ catch(e){
+  if(window.console)console.warn('map:',e);
+  if(token===mapToken){box.innerHTML='<div class="muted pad">'+t('map.fail')+' <button type="button" class="btn sm" data-act="mapRetry">↻ '+t('map.retry')+'</button></div>';}
+ }
+}
+async function drawMap(w,box,info,token){
+ /* libraries + state outlines load while places are being looked up */
+ var libs=withTimeout(Promise.all([ensureD3(),getTopo()]),25000);libs.catch(function(){});
  var loads=(Array.isArray(w.loads)?w.loads:[]).slice().sort(function(a,b){return String(a.pickup||'').localeCompare(String(b.pickup||''));});
  var segs=[],stops=[],last=null,missing=0;
  var st0=(w.startGeo&&w.startGeo.lat!=null&&w.startGeo.lon!=null)?w.startGeo:null;
@@ -1488,10 +1622,9 @@ async function renderMap(w){
   addStop(A);segs.push({t:'ld',a:A,b:B});addStop(B);last=B;
  }
  if(!segs.length){box.innerHTML='<div class="muted pad">'+t('map.none')+'</div>';if(missing)info.innerHTML='<div class="cs">'+t('map.missing',{n:missing})+'</div>';return;}
- var topo;
- try{if(!window.d3||!window.topojson)throw new Error('lib');topo=await getTopo();}catch(e){if(token===mapToken)box.innerHTML='<div class="muted pad">'+t('map.fail')+'</div>';return;}
+ var topo=(await libs)[1];
  if(token!==mapToken)return;
- var fc=topojson.feature(topo,topo.objects.states),W=960,H=600;
+ var fc=topoFeature(topo,topo.objects.states),W=960,H=600;
  var proj=d3.geoAlbersUsa().fitExtent([[10,10],[W-10,H-10]],fc),path=d3.geoPath(proj);
  var stopSt={},crossSt={};
  stops.forEach(function(s){if(s.g.st)stopSt[s.g.st]=1;});
@@ -1657,7 +1790,13 @@ var ACT={
   runEval();},
  fuelMode:function(b){if(!guardWrite())return;S.fuelMode=b.dataset.v;renderStatic();queueSave();},
  maint:function(b){if(!guardWrite())return;S.maintOn=b.dataset.v==='1';renderStatic();queueSave();},
- addLoad:function(){if(!guardWrite())return;var prev=S.loads[S.loads.length-1];S.loads.push(newLoad(prev?{pickup:prev.delivery||todayISO(),delivery:prev.delivery||todayISO()}:{}));renderLoads();changed();var c=$$('[data-list="loads"]').pop();if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},
+ addLoad:function(){if(!guardWrite())return;var prev=S.loads[S.loads.length-1];
+  S.loads.forEach(function(x){if(!isBlankLoad(x))x._open=false;});
+  var nl=newLoad(prev?{pickup:prev.delivery||todayISO(),delivery:prev.delivery||todayISO()}:{});nl._open=true;S.loads.push(nl);
+  renderLoads();changed();var c=$$('[data-list="loads"]').pop();if(c)c.scrollIntoView({behavior:'smooth',block:'center'});},
+ ldToggle:function(b){var c=b.closest('[data-list]'),l=c&&findItem(c);if(!l)return;l._open=!l._open;c.classList.toggle('open',l._open);b.setAttribute('aria-expanded',l._open?'true':'false');
+  if(l._open){var r=c.getBoundingClientRect();if(r.bottom>window.innerHeight-80)c.scrollIntoView({behavior:'smooth',block:'nearest'});}},
+ mapRetry:function(){var w=S.archive[S.archSel];if(w)renderMap(w);},
  addFuel:function(){if(!guardWrite())return;S.fuel.push(newFuel());renderFuel();changed();},
  addExp:function(){if(!guardWrite())return;S.exps.push(newExp());renderExps();changed();},
  del:async function(b){if(!guardWrite())return;var c=b.closest('[data-list]');if(!c)return;var key=c.dataset.list;S[key]=S[key].filter(function(x){return x.id!==c.dataset.id;});if(key==='loads'&&!S.loads.length)S.loads=[newLoad()];if(key==='loads')renderLoads();else if(key==='fuel')renderFuel();else renderExps();changed();
@@ -1696,7 +1835,7 @@ var ACT={
   var o={pickup:td,delivery:addDaysISO(td,days-1),miles:num($('#ev-loaded').value),deadhead:dh,gross:num($('#ev-gross').value),fromText:EV.from.geo?EV.from.geo.label:EV.from.text,toText:EV.to.geo?EV.to.geo.label:EV.to.text,fromGeo:EV.from.geo,toGeo:EV.to.geo};
   o.route=[o.fromText,o.toText].filter(Boolean).join(' -> ');
   if(S.loads.length===1&&!num(S.loads[0].gross)&&!num(S.loads[0].miles)&&!S.loads[0].fromText)S.loads=[];
-  var nl=newLoad(o);S.loads.push(nl);
+  var nl=newLoad(o);nl._open=true;S.loads.forEach(function(x){x._open=false;});S.loads.push(nl);
   if(S.milesCalc==='auto'&&S.loads.length===1&&!S.startGeo&&EV.pos.geo){S.startGeo=EV.pos.geo;S.startText=EV.pos.geo.label||'';}
   renderStatic();queueSave();toast(t('tl.booked'));go('week');
   if(S.milesCalc==='auto')calcLoadMiles(nl).then(function(){refresh();queueSave();});
@@ -1825,7 +1964,7 @@ function init(){
  }
  $('#auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')authLogin();});
  evSyncUI();runEval();runWeight();
- window.__hs={S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
+ window.__hs={topoFeature:topoFeature,routeParts:routeParts,ensureD3:ensureD3,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
 }
 init();
 })();
