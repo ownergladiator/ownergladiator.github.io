@@ -17,7 +17,7 @@ window.HS_CONFIG = {
   ADMIN_EMAIL:  'mihastya@gmail.com'
 };
 </script>
-<title>Hotshot Fleet Hub 6.5</title>
+<title>Hotshot Fleet Hub 6.6</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hotshot Hub">
@@ -558,9 +558,15 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
               <div><label class="r"><span data-i18n="tl.dh"></span><span class="atag" data-i18n="mc.tag"></span></label><input type="number" inputmode="decimal" id="ev-dh" value="65"></div>
               <div><label class="g" data-i18n="tl.gross"></label><input type="number" inputmode="decimal" id="ev-gross" value="1600" style="font-weight:800;color:var(--grn)"></div>
               <div><label data-i18n="tl.days"></label><input type="number" inputmode="numeric" id="ev-days" value="2"></div>
-              <div class="s2"><label data-i18n="tl.target"></label><input type="number" inputmode="decimal" step="0.05" id="ev-target" value="1.00"></div>
+              <div class="s2"><label data-i18n="tl.target"></label><input type="number" inputmode="decimal" step="0.05" id="ev-target" value="1.00"><div class="cs" id="ev-target-hint" style="margin-top:4px"></div></div>
             </div>
             <div class="cs" style="margin-top:6px" id="ev-hint"></div>
+            <div class="mlbl" style="margin-top:12px" data-i18n="tl.costSrc"></div>
+            <div class="seg" id="seg-evcost" style="margin-top:8px">
+              <button data-act="evCost" data-v="stats" data-i18n="tl.cost.stats"></button>
+              <button data-act="evCost" data-v="manual" data-i18n="tl.cost.manual"></button>
+            </div>
+            <div class="card flat" style="margin-top:10px" id="ev-stats" hidden></div>
             <div class="card flat" style="margin-top:12px" id="ev-owner">
               <div class="fgrid" style="grid-template-columns:repeat(2,1fr)">
                 <div><label data-i18n="tl.pct"></label><input type="number" inputmode="decimal" id="ev-pct" value="12"></div>
@@ -572,7 +578,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
             <div class="card flat" style="margin-top:12px;border-color:var(--blu)" id="ev-driver" hidden>
               <div class="fgrid">
                 <div><label data-i18n="tl.drvPct"></label><input type="number" inputmode="decimal" step="0.5" id="ev-dpct" value="30"></div>
-                <div><label data-i18n="tl.drvExp"></label><input type="number" inputmode="decimal" id="ev-dexp" value="0"></div>
+                <div id="ev-dexp-w"><label data-i18n="tl.drvExp"></label><input type="number" inputmode="decimal" id="ev-dexp" value="0"></div>
               </div>
             </div>
             <div class="verdict g" id="ev-verdict"></div>
@@ -757,7 +763,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
     <button class="btn block need-write" data-act="impOpen" data-i18n="menu.import"></button>
     <button class="btn block" data-act="backup" data-i18n="menu.backup"></button>
     <button class="btn dng block" data-act="logout" data-i18n="menu.logout"></button>
-    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.5</div>
+    <div class="cs" style="text-align:center" id="app-ver">Hotshot Fleet Hub 6.6</div>
   </div>
 </div>
 <!-- import weeks from the old site (another Supabase project) -->
@@ -789,7 +795,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='6.5';
+var APP_VER='6.6';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -855,7 +861,7 @@ var DICT=[
 ['d.truck','Аренда трака','Truck payment'],['d.trailer','Аренда прицепа','Trailer payment'],['d.ins','Страховка','Insurance'],['d.comm','Комиссия компании (%)','Company fee (%)'],['d.eld','ELD / Logbook','ELD / Logbook'],['d.adv','Аванс / личные расходы','Advance / personal costs'],
 ['tl.eval','Брать груз или нет?','Take the load?'],['tl.evalDesc','Реальный заработок за 10 секунд, с учётом пустого перегона.','Real earnings in 10 seconds, deadhead included.'],['tl.pos','Где вы сейчас (необязательно)','Where you are now (optional)'],['tl.pick','Pick up','Pick up'],['tl.drop','Delivery','Delivery'],
 ['tl.autoHint','🤖 Введите город или ZIP — мили по дорогам посчитаются сами. Поля АВТО заблокированы; свои цифры — в режиме «Вручную».','🤖 Enter a city or ZIP and road miles are calculated for you. AUTO fields are locked; for your own numbers switch to Manual.'],
-['tl.manualHint','✍️ Впишите груженые и пустые мили сами. Адреса нужны только чтобы записать груз в неделю.','✍️ Type loaded and deadhead miles yourself. Addresses are only used when you book the load into the week.'],['tl.loaded','Loaded mi','Loaded mi'],['tl.dh','Deadhead mi','Deadhead mi'],['tl.gross','Ставка брокера, $','Broker rate, $'],['tl.days','Дней в пути','Days'],['tl.target','Цель Net RPM, $/mi','Target Net RPM, $/mi'],
+['tl.manualHint','✍️ Впишите груженые и пустые мили сами. Адреса нужны только чтобы записать груз в неделю.','✍️ Type loaded and deadhead miles yourself. Addresses are only used when you book the load into the week.'],['tl.loaded','Loaded mi','Loaded mi'],['tl.dh','Deadhead mi','Deadhead mi'],['tl.gross','Ставка брокера, $','Broker rate, $'],['tl.days','Дней в пути','Days'],['tl.target','Цель Net RPM, $/mi','Target Net RPM, $/mi'],['tl.costSrc','Расходы рейса','Trip costs'],['tl.cost.stats','📊 Моя статистика','📊 My stats'],['tl.cost.manual','✍️ Вручную','✍️ Manual'],['tl.st.title','Ваша средняя себестоимость мили','Your average cost per mile'],['tl.st.titleD','Ваши средние вычеты на милю','Your average deductions per mile'],['tl.st.weeks','по {n} нед. архива','from {n} archived wk'],['tl.st.pct','Комиссия {p}% берётся от ставки этого груза, остальное — {c} на милю (топливо, платежи, страховка и т. д.).','The {p}% fee is taken from this load\'s rate; the rest is {c} per mile (fuel, payments, insurance, etc.).'],['tl.st.extras','Включая доп. расходы из «Итогов»: {c} на милю.','Including extra expenses from Summary: {c} per mile.'],['tl.st.none','В архиве пока нет недель для этой роли — считаем по ручным расходам ниже. После первой закрытой недели включится ваша статистика.','No archived weeks for this role yet — using the manual costs below. Your stats switch on after your first closed week.'],['tl.st.avg','Ваш средний Net RPM по архиву: {r}. Пока вы не поменяли цель, она равна ему.','Your average Net RPM: {r}. Until you change the target, it equals this.'],['tl.st.avgOnly','Ваш средний Net RPM по архиву: {r}.','Your average Net RPM: {r}.'],['tl.costOut','Расходы: {a}','Costs: {a}'],['tl.dedOut','вычеты: {a}','deductions: {a}'],
 ['tl.pct','Комиссия, %','Fee, %'],['tl.other','Прочее, $/mi','Other, $/mi'],['tl.mpg','MPG','MPG'],['tl.fuel','Дизель, $/gal','Diesel, $/gal'],['tl.drvPct','Ваш %','Your %'],['tl.drvExp','Расходы на рейс, $','Trip expenses, $'],
 ['tl.net','Чистыми','Net'],['tl.allrpm','All-miles RPM','All-miles RPM'],['tl.netrpm','Net RPM','Net RPM'],['tl.book','+ Добавить в журнал недели','+ Add to this week'],['tl.good','🟢 ОТЛИЧНЫЙ ГРУЗ','🟢 GREAT LOAD'],['tl.ok','🟡 ПРОХОДНОЙ ГРУЗ','🟡 DECENT LOAD'],['tl.bad','🔴 СЛАБЫЙ ГРУЗ','🔴 WEAK LOAD'],
 ['tl.minRate','Просите минимум','Ask for at least'],['tl.minSub','чтобы выйти на цель Net RPM, это {r}/mi по Loaded','to hit your Net RPM target, that is {r}/mi loaded'],['tl.booked','Груз добавлен в журнал недели','Load added to this week'],['tl.day','{a} / день','{a} / day'],['tl.rate','Ставка {p}%: {a}','Rate {p}%: {a}'],['tl.fuelOut','Топливо: {a}','Fuel: {a}'],
@@ -1368,22 +1374,57 @@ async function evPlace(inp){
 /* =========================================================
    Evaluator + weight
    ========================================================= */
+/* Trip costs from the user's own history: every archived week of the same
+   role (owner / driver on %) plus the Summary tab's extra expenses.
+   cpm      = (all week expenses + extras) / all miles   — what Summary calls CPM
+   p        = share of gross that went to %-based items (company fee),
+              applied to THIS load's rate instead of being spread per mile
+   cpmNoPct = the per-mile part without that fee
+   nrpm     = average Net RPM after extras (default target)          */
+EV.cost=SafeStorage.get('hs_evcost')==='manual'?'manual':'stats';
+function evStats(){
+ var isD=S.role==='driver',G=0,E=0,P=0,N=0,M=0,n=0,X=0;
+ S.archive.forEach(function(w){if((w.userRole==='driver')!==isD)return;var m=num(w.totalMiles);if(!(m>0))return;n++;M+=m;G+=num(w.totalGross);E+=num(w.totalExpenses);P+=num(w.percentExpenses);N+=num(w.netProfit);});
+ if(!n)return null;
+ S.extras.forEach(function(x){X+=num(x.amt);});
+ if(isD||P<0)P=0;
+ return{n:n,M:M,X:X,p:G>0?Math.min(.9,P/G):0,cpm:(E+X)/M,cpmNoPct:(E-P+X)/M,xpm:X/M,nrpm:(N-X)/M};
+}
+function evUseStats(){return EV.cost==='stats'?evStats():null;}
+function evCostUI(){
+ var isD=S.role==='driver',st=evStats(),use=EV.cost==='stats'&&!!st,box=$('#ev-stats');
+ $$('#seg-evcost button').forEach(function(b){var v=b.dataset.v;b.className=(v===(use?'stats':'manual')?'on':'');b.disabled=(v==='stats'&&!st);});
+ $('#ev-owner').hidden=isD||use;$('#ev-driver').hidden=!isD;$('#ev-dexp-w').hidden=use;
+ if(use){
+  box.hidden=false;
+  box.innerHTML='<div class="row between" style="align-items:flex-end;gap:10px"><div style="min-width:0"><div class="cs">'+t(isD?'tl.st.titleD':'tl.st.title')+'</div><div class="xt-big a">$'+f2(st.cpm)+'<span class="cs" style="font-family:var(--fb)"> /mi</span></div></div>'+
+   '<div class="cs" style="text-align:right">'+t('tl.st.weeks',{n:st.n})+'<br>'+f0(st.M)+' mi</div></div>'+
+   (!isD&&st.p>0?'<div class="cs" style="margin-top:6px">'+t('tl.st.pct',{p:f1(st.p*100),c:'$'+f2(st.cpmNoPct)})+'</div>':'')+
+   (st.X>0?'<div class="cs" style="margin-top:4px">'+t('tl.st.extras',{c:'$'+f2(st.xpm)})+'</div>':'');
+ }else if(!st&&EV.cost==='stats'){box.hidden=false;box.innerHTML='<div class="cs">'+t('tl.st.none')+'</div>';}
+ else box.hidden=true;
+}
+function evDefaultTarget(){
+ var isD=S.role==='driver',st=evUseStats(),h=$('#ev-target-hint');
+ if(st){h.textContent=t(syncEval._t?'tl.st.avgOnly':'tl.st.avg',{r:'$'+f2(st.nrpm)});if(!syncEval._t)$('#ev-target').value=(st.nrpm>0.05?st.nrpm:(isD?0.65:0.5)).toFixed(2);}
+ else{h.textContent='';if(!syncEval._t)$('#ev-target').value=isD?'0.65':'1.00';}
+}
 function syncEval(){
- var isD=S.role==='driver';
  $('#ev-mpg').value=S.mpg;$('#ev-fuel').value=Math.min(num(S.diesel)||4,9);$('#ev-dpct').value=S.driverPct;
  var pe=S.exps.filter(function(e){return e.type==='percent'&&num(e.val)>0;})[0];if(pe)$('#ev-pct').value=num(pe.val);
- if(!syncEval._t){$('#ev-target').value=isD?'0.65':'1.00';}
- $('#ev-owner').hidden=isD;$('#ev-driver').hidden=!isD;
+ evCostUI();evDefaultTarget();
  evSyncUI();
 }
 function runEval(){
- var isD=S.role==='driver';
+ var isD=S.role==='driver',st=evUseStats();
  var loaded=num($('#ev-loaded').value),dh=num($('#ev-dh').value),gross=num($('#ev-gross').value),days=Math.max(1,num($('#ev-days').value)||1),mi=loaded+dh,target=num($('#ev-target').value);
  var net,sub,minG;
- if(isD){var pct=num($('#ev-dpct').value)||30,exp=num($('#ev-dexp').value);net=gross*pct/100-exp;sub=t('tl.rate',{p:pct,a:money(gross*pct/100,0)});minG=(target*mi+exp)/(pct/100);}
+ if(st&&isD){var sp=num($('#ev-dpct').value)||30,ded=mi*st.cpm;net=gross*sp/100-ded;sub=t('tl.rate',{p:sp,a:money(gross*sp/100,0)})+' · '+t('tl.dedOut',{a:money(ded,0)});minG=(target*mi+ded)/(sp/100);}
+ else if(st){var cost=mi*st.cpmNoPct+gross*st.p;net=gross-cost;sub=t('tl.costOut',{a:money(cost,0)});minG=(mi*st.cpmNoPct+target*mi)/Math.max(.01,1-st.p);}
+ else if(isD){var pct=num($('#ev-dpct').value)||30,exp=num($('#ev-dexp').value);net=gross*pct/100-exp;sub=t('tl.rate',{p:pct,a:money(gross*pct/100,0)});minG=(target*mi+exp)/(pct/100);}
  else{var fp=num($('#ev-pct').value)/100,oc=num($('#ev-other').value),mpg=Math.max(.1,num($('#ev-mpg').value)||9),fu=num($('#ev-fuel').value);var fuel=mi/mpg*fu;net=gross-gross*fp-fuel-mi*oc;sub=t('tl.fuelOut',{a:money(fuel,0)});minG=(fuel+mi*oc+target*mi)/Math.max(.01,1-fp);}
  var nrpm=mi>0?net/mi:0;
- $('#ev-net').textContent=money(net);$('#ev-day').textContent=t('tl.day',{a:money(net/days,0)});
+ $('#ev-net').textContent=money(net,0);$('#ev-day').textContent=t('tl.day',{a:money(net/days,0)});
  $('#ev-all').textContent='$'+f2(mi>0?gross/mi:0);$('#ev-ld').textContent=t('k.loaded',{v:'$'+f2(loaded>0?gross/loaded:0)});
  $('#ev-nrpm').textContent='$'+f2(nrpm);$('#ev-sub').textContent=sub;
  $('#ev-min').textContent=money(Math.max(0,minG),0);$('#ev-min-sub').textContent=t('tl.minSub',{r:'$'+f2(loaded>0?Math.max(0,minG)/loaded:0)});
@@ -1511,6 +1552,7 @@ async function loadArchive(){
  if(r.error){console.error(r.error);return;}
  S.archive=(r.data||[]).map(function(row){var p=row.full_payload||{};p.db_id=row.id;p.weekEndDate=row.week_end_date;p.monthYear=monthOf(p);return p;});
  fillArchiveControls();refresh();
+ if(curPage==='tools'){syncEval();runEval();}
 }
 async function archiveWeek(){
  if(S.ro)return toast(t('t.ro'));
@@ -2093,6 +2135,7 @@ var ACT={
   if(v==='auto'&&S.loads.some(function(l){return num(l.miles)>0||num(l.deadhead)>0;})&&!confirm(t('mc.confirm')))return;
   S.milesCalc=v;renderStatic();queueSave();
   if(v==='auto'){toast(t('mc.done'));await calcAllMiles(true);queueSave();}else toast(t('mc.manualOn'));},
+ evCost:function(b){EV.cost=b.dataset.v==='manual'?'manual':'stats';SafeStorage.set('hs_evcost',EV.cost);syncEval();runEval();},
  evCalc:async function(b){EV.mode=b.dataset.v==='manual'?'manual':'auto';SafeStorage.set('hs_evcalc',EV.mode);evSyncUI();
   if(EV.mode==='auto'){var ks=['pos','from','to'];for(var k=0;k<ks.length;k++){var inp=$('#ev-'+ks[k]);if(inp&&inp.value.trim()&&!EV[ks[k]].geo)await resolveInto(inp,EV[ks[k]],'text','geo');}await evAuto();evSyncUI();}
   runEval();},
@@ -2167,7 +2210,7 @@ document.addEventListener('input',function(e){
  if(el.dataset.set){var k=el.dataset.set;S[k]=(k==='label')?el.value:num(el.value);if(k==='perDiem'){renderReport();}changed();return;}
  if(el.dataset.evplace){if(/^\d{5}$/.test(el.value.trim()))evPlace(el);return;}
  if(el.dataset.wplace){S.startText=el.value;if(/^\d{5}$/.test(el.value.trim()))resolveInto(el,S,'startText','startGeo',afterStart);return;}
- if(el.closest('#page-tools')){if(el.id==='ev-target')syncEval._t=1;if(el.id==='wt-sel'||el.id.indexOf('wt-')===0)runWeight();else runEval();return;}
+ if(el.closest('#page-tools')){if(el.id==='ev-target'){syncEval._t=1;evDefaultTarget();}if(el.id==='wt-sel'||el.id.indexOf('wt-')===0)runWeight();else runEval();return;}
  if(el.id==='goal-in'){updateGoal();return;}
  var card=el.closest('[data-list]');if(!card)return;
  var it=findItem(card);if(!it)return;
