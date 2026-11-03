@@ -121,6 +121,18 @@ textarea{min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:13px
 @media(max-width:379px){.bn-h{display:none}}
 @media(max-width:359px){.brand{font-size:20px}.brand .og-em{height:28px}}
 .rp-brand{display:flex;align-items:center;gap:10px}.rp-brand .og-em{height:42px}
+.wdates-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#wk-dhint{min-width:0;flex:1 1 200px}#wk-dhint .w{color:var(--acc);font-weight:700}
+.ar-dates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:end}.ar-dates input,.fgrid input[type=date]{min-width:0;width:100%}
+#rp-custom{grid-column:1/-1}.rp-hint{margin-top:10px;line-height:1.4}
+.rp-t tfoot td{font-weight:700;border-bottom:none}.rp-t tr.grp td{background:var(--bg2);font-weight:700}
+.rp-t td:first-child{white-space:normal;min-width:110px}.rp-t .sm-only{font-weight:500;margin-top:2px}
+.rp-xt-t td:first-child{min-width:0;white-space:nowrap}.rp-xt-t td:nth-child(2){white-space:normal}.rp-xt-t tfoot td:first-child{white-space:normal}
+@media(max-width:699px){.rp-t .hm{display:none}}@media(min-width:700px){.rp-t .sm-only{display:none}}
+.rp-x{margin-top:14px}.rp-x .ct{font-size:17px;margin-bottom:6px}
+.pdf-prev{display:block;width:100%;max-height:44dvh;object-fit:contain;background:#fff;border-radius:10px;border:1px solid var(--line)}
+a.btn{text-decoration:none;color:inherit}
+@media(max-width:420px){.ar-dates{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ar-dates .btn{grid-column:span 2}}
 .icon-btn{flex:none}
 @media(max-width:560px){.sync{display:none}.top .tag{display:none}.icon-btn{min-width:40px;min-height:40px}}
 .shell{display:block}
@@ -230,8 +242,26 @@ body.ro .need-write{display:none!important}
 .ld-b .chk{display:flex;align-items:center;gap:8px;min-height:40px;font-size:13px;color:var(--tx);margin:0;cursor:pointer;white-space:normal;line-height:1.2}
 .ld-b .cw-chk{align-self:end}
 .ld-foot{grid-column:1/-1;display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+/* partials (a second shipment on the same trip): violet so they never look like a separate load */
+.pts{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.pts-h{display:none;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}.pts.has .pts-h{display:flex}
+.pts-t{font-weight:700;font-size:13px;color:var(--vio)}.pts-s{font-size:12px;color:var(--mut)}
+.pts-f{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pts-hint{flex:1 1 180px;line-height:1.35}
+.pt{border:1px solid color-mix(in srgb,var(--vio) 32%,var(--line));border-left:3px solid var(--vio);border-radius:10px;padding:8px;background:color-mix(in srgb,var(--vio) 6%,var(--card2));min-width:0}
+.pt-h{display:flex;align-items:center;gap:8px;margin-bottom:7px;min-height:28px}
+.pt-n{font-family:var(--fd);font-weight:800;font-size:13px;background:var(--vio);color:#160f2b;border-radius:6px;padding:2px 7px;flex:none}
+.pt-out{flex:1;min-width:0;font-size:12px;color:var(--mut);line-height:1.3}.pt-out b{color:var(--grn)}.pt-out b.neg{color:var(--red)}.pt-out .pt-dim{color:var(--dim)}
+.pt-g{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.pt-g>.f{grid-column:span 3;min-width:0}.pt-g>.f.n{grid-column:span 2}
+.pt .pst{font-size:10.5px;color:var(--grn);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pt .pst:empty{display:none}.pt .pst.warn{color:var(--red)}
+.pt .pt-mst{color:var(--vio)}.pt-auto input{border-style:dashed;border-color:color-mix(in srgb,var(--vio) 60%,var(--line))}
+.pt .chk{display:flex;align-items:center;gap:8px;min-height:34px;font-size:12.5px;color:var(--tx);margin:4px 0 0;cursor:pointer}
+.pt-add{align-self:flex-start;border-color:color-mix(in srgb,var(--vio) 55%,var(--line));color:var(--vio)}
+.pt .x{flex:none}
+.pt-row td{color:var(--mut);font-size:12px}.pt-row td b{color:var(--vio);font-weight:600}.pt-row td.g{color:var(--grn)}
+.sumbar b.v{color:var(--vio)}
 @media(min-width:760px){
  .ld-b{grid-template-columns:repeat(12,minmax(0,1fr))}
+ .pt-g{grid-template-columns:repeat(12,minmax(0,1fr))}.pt-g>.f{grid-column:span 3}.pt-g>.f.n{grid-column:span 2}
  .ld-b>.f{grid-column:span 3}.ld-b>.f.cw-num{grid-column:span 2}.ld-b>.f.cw-num.wide{grid-column:span 3}
 }
 /* fuel + expenses: table-like rows that fit the screen */
@@ -348,6 +378,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
  body{background:#fff!important;color:#000!important}
  .top,nav#nav,.no-print,.page:not(#page-reports){display:none!important}
  #page-reports{display:flex!important}
+ .rp-detail{display:block!important}
  .card,.kpi,.chip{background:#fff!important;border:1px solid #bbb!important;color:#000!important}
  *{color:#000!important}
  main{padding:0}
@@ -407,6 +438,9 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
         <div class="card">
           <div class="fgrid">
             <div class="s2"><label data-i18n="wk.label"></label><input type="text" id="in-label" data-set="label" style="font-weight:700"></div>
+            <div><label data-i18n="wk.from"></label><input type="date" id="in-wFrom"></div>
+            <div><label data-i18n="wk.to"></label><input type="date" id="in-wTo"></div>
+            <div class="s2 wdates-row"><span class="cs" id="wk-dhint"></span><span class="row" style="gap:6px;flex:none"><button class="btn sm need-write" data-act="wkThis" data-i18n="wk.dThis"></button><button class="btn sm need-write" data-act="wkLoads" data-i18n="wk.dLoads"></button></span></div>
           </div>
           <div class="row wrap" style="margin-top:12px">
             <div class="seg" id="seg-role">
@@ -633,6 +667,8 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
         </div>
         <div id="arch-body" class="page" style="display:none">
           <div class="kpis" id="arch-kpis"></div>
+          <div class="card need-write" id="ar-dates-card"><div class="ch" style="margin-bottom:8px"><span class="ct" style="font-size:17px" data-i18n="ar.dates"></span><span class="cs" id="ar-dates-src"></span></div>
+            <div class="ar-dates"><div><label data-i18n="wk.from"></label><input type="date" id="ar-from"></div><div><label data-i18n="wk.to"></label><input type="date" id="ar-to"></div><button class="btn sm pri" data-act="arDates" data-i18n="ar.datesSave"></button></div></div>
 
           <div class="card">
             <div class="ch"><div><span class="ct" data-i18n="ar.map"></span><div class="cs" data-i18n="ar.mapSub"></div></div>
@@ -737,13 +773,15 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
           <div class="ch"><span class="ct" data-i18n="rp.title"></span>
             <div class="row wrap"><button class="btn" data-act="csv" data-i18n="rp.csv"></button><button class="btn pri" data-act="print" data-i18n="rp.print"></button></div></div>
           <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
-            <div><label data-i18n="rp.mode"></label><select id="rp-mode"><option value="all" data-i18n="rp.all"></option><option value="month" data-i18n="rp.month"></option><option value="week" data-i18n="rp.week"></option><option value="range" data-i18n="rp.range"></option></select></div>
+            <div><label data-i18n="rp.mode"></label><select id="rp-mode"><option value="all" data-i18n="rp.all"></option><option value="month" data-i18n="rp.month"></option><option value="week" data-i18n="rp.week"></option><option value="custom" data-i18n="rp.custom"></option><option value="range" data-i18n="rp.range"></option></select></div>
             <div id="rp-w-month" hidden><label data-i18n="rp.month"></label><select id="rp-month"></select></div>
             <div id="rp-w-week" hidden><label data-i18n="rp.week"></label><select id="rp-week"></select></div>
             <div id="rp-w-from" hidden><label data-i18n="rp.from"></label><input type="date" id="rp-from"></div>
             <div id="rp-w-to" hidden><label data-i18n="rp.to"></label><input type="date" id="rp-to"></div>
             <div><label data-i18n="rp.rate"></label><input type="number" inputmode="decimal" id="in-perDiem" data-set="perDiem"></div>
+            <div id="rp-custom" hidden><div class="row between wrap" style="margin-bottom:8px"><span class="cs" id="rp-cnt"></span><div class="row"><button class="btn sm" data-act="rpAll" data-i18n="sm.all.btn"></button><button class="btn sm" data-act="rpNone" data-i18n="sm.none"></button></div></div><div id="rp-clist" class="list" style="max-height:260px;overflow:auto"></div></div>
           </div>
+          <div class="cs rp-hint" data-i18n="rp.dateHint"></div>
         </div>
         <div class="card" id="rp-area">
           <div class="row between wrap" style="border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px">
@@ -753,7 +791,12 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
           <div class="kpis" id="rp-kpis" style="margin-bottom:14px"></div>
           <div class="grid2" style="margin-bottom:14px">
             <div class="card flat"><div class="cs" style="font-weight:700" data-i18n="rp.perdiem"></div><div class="row between" style="margin-top:4px"><b class="big g" style="font-size:30px" id="rp-pd"></b><span class="cs b" id="rp-pd-d"></span></div><div class="cs" id="rp-pd-ded"></div></div>
-            <div class="card flat"><div class="cs" style="font-weight:700" data-i18n="rp.milesFuel"></div><div class="row between" style="margin-top:4px"><b id="rp-mi"></b><b class="a" id="rp-fuel"></b></div><div class="cs" id="rp-dh"></div></div>
+            <div class="card flat"><div class="cs" style="font-weight:700" data-i18n="rp.milesFuel"></div><div class="row between wrap" style="margin-top:4px;gap:2px 12px"><b id="rp-mi" style="white-space:nowrap"></b><b class="a" id="rp-fuel" style="white-space:nowrap"></b></div><div class="cs" id="rp-dh"></div></div>
+          </div>
+          <div class="card flat" style="margin-bottom:14px" id="rp-exp-card"><div class="row between wrap" style="margin-bottom:8px;gap:8px"><div class="ct r">💸 <span data-i18n="rp.expTitle"></span></div><button class="btn sm no-print" data-act="rpDetail" id="rp-dbtn"></button></div>
+            <div class="tscroll"><table class="rp-t" id="rp-t-exp"><thead><tr><th data-i18n="rp.expItem"></th><th class="hm" data-i18n="rp.expType"></th><th class="ar hm" data-i18n="rp.expWeeks"></th><th class="ar" data-i18n="rp.expSum"></th><th class="ar hm">$/mi</th><th class="ar">%</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+            <div id="rp-xt" class="rp-x"></div>
+            <div id="rp-detail" class="rp-detail rp-x" hidden><div class="ct" data-i18n="rp.detailTitle"></div><div class="tscroll"><table class="rp-t" id="rp-t-det"><thead><tr><th data-i18n="rp.expItem"></th><th class="hm" data-i18n="rp.expType"></th><th class="ar" data-i18n="rp.expSum"></th></tr></thead><tbody></tbody></table></div></div>
           </div>
           <div class="card flat" style="margin-bottom:14px"><div class="ct b" style="margin-bottom:8px">⛽ <span data-i18n="rp.ifta"></span></div><div class="row wrap" id="rp-ifta"></div></div>
           <div class="card flat" style="margin-bottom:14px"><div class="ct" style="margin-bottom:8px" data-i18n="rp.weeks"></div>
@@ -766,6 +809,19 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
   </div>
 </div>
 
+<!-- PDF sheet: phones get a real PDF file to save / send -->
+<div id="pdf-bg" class="sheet-bg" hidden data-act="pdfClose">
+  <div class="sheet" id="pdf-sheet">
+    <div class="row between"><b style="font-size:16px" id="pdf-ttl"></b><button class="icon-btn" data-act="pdfClose">✕</button></div>
+    <div class="cs" id="pdf-info"></div>
+    <img id="pdf-prev" class="pdf-prev" alt="" hidden>
+    <button class="btn pri block" data-act="pdfShare" id="pdf-share" hidden></button>
+    <a class="btn block" id="pdf-dl" hidden></a>
+    <a class="btn block" id="pdf-open" target="_blank" rel="noopener" hidden></a>
+    <div class="cs" id="pdf-hint"></div>
+  </div>
+</div>
+
 <!-- menu sheet -->
 <div id="menu-bg" class="sheet-bg" hidden data-act="closeMenu">
   <div class="sheet" id="menu-sheet">
@@ -774,7 +830,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
     <button class="btn block need-write" data-act="impOpen" data-i18n="menu.import"></button>
     <button class="btn block" data-act="backup" data-i18n="menu.backup"></button>
     <button class="btn dng block" data-act="logout" data-i18n="menu.logout"></button>
-    <div class="cs" style="text-align:center" id="app-ver">OwnerGladiator Hub 6.7</div>
+    <div class="cs" style="text-align:center" id="app-ver">OwnerGladiator Hub 6.9</div>
   </div>
 </div>
 <!-- import weeks from the old site (another Supabase project) -->
@@ -806,7 +862,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--mut);min-height:36px;d
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='6.7';
+var APP_VER='6.9';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -835,7 +891,7 @@ var DICT=[
 ['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.import','📥 Перенести недели со старого сайта','📥 Import weeks from the old site'],['imp.title','Перенос со старого сайта','Import from the old site'],['imp.desc','Войдите почтой и паролем от СТАРОГО сайта. Недели скопируются сюда, на старом сайте ничего не изменится.','Sign in with your OLD site email and password. Your weeks are copied here; nothing changes on the old site.'],['imp.email','Почта на старом сайте','Old site email'],['imp.pass','Пароль от старого сайта','Old site password'],['imp.adv','Адрес старой базы (менять не нужно)','Old database address (no need to change)'],['imp.find','🔎 Найти мои недели','🔎 Find my weeks'],['imp.busy','⏳ Подключаюсь к старой базе…','⏳ Connecting to the old database…'],['imp.found','Найдено недель в архиве: {n}','Archived weeks found: {n}'],['imp.loads','рейсов: {n}','loads: {n}'],['imp.empty','У этого аккаунта на старом сайте нет сохранённых недель.','This account has no saved weeks on the old site.'],['imp.dup','уже есть здесь','already here'],['imp.draftT','Незакрытая неделя','Open week'],['imp.draft','«{l}», рейсов: {n}. Станет текущей неделей здесь.','“{l}”, loads: {n}. Becomes the current week here.'],['imp.draftWarn','Здесь уже есть данные текущей недели — они заменятся.','This site already has current-week data — it will be replaced.'],['imp.run','📥 Перенести выбранное','📥 Import selected'],['imp.none','Ничего не выбрано','Nothing selected'],['imp.done','✅ Перенесено недель: {n}','✅ Weeks imported: {n}'],['imp.doneDraft','✅ Незакрытая неделя перенесена','✅ Open week imported'],['imp.badLogin','Неверная почта или пароль от старого сайта.','Wrong email or password for the old site.'],['imp.unconf','Почта на старом сайте не подтверждена.','This email is not confirmed on the old site.'],['imp.net','Не удалось связаться со старой базой. Проверьте интернет. Если старым сайтом давно не пользовались, его проект Supabase мог уснуть — включите его в панели Supabase и попробуйте снова.','Could not reach the old database. Check your connection. If the old site has not been used for a while, its Supabase project may be paused — resume it in the Supabase dashboard and try again.'],['imp.same','Это адрес новой базы. Укажите адрес старой.','That is the new database. Enter the old one.'],['imp.badCfg','Проверьте адрес и ключ старой базы.','Check the old database address and key.'],['menu.logout','Выйти','Sign out'],
 ['ro.banner','Вы смотрите чужой профиль: только чтение, изменения не сохраняются.','You are viewing another profile: read-only, changes are not saved.'],
 ['wk.label','Название недели / период','Week name / period'],['wk.archive','Завершить и в архив','Finish and archive'],['wk.new','Новая неделя','New week'],['wk.evalBtn','Проверить груз','Check a load'],
-['wk.defLabel','Неделя от {d}','Week of {d}'],['wk.confirmNew','Начать новую неделю? Рейсы и чеки очистятся, настройки по умолчанию сохранятся.','Start a new week? Loads and receipts will be cleared; your defaults stay.'],['wk.confirmArch','Сохранить неделю «{n}» в архив?','Save week «{n}» to the archive?'],
+['wk.defLabel','Неделя от {d}','Week of {d}'],['wk.rangeLabel','Неделя {a}–{b}','Week {a}–{b}'],['wk.from','Неделя с','Week from'],['wk.to','по','to'],['wk.dSet','📅 {n} дн.: {a} – {b}. По этим датам неделя попадёт в нужный месяц, «Итоги» и «Отчёты».','📅 {n} days: {a} – {b}. These dates put the week into the right month, Summary and Reports.'],['wk.dOut','⚠️ грузов вне этих дат: {n}','⚠️ loads outside these dates: {n}'],['wk.dLoadsHint','Даты не выбраны — неделя возьмёт даты грузов: {a} – {b}.','No dates picked — the week uses its load dates: {a} – {b}.'],['wk.dNone','Даты не выбраны — неделя возьмёт их из дат грузов.','No dates picked — the week will use its load dates.'],['wk.dThis','Эта неделя','This week'],['wk.dLoads','По грузам','From loads'],['wk.dNoLoads','В грузах пока нет дат','Loads have no dates yet'],['ar.dates','Даты недели','Week dates'],['ar.datesSave','Сохранить даты','Save dates'],['ar.datesOk','Даты недели обновлены','Week dates updated'],['ar.datesBad','Выберите обе даты','Pick both dates'],['ar.dManual','заданы вручную','set by hand'],['ar.dLoads','взяты из дат грузов','taken from load dates'],['wk.confirmNew','Начать новую неделю? Рейсы и чеки очистятся, настройки по умолчанию сохранятся.','Start a new week? Loads and receipts will be cleared; your defaults stay.'],['wk.confirmArch','Сохранить неделю «{n}» в архив?','Save week «{n}» to the archive?'],
 ['role.owner','Овнер-оператор','Owner-operator'],['role.driver','Водитель на %','Driver on %'],['tag.owner','Owner-Op','Owner-Op'],['tag.driver','Driver %','Driver %'],
 ['h.net.o','Чистая прибыль','Net profit'],['h.net.d','Чистыми на руки','Take-home pay'],['h.vs','к прошлой неделе','vs last week'],['h.m.o','маржа','margin'],['h.m.d','доля от Gross','of gross'],['h.per','в день','per day'],
 ['k.gross','Gross','Gross'],['k.exp','Расходы','Expenses'],['k.earned','Начислено по %','Earned by %'],['k.deduct','Вычеты: {a}','Deductions: {a}'],['k.netrpm','Net / миля','Net / mile'],['k.rpm','Gross RPM','Gross RPM'],['k.loaded','Loaded: {v}','Loaded: {v}'],
@@ -849,7 +905,7 @@ var DICT=[
 ['ld.from','Откуда','From'],['ld.to','Куда','To'],['ld.ph','Dallas, TX или 75201','Dallas, TX or 75201'],
 ['ld.pick','Pick up','Pick up'],['ld.del','Delivery','Delivery'],['ld.mi.s','Мили всего','Total miles'],['ld.mi.l','Loaded, mi','Loaded, mi'],['ld.dh','DH, mi','DH, mi'],['ld.gross','Gross, $','Gross, $'],
 ['ld.broker','Брокер / Load #','Broker / Load #'],['ld.unpaid','Ждёт оплаты','Awaiting payment'],['ld.calc','Рассчитать мили','Calculate miles'],['ld.d','{n} дн.','{n} d'],['ld.empty','Рейсов пока нет','No loads yet'],['ld.new','Новый рейс — нажмите, чтобы заполнить','New load — tap to fill in'],
-['ld.sumL','Loaded','Loaded'],['ld.sumD','Deadhead','Deadhead'],['ld.sumR','Loaded RPM','Loaded RPM'],['ld.auto','≈ авто','≈ auto'],
+['ld.sumL','Loaded','Loaded'],['pt.head','📦 Partials — догруз в этом рейсе','📦 Partials on this trip'],['pt.add','📦 + Partial','📦 + Partial'],['pt.hint','Догруз в этом же рейсе: откуда, куда, сколько миль он добавил к маршруту и сколько платят.','A partial on this same trip: from, to, the miles it adds to the route and its pay.'],['pt.from','Забрать в','Pick up in'],['pt.to','Доставить в','Deliver to'],['pt.mi','+ мили к рейсу','+ miles to trip'],['pt.pay','Оплата, $','Pay, $'],['pt.broker','Брокер / Load #','Broker / Load #'],['pt.unpaid','Ждёт оплаты','Awaiting payment'],['pt.auto','≈ объезд по карте','≈ map detour'],['pt.perMi','{r} за доп. милю','{r} per added mile'],['pt.free','без доп. миль','no extra miles'],['pt.netW','чистыми','net'],['pt.noPay','Впиши оплату и + мили','Enter the pay and extra miles'],['pt.trip','весь рейс {g} · {r}/mi','whole trip {g} · {r}/mi'],['pt.sumBar','Partials ({n})','Partials ({n})'],['i.pt','📦 Партиалы: +{a} за +{m} mi — {r} за каждую доп. милю.','📦 Partials: +{a} for +{m} mi — {r} per added mile.'],['i.pt0','📦 Партиалы: +{a} без доп. миль.','📦 Partials: +{a} with no extra miles.'],['ld.sumD','Deadhead','Deadhead'],['ld.sumR','Loaded RPM','Loaded RPM'],['ld.auto','≈ авто','≈ auto'],
 ['mc.what','Учёт миль','Miles tracked'],['mc.how','Ввод миль','Miles entry'],['mc.auto','🤖 Авто','🤖 Auto'],['mc.manual','✍️ Вручную','✍️ Manual'],['mc.tag','авто','auto'],
 ['mc.hAuto','🤖 Считаем по адресам: груженые — «Откуда» → «Куда», пустые — от прошлой выгрузки. Поля АВТО заблокированы.','🤖 Calculated from addresses: loaded = From → To, deadhead = from the previous drop. AUTO fields are locked.'],
 ['mc.hAutoS','🤖 Считаем по адресам: путь груза + пустой перегон от прошлой выгрузки. Поля АВТО заблокированы.','🤖 Calculated from addresses: load route + deadhead from the previous drop. AUTO fields are locked.'],
@@ -889,8 +945,8 @@ var DICT=[
 ['sm.goal','Цель чистой прибыли, $','Net profit goal, $'],['sm.util','Загрузка и Per Diem','Utilization and Per Diem'],['sm.days','{n} дн. в рейсах','{n} days on road'],['sm.weeksN','Недель: {n}','Weeks: {n}'],['sm.load','{p}% загрузка','{p}% utilization'],['sm.perday','Чистыми / день: {a}','Net / day: {a}'],['sm.pd','Per Diem (${r}/д): {a}','Per Diem (${r}/d): {a}'],
 ['sm.dyn','Динамика: Gross, расходы, чистыми','Trend: gross, expenses, net'],['sm.struct','Структура затрат','Cost structure'],['sm.corr','Gross RPM, Net RPM, CPM','Gross RPM, Net RPM, CPM'],['sm.hauls','Эффективность по длине рейса','Efficiency by haul length'],['sm.lanes','Лучшие направления','Best lanes'],['sm.lanesChart','Топ направлений по RPM','Top lanes by RPM'],['sm.weeks','Недели в отчёте','Weeks included'],['sm.dhdyn','Пустой пробег по неделям','Deadhead by week'],['sm.hint','Указывайте штаты в маршрутах, напр. Dallas, TX','Include states in routes, e.g. Dallas, TX'],
 ['sm.gAll','Gross за всё время','Gross, all time'],['sm.gSel','Gross (выбранные)','Gross (selected)'],['sm.gMonth','Gross за месяц','Gross, month'],['sm.expD','Расходы / вычеты','Expenses / deductions'],['sm.net','Чистый доход','Net income'],['sm.nrpm','Net RPM периода','Period Net RPM'],['sm.margin','Маржа','Margin'],['sm.miles','Пробег','Mileage'],['sm.avgRpm','Ср. Gross RPM','Avg Gross RPM'],
-['rp.title','Отчёт: финансы, налоги, IFTA','Report: finance, tax, IFTA'],['rp.print','🖨️ PDF / печать','🖨️ PDF / Print'],['rp.csv','⬇️ CSV','⬇️ CSV'],['rp.mode','Тип периода','Period type'],['rp.all','Все сохранённые недели','All saved weeks'],['rp.month','Месяц','Month'],['rp.week','Неделя','Week'],['rp.range','Диапазон дат','Date range'],['rp.from','С даты','From'],['rp.to','По дату','To'],['rp.rate','Per Diem, $/день','Per Diem, $/day'],
-['rp.heading','OwnerGladiator Hub: финансовый и налоговый отчёт','OwnerGladiator Hub: financial and tax report'],['rp.period','Период: {p}','Period: {p}'],['rp.pAll','все сохранённые недели','all saved weeks'],['rp.pMonth','месяц {m}','month {m}'],['rp.pRange','с {a} по {b}','from {a} to {b}'],['rp.start','начала','the start'],['rp.today','сегодня','today'],['rp.profile','Профиль','Profile'],['rp.gen','Сформирован: {d}','Generated: {d}'],
+['rp.title','Отчёт: финансы, налоги, IFTA','Report: finance, tax, IFTA'],['rp.print','📄 PDF / печать','📄 PDF / Print'],['rp.csv','⬇️ CSV','⬇️ CSV'],['rp.mode','Тип периода','Period type'],['rp.all','Все сохранённые недели','All saved weeks'],['rp.month','Месяц','Month'],['rp.week','Неделя','Week'],['rp.range','Диапазон дат','Date range'],['rp.from','С даты','From'],['rp.to','По дату','To'],['rp.rate','Per Diem, $/день','Per Diem, $/day'],
+['rp.custom','Выбрать недели','Pick weeks'],['rp.pCustom','выбранные недели ({n})','selected weeks ({n})'],['rp.dateHint','ℹ️ Неделя попадает в период по своему последнему дню: дате «по» из вкладки «Неделя», а если её не выбрали — по последней дате доставки груза. Доп. расходы из «Итогов» попадают в отчёт по своей дате.','ℹ️ A week belongs to the period that holds its last day: the "to" date from the Week tab, or the last delivery date if none was picked. Extra costs from Summary go by their own date.'],['rp.expTitle','Расходы за период по статьям','Expenses for the period by item'],['rp.expItem','Статья','Item'],['rp.expType','Тип','Type'],['rp.expWeeks','Недель','Weeks'],['rp.expSum','Сумма','Amount'],['rp.nWeeks','{n} нед.','{n} wk'],['rp.daysShort','Дни','Days'],['rp.expTotal','Итого расходы недель','Total weekly expenses'],['rp.other','Прочее (без расшифровки)','Other (no breakdown)'],['rp.diesel','Дизель','Diesel'],['rp.byMpg','оценка по MPG','MPG estimate'],['rp.tMixed','разные ставки','mixed rates'],['rp.xtTitle','Доп. расходы периода (из «Итогов»)','Extra costs of the period (from Summary)'],['rp.xtTotal','Итого доп. расходы','Total extra costs'],['rp.allExp','Все расходы с доп.','All expenses incl. extras'],['rp.netX','Чистыми с доп. расходами','Net after extra costs'],['rp.kX','Доп. расходы','Extra costs'],['rp.kXs','{n} шт. из «Итогов»','{n} from Summary'],['rp.kNX','Чистыми с доп.','Net after extras'],['rp.detailShow','📋 Списком по неделям','📋 List by week'],['rp.detailHide','Скрыть список','Hide the list'],['rp.detailTitle','Расходы списком по неделям','Expenses by week'],['rp.noExp','В выбранном периоде нет расходов.','No expenses in this period.'],['rp.pdfTitle','Финансовый и налоговый отчёт','Financial and tax report'],['rp.pageOf','стр. {n} из {m}','page {n} of {m}'],['rp.state','Штат','State'],['rp.withX','с доп.','incl. extras'],['pdf.making','Готовим PDF…','Preparing the PDF…'],['pdf.ready','PDF готов','PDF is ready'],['pdf.pages','{n} стр. · {kb} КБ','{n} pages · {kb} KB'],['pdf.share','📤 Сохранить / отправить','📤 Save / share'],['pdf.dl','⬇️ Скачать файл','⬇️ Download file'],['pdf.open','👁 Открыть','👁 Open'],['pdf.hint','На айфоне: «Сохранить / отправить» → «Сохранить в Файлы», или сразу отправь в WhatsApp, Telegram, почту.','On iPhone: "Save / share" → "Save to Files", or send it straight to WhatsApp, Telegram or mail.'],['pdf.fail','Не получилось сделать PDF: {e}','Could not build the PDF: {e}'],['rp.heading','OwnerGladiator Hub: финансовый и налоговый отчёт','OwnerGladiator Hub: financial and tax report'],['rp.period','Период: {p}','Period: {p}'],['rp.pAll','все сохранённые недели','all saved weeks'],['rp.pMonth','месяц {m}','month {m}'],['rp.pRange','с {a} по {b}','from {a} to {b}'],['rp.start','начала','the start'],['rp.today','сегодня','today'],['rp.profile','Профиль','Profile'],['rp.gen','Сформирован: {d}','Generated: {d}'],
 ['rp.perdiem','Per Diem (питание в рейсе)','Per Diem (meals on the road)'],['rp.pdDays','{n} дн. × ${r}','{n} d × ${r}'],['rp.ded','Вычитаемо (80%): {a}','Deductible (80%): {a}'],['rp.milesFuel','Пробег и топливо','Miles and fuel'],['rp.milesVal','Всего: {m} mi ({n} нед.)','Total: {m} mi ({n} wk)'],['rp.fuelVal','Топливо: {a}','Fuel: {a}'],['rp.dhNote','Loaded: {a} mi | Deadhead: {b} mi ({p}%)','Loaded: {a} mi | Deadhead: {b} mi ({p}%)'],
 ['rp.ifta','Дизель по штатам за период (IFTA)','Diesel by state for the period (IFTA)'],['rp.noIfta','В периоде нет чеков с заправками по штатам.','No fuel receipts with states in this period.'],['rp.weeks','Недели периода','Weeks in period'],['rp.loads','Реестр рейсов','Load registry'],['rp.gP','Gross за период','Gross, period'],['rp.net','Чистая прибыль','Net profit'],['rp.allMiles','Всего миль','Total miles'],
 ['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.del','Удалить','Delete'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
@@ -916,6 +972,11 @@ function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString
 function isoOf(d){var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;}
 function todayISO(){return isoOf(new Date());}
 function addDaysISO(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return isoOf(d);}
+function isISO(s){return/^\d{4}-\d{2}-\d{2}$/.test(String(s||''));}
+function daysBetween(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);}
+function mondayOf(iso){var d=new Date(iso+'T00:00:00');return addDaysISO(iso,-((d.getDay()+6)%7));}
+var DOW={ru:['вс','пн','вт','ср','чт','пт','сб'],en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']};
+function dowOf(iso){return(DOW[LANG]||DOW.en)[new Date(iso+'T00:00:00').getDay()];}
 function cssv(n){return getComputedStyle(document.body).getPropertyValue(n).trim()||'#888';}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 function toast(msg,ms){var el=$('#toast');el.textContent=msg;el.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(function(){el.style.display='none';},ms||2400);}
@@ -929,12 +990,22 @@ function hav(a,b){var R=3958.8,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lo
 /* =========================================================
    State
    ========================================================= */
-var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,
+var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,
  extras:[],maintOn:false,maintStart:0,maintInterval:10000,maintBase:0,template:null,loads:[],fuel:[],exps:[],archive:[],archSel:null};
 var LAST={};var CH={};var saveT=null;var mapToken=0;var curPage='week';
 
-function newLoad(o){return Object.assign({id:uid(),pickup:todayISO(),delivery:todayISO(),fromText:'',toText:'',fromGeo:null,toGeo:null,route:'',miles:0,deadhead:0,gross:0,broker:'',unpaid:false},o||{});}
-function normLoad(o){var l=newLoad(o);l.id=uid();if(!l.fromText&&!l.toText&&l.route){var p=routeParts(l.route);if(p[1]){l.fromText=p[0];l.toText=p[1];}}return l;}
+function newLoad(o){return Object.assign({id:uid(),pickup:todayISO(),delivery:todayISO(),fromText:'',toText:'',fromGeo:null,toGeo:null,route:'',miles:0,deadhead:0,gross:0,broker:'',unpaid:false,partials:[]},o||{});}
+/* A partial rides on the same trip as its load: own from/to, the miles it ADDS to the trip, its pay.
+   Its miles count as loaded miles (the truck is loaded), its pay as gross; deadhead is the load's. */
+function newPartial(o){return Object.assign({id:uid(),fromText:'',toText:'',fromGeo:null,toGeo:null,miles:0,pay:0,broker:'',unpaid:false,mAuto:false},o||{});}
+function ptList(l){return l&&Array.isArray(l.partials)?l.partials:[];}
+function ptSum(l){var o={n:0,pay:0,mi:0,unp:0,unpN:0};ptList(l).forEach(function(q){var pay=num(q.pay),mi=num(q.miles);if(pay>0||mi>0||String(q.fromText||'').trim()||String(q.toText||'').trim())o.n++;o.pay+=pay;o.mi+=mi;if(q.unpaid&&pay>0){o.unp+=pay;o.unpN++;}});return o;}
+function ptOut(q){return{fromText:q.fromText||'',toText:q.toText||'',fromGeo:q.fromGeo||null,toGeo:q.toGeo||null,miles:num(q.miles),pay:num(q.pay),broker:q.broker||'',unpaid:!!q.unpaid,mAuto:!!q.mAuto};}
+function ptRoute(q){return[String(q.fromText||'').trim(),String(q.toText||'').trim()].filter(Boolean).join(' → ');}
+function tripGross(l){return num(l.gross)+ptSum(l).pay;}
+function tripLoaded(l){return num(l.miles)+ptSum(l).mi;}
+function normLoad(o){var l=newLoad(o);l.id=uid();if(!l.fromText&&!l.toText&&l.route){var p=routeParts(l.route);if(p[1]){l.fromText=p[0];l.toText=p[1];}}
+ l.partials=ptList(o).map(function(q){return newPartial(Object.assign({},q,{id:uid()}));});return l;}
 function newFuel(o){return Object.assign({id:uid(),loc:'',dieselGal:0,dieselCost:0,defGal:0,defCost:0},o||{});}
 function newExp(o){return Object.assign({id:uid(),name:t('ex.new'),type:'fixed',val:0},o||{});}
 function ownerNameSet(){return[TR.ru['d.truck'],TR.en['d.truck']];}
@@ -1020,12 +1091,44 @@ async function roadMiles(a,b){return(await roadInfo(a,b)).mi;}
 function pstText(g){if(!g)return'';return'📍 '+(g.zip?t('geo.zip',{z:g.zip}):(g.approx?t('geo.approx'):t('geo.ok')));}
 
 /* =========================================================
+   Week dates: the week's own "from – to" (optional)
+   ========================================================= */
+function loadsSpan(){var a='',b='';S.loads.forEach(function(l){if(isISO(l.pickup)&&(!a||l.pickup<a))a=l.pickup;if(isISO(l.delivery)&&(!b||l.delivery>b))b=l.delivery;});return{a:a||b,b:b||a};}
+function isAutoLabel(s){s=String(s||'').trim();return!s||/^(Неделя от|Week of) \d{4}-\d{2}-\d{2}$/.test(s)||/^(Неделя|Week) \d{2}[.\/]\d{2}\s?[–-]\s?\d{2}[.\/]\d{2}$/.test(s);}
+function setWeekDates(a,b){
+ a=isISO(a)?a:'';b=isISO(b)?b:'';if(a&&b&&b<a){var x=a;a=b;b=x;}
+ S.wFrom=a;S.wTo=b;
+ if(a&&b&&isAutoLabel(S.label)){S.label=t('wk.rangeLabel',{a:shortDate(a),b:shortDate(b)});$('#in-label').value=S.label;}
+ renderWeekDates(true);changed();
+}
+function onWeekDate(el){
+ var v=isISO(el.value)?el.value:'';
+ if(!v)return setWeekDates('','');
+ var a=S.wFrom,b=S.wTo;
+ if(el.id==='in-wFrom'){a=v;if(!isISO(b)||b<a)b=addDaysISO(a,6);}else{b=v;if(!isISO(a)||a>b)a=addDaysISO(b,-6);}
+ setWeekDates(a,b);
+}
+function renderWeekDates(setInputs){
+ var f=$('#in-wFrom'),to=$('#in-wTo'),hint=$('#wk-dhint');if(!f)return;
+ if(setInputs){f.value=S.wFrom||'';to.value=S.wTo||'';}
+ to.min=S.wFrom||'';f.max=S.wTo||'';
+ var ls=loadsSpan(),html;
+ if(S.wFrom&&S.wTo){
+  var out=0;S.loads.forEach(function(l){var p=isISO(l.pickup)?l.pickup:'',d=isISO(l.delivery)?l.delivery:'';if((p&&(p<S.wFrom||p>S.wTo))||(d&&(d<S.wFrom||d>S.wTo)))out++;});
+  html=esc(t('wk.dSet',{n:daysBetween(S.wFrom,S.wTo)+1,a:dowOf(S.wFrom)+' '+shortDate(S.wFrom),b:dowOf(S.wTo)+' '+shortDate(S.wTo)}))+(out?' <span class="w">'+esc(t('wk.dOut',{n:out}))+'</span>':'');
+ }else if(ls.a)html=esc(t('wk.dLoadsHint',{a:shortDate(ls.a),b:shortDate(ls.b)}));
+ else html=esc(t('wk.dNone'));
+ hint.innerHTML=html;
+}
+
+/* =========================================================
    Calculation
    ========================================================= */
 function calc(){
  var isD=S.role==='driver',split=S.milesMode==='split';
  var loaded=0,dh=0,gross=0,first='',last='',unpaid=0,unpaidN=0;
- S.loads.forEach(function(l){var m=num(l.miles),d=split?num(l.deadhead):0,g=num(l.gross);loaded+=m;dh+=d;gross+=g;if(l.pickup&&(!first||l.pickup<first))first=l.pickup;if(l.delivery&&(!last||l.delivery>last))last=l.delivery;if(l.unpaid&&g>0){unpaid+=g;unpaidN++;}});
+ var pPay=0,pMi=0,pN=0;
+ S.loads.forEach(function(l){var ps=ptSum(l),g0=num(l.gross),m=num(l.miles)+ps.mi,d=split?num(l.deadhead):0,g=g0+ps.pay;loaded+=m;dh+=d;gross+=g;pPay+=ps.pay;pMi+=ps.mi;pN+=ps.n;if(l.pickup&&(!first||l.pickup<first))first=l.pickup;if(l.delivery&&(!last||l.delivery>last))last=l.delivery;if(l.unpaid&&g0>0){unpaid+=g0;unpaidN++;}unpaid+=ps.unp;unpaidN+=ps.unpN;});
  var miles=loaded+dh,days=daysUnion(S.loads);
  var dGal=0,dUsd=0,defUsd=0,fStates={};
  S.fuel.forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);dGal+=g;dUsd+=c;defUsd+=num(f.defCost);if(g>0||c>0){var sc=stateCodes(f.loc);var k=sc.length?sc[sc.length-1]:'OTHER';if(!fStates[k])fStates[k]={gal:0,cost:0};fStates[k].gal+=g;fStates[k].cost+=c;}});
@@ -1040,7 +1143,9 @@ function calc(){
  var drvPct=num(S.driverPct)||30,drvPay=gross*drvPct/100;
  var totalExp=isD?own:fuelCost+own;
  var net=isD?(drvPay-own):(gross-totalExp);
- return{weekLabel:S.label||'Week',startDate:first,endDate:last,monthYear:monthOf({endDate:last,startDate:first}),userRole:S.role,driverPct:drvPct,driverGrossPay:drvPay,
+ /* the week's own dates (picked in the Week tab) win; otherwise the first pickup / last delivery */
+ var wa=isISO(S.wFrom)?S.wFrom:'',wb=isISO(S.wTo)?S.wTo:'',sd=wa||first||(wb?addDaysISO(wb,-6):''),ed=wb||last||(wa?addDaysISO(wa,6):'');
+ return{weekLabel:S.label||'Week',startDate:sd,endDate:ed,datesManual:!!(wa||wb),loadsFrom:first,loadsTo:last,partialPay:pPay,partialMiles:pMi,partialCount:pN,monthYear:monthOf({endDate:ed,startDate:sd}),userRole:S.role,driverPct:drvPct,driverGrossPay:drvPay,
   milesMode:S.milesMode,milesCalc:S.milesCalc,fuelMode:S.fuelMode,loadedMiles:loaded,deadheadMiles:dh,totalMiles:miles,totalGross:gross,totalExpenses:totalExp,netProfit:net,totalDays:days,
   netRpm:miles>0?net/miles:0,margin:gross>0?net/gross*100:0,cpm:miles>0?totalExp/miles:0,avgRpm:miles>0?gross/miles:0,loadedRpm:loaded>0?gross/loaded:0,fuelCost:fuelCost,
   fuelLogs:S.fuel.map(function(f){return{loc:f.loc,dieselGal:num(f.dieselGal),dieselCost:num(f.dieselCost),defGal:num(f.defGal),defCost:num(f.defCost)};}),
@@ -1052,9 +1157,9 @@ function calc(){
    Persistence (draft)
    ========================================================= */
 function draftObj(){
- return{weekLabel:S.label,userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
+ return{weekLabel:S.label,weekFrom:S.wFrom||'',weekTo:S.wTo||'',userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
   defaultTemplate:S.template||null,mpg:S.mpg,dieselPrice:S.diesel,taxPct:S.taxPct,perDiem:S.perDiem,
-  loads:S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:num(l.deadhead),gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid};}),
+  loads:S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:num(l.deadhead),gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid,partials:ptList(l).map(ptOut)};}),
   fuelLogs:S.fuel.map(function(f){return{loc:f.loc,dieselGal:num(f.dieselGal),dieselCost:num(f.dieselCost),defGal:num(f.defGal),defCost:num(f.defCost)};}),
   expenses:S.exps.map(function(e){return{name:e.name,type:e.type,val:num(e.val)};}),
   extras:S.extras.map(function(x){return{name:x.name,amt:num(x.amt),date:x.date};}),updatedAt:Date.now()};
@@ -1074,6 +1179,7 @@ function applyDraft(d){
  if(!d)return;
  if(d.defaultTemplate){S.template=d.defaultTemplate;SafeStorage.set(tplKey(),JSON.stringify(d.defaultTemplate));}
  if(d.weekLabel!=null)S.label=d.weekLabel;
+ S.wFrom=isISO(d.weekFrom)?d.weekFrom:'';S.wTo=isISO(d.weekTo)?d.weekTo:'';
  S.role=d.userRole==='driver'?'driver':'owner';
  if(d.driverPct!=null)S.driverPct=num(d.driverPct)||30;
  S.fuelMode=d.fuelMode==='log'?'log':'mpg';S.milesMode=d.milesMode==='split'?'split':'simple';
@@ -1096,7 +1202,10 @@ function resetWeek(carryStart){
  if(carryStart)S.loads.forEach(function(l){if(l.toGeo&&l.toGeo.lat!=null&&(!lastDrop||String(l.delivery||'')>=lastDrop.d))lastDrop={g:l.toGeo,d:String(l.delivery||'')};});
  S.startGeo=lastDrop?lastDrop.g:null;S.startText=S.startGeo?(S.startGeo.label||''):'';
  if(tpl&&(tpl.milesCalc==='auto'||tpl.milesCalc==='manual'))S.milesCalc=tpl.milesCalc;
- S.label=t('wk.defLabel',{d:todayISO()});S.loads=[newLoad()];S.fuel=[];S.maintBase=S.maintBase||0;
+ /* next week starts the day after the closed one ends, same length */
+ var pF=isISO(S.wFrom)?S.wFrom:'',pT=carryStart&&isISO(S.wTo)?S.wTo:'',len=pT&&pF?Math.max(0,daysBetween(pF,pT)):6;
+ S.wFrom=pT?addDaysISO(pT,1):'';S.wTo=pT?addDaysISO(pT,1+len):'';
+ S.label=S.wFrom?t('wk.rangeLabel',{a:shortDate(S.wFrom),b:shortDate(S.wTo)}):t('wk.defLabel',{d:todayISO()});S.loads=[newLoad()];S.fuel=[];S.maintBase=S.maintBase||0;
  S.role=(tpl&&tpl.userRole==='driver')?'driver':(tpl?'owner':S.role);
  if(tpl){S.driverPct=num(tpl.driverPct)||30;if(tpl.mpg!=null&&tpl.mpg!=='')S.mpg=num(tpl.mpg);if(tpl.dieselPrice!=null&&tpl.dieselPrice!=='')S.diesel=num(tpl.dieselPrice);S.milesMode=tpl.milesMode==='split'?'split':'simple';S.maintOn=!!tpl.maintEnabled;if(tpl.maintStartBal!=null)S.maintStart=num(tpl.maintStartBal);if(tpl.maintInterval)S.maintInterval=num(tpl.maintInterval);if(tpl.maintResetBase!=null)S.maintBase=num(tpl.maintResetBase);if(tpl.taxPct!=null)S.taxPct=num(tpl.taxPct);}
  S.exps=(tpl&&Array.isArray(tpl.expenses)&&tpl.expenses.length)?tpl.expenses.map(function(e){return newExp(e);}):defaultExps(S.role);
@@ -1122,7 +1231,7 @@ function kpi(l,v,cls,s,hl){return'<div class="kpi'+(hl?' hl':'')+'"><div class="
 
 function renderStatic(){
  var isD=S.role==='driver';
- $('#in-label').value=S.label;$('#in-driverPct').value=S.driverPct;$('#in-mpg').value=S.mpg;$('#in-diesel').value=S.diesel;$('#in-taxPct').value=S.taxPct;
+ $('#in-label').value=S.label;renderWeekDates(true);$('#in-driverPct').value=S.driverPct;$('#in-mpg').value=S.mpg;$('#in-diesel').value=S.diesel;$('#in-taxPct').value=S.taxPct;
  $('#in-maintStart').value=S.maintStart;$('#in-maintInterval').value=S.maintInterval;$('#in-perDiem').value=S.perDiem;
  $$('#seg-role button').forEach(function(b){b.className=(b.dataset.v===S.role?'on':'');});
  $('#seg-role').classList.toggle('blu',isD);
@@ -1145,7 +1254,18 @@ function renderStatic(){
  renderLoads();renderFuel();renderExps();refresh();
 }
 
-function isBlankLoad(l){return!String(l.fromText||'').trim()&&!String(l.toText||'').trim()&&!String(l.route||'').trim()&&!num(l.gross)&&!num(l.miles);}
+function isBlankLoad(l){return!String(l.fromText||'').trim()&&!String(l.toText||'').trim()&&!String(l.route||'').trim()&&!num(l.gross)&&!num(l.miles)&&!ptSum(l).n;}
+function partialCard(q,k){
+ return'<div class="pt" data-list="partials" data-id="'+q.id+'">'+
+ '<div class="pt-h"><span class="pt-n">P'+(k+1)+'</span><span class="pt-out" data-pout></span><button type="button" class="x need-write" data-act="del" aria-label="delete">✕</button></div>'+
+ '<div class="pt-g">'+
+ '<div class="f"><label>'+t('pt.from')+'</label><input type="text" data-place="from" value="'+esc(q.fromText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(q.fromGeo))+'</div></div>'+
+ '<div class="f"><label>'+t('pt.to')+'</label><input type="text" data-place="to" value="'+esc(q.toText)+'" placeholder="'+esc(t('ld.ph'))+'" autocomplete="off" autocapitalize="words" enterkeyhint="next"><div class="pst">'+esc(pstText(q.toGeo))+'</div></div>'+
+ '<div class="f n'+(S.milesCalc==='auto'&&q.mAuto?' pt-auto':'')+'"><label>'+t('pt.mi')+'</label><input type="number" inputmode="decimal" data-k="miles" value="'+num(q.miles)+'"><div class="pst pt-mst">'+(S.milesCalc==='auto'&&q.mAuto?t('pt.auto'):'')+'</div></div>'+
+ '<div class="f n"><label class="g">'+t('pt.pay')+'</label><input type="number" inputmode="decimal" data-k="pay" value="'+num(q.pay)+'" class="g"></div>'+
+ '<div class="f n"><label>'+t('pt.broker')+'</label><input type="text" data-k="broker" value="'+esc(q.broker)+'" autocomplete="off"></div>'+
+ '</div><label class="chk"><input type="checkbox" data-k="unpaid"'+(q.unpaid?' checked':'')+'><span>⏳ '+t('pt.unpaid')+'</span></label></div>';
+}
 function shortDate(iso){var p=String(iso||'').split('-');if(p.length<3)return String(iso||'');return LANG==='ru'?(p[2]+'.'+p[1]):(p[1]+'/'+p[2]);}
 /* A load is a one-line summary (route, dates, miles, $) that opens into a compact editor */
 function loadCard(l,i){
@@ -1165,6 +1285,8 @@ function loadCard(l,i){
  '<div class="f cw-num'+(split?'':' wide')+'"><label class="g">'+t('ld.gross')+'</label><input type="number" inputmode="decimal" data-k="gross" value="'+num(l.gross)+'" class="g"></div>'+
  '<div class="f cw-brk"><label>'+t('ld.broker')+'</label><input type="text" data-k="broker" value="'+esc(l.broker)+'" autocomplete="off"></div>'+
  '<div class="f cw-chk"><label class="chk"><input type="checkbox" data-k="unpaid"'+(l.unpaid?' checked':'')+'><span>⏳ '+t('ld.unpaid')+'</span></label></div>'+
+ '<div class="pts'+(ptList(l).length?' has':'')+'"><div class="pts-h"><span class="pts-t">'+t('pt.head')+'</span><span class="pts-s" data-psum></span></div>'+ptList(l).map(partialCard).join('')+
+ '<div class="pts-f"><button type="button" class="btn sm pt-add need-write" data-act="ptAdd">'+t('pt.add')+'</button><span class="cs pts-hint" data-phint></span></div></div>'+
  '<div class="ld-foot need-write"><button type="button" class="btn sm" data-act="recalcMiles">'+(auto?'↻ '+t('mc.recalc'):'📏 '+t('ld.calc'))+'</button><button type="button" class="btn sm dng" data-act="del">🗑 '+t('c.del')+'</button></div>'+
  '</div></div>';
 }
@@ -1176,18 +1298,44 @@ function renderLoads(){
 function updateLoadOut(l){
  var card=$('[data-list="loads"][data-id="'+l.id+'"]');if(!card)return;
  var split=S.milesMode==='split',i=S.loads.indexOf(l);
- var lm=num(l.miles),dm=split?num(l.deadhead):0,mi=lm+dm,g=num(l.gross),rpm=mi>0?g/mi:0;
+ var ps=ptSum(l),lm=num(l.miles)+ps.mi,dm=split?num(l.deadhead):0,mi=lm+dm,g=num(l.gross)+ps.pay,rpm=mi>0?g/mi:0;
  var a=S.milesCalc==='auto'&&(canLd(l)||(split&&canDh(i)));
  var route=[String(l.fromText||'').trim(),String(l.toText||'').trim()].filter(Boolean).join(' → ')||String(l.route||'').replace(/\s*->\s*/g,' → ').trim();
  var dates=l.pickup?(shortDate(l.pickup)+(l.delivery&&l.delivery!==l.pickup?'–'+shortDate(l.delivery):'')):'';
  var parts=[dates,(split&&dm>0?f0(lm)+' + '+f0(dm)+' DH':f0(mi))+' mi'];
  if(mi>0&&g>0)parts.push('$'+f2(rpm)+'/mi');
+ if(ps.n)parts.push('📦 '+ps.n);
  if(a)parts.push('🤖'+(l.apx?'≈':''));
  if(l.unpaid&&g>0)parts.push('⏳');
  if(String(l.broker||'').trim())parts.push(String(l.broker).trim());
  var re=card.querySelector('.ld-route');re.textContent=route||t('ld.new');re.classList.toggle('dim',!route);
  card.querySelector('[data-out]').textContent=parts.filter(Boolean).join(' · ');
  var ge=card.querySelector('.ld-gross');ge.textContent=g>0?money(g,0):'—';ge.classList.toggle('z',!(g>0));
+ /* partials block: sum line, hint, and each partial's "is it worth it" line */
+ var pl=ptList(l),box=card.querySelector('.pts');
+ if(box){box.classList.toggle('has',pl.length>0);
+  var sEl=box.querySelector('[data-psum]');if(sEl)sEl.textContent=pl.length?('+'+money(ps.pay,0)+' · +'+f0(ps.mi)+' mi · '+t('pt.trip',{g:money(g,0),r:'$'+f2(rpm)})):'';
+  var hEl=box.querySelector('[data-phint]');if(hEl)hEl.textContent=pl.length?'':t('pt.hint');
+  var md=ptModel();
+  pl.forEach(function(q){var pc=box.querySelector('[data-list="partials"][data-id="'+q.id+'"]');if(!pc)return;pc.querySelector('[data-pout]').innerHTML=ptOutHtml(q,md);
+   var mf=pc.querySelector('[data-k="miles"]'),au=S.milesCalc==='auto'&&!!q.mAuto;if(mf){mf.parentElement.classList.toggle('pt-auto',au);var ms=mf.parentElement.querySelector('.pt-mst');if(ms)ms.textContent=au?t('pt.auto'):'';}});
+ }
+}
+/* rough net a partial brings: its pay minus fees (% of gross) minus its extra miles at your cost per mile */
+function ptModel(){
+ var isD=S.role==='driver',d=isD?(num(S.driverPct)||30)/100:1,st=evStats();
+ if(st)return{p:isD?0:st.p,cpm:st.cpmNoPct,d:d};
+ var c=LAST;if(!c||!(num(c.totalMiles)>0))return null;
+ var G=num(c.totalGross),P=isD?0:num(c.percentExpenses),E=num(c.totalExpenses);
+ return{p:G>0?Math.min(.9,P/G):0,cpm:Math.max(0,(E-P)/num(c.totalMiles)),d:d};
+}
+function ptOutHtml(q,md){
+ var pay=num(q.pay),mi=num(q.miles);
+ if(!(pay>0))return'<span class="pt-dim">'+t('pt.noPay')+'</span>';
+ var a=[mi>0?'+'+f0(mi)+' mi':t('pt.free')];
+ if(mi>0)a.push(t('pt.perMi',{r:'$'+f2(pay/mi)}));
+ if(md){var nt=pay*md.d*(1-md.p)-mi*md.cpm;a.push('<b class="'+(nt<0?'neg':'')+'">≈ '+(nt<0?'−':'+')+money(Math.abs(nt),0)+'</b> '+t('pt.netW'));}
+ return a.join(' · ');
 }
 /* fuel and expenses: one table-like row each, sized to fit a phone screen */
 function fuelCard(f){
@@ -1213,6 +1361,7 @@ function renderExps(){$('#exp-list').innerHTML=S.exps.map(expCard).join('');}
 
 function refresh(){
  var R=LAST=calc();var isD=S.role==='driver';
+ renderWeekDates(false);
  // exp sums
  S.exps.forEach(function(e){var c=$('[data-list="exps"][data-id="'+e.id+'"] [data-sum]');if(c)c.textContent=money(e._sum||0);});
  S.loads.forEach(updateLoadOut);
@@ -1238,8 +1387,9 @@ function refresh(){
  k+=R.unpaidCount>0?kpi(t('k.unpaid'),money(R.unpaidAmount,0),'a',t('k.nUnpaid',{n:R.unpaidCount})):'';
  $('#kpis').innerHTML=k;
  // loads sum
- var sb2=$('#loads-sum');sb2.hidden=S.milesMode!=='split';
- if(S.milesMode==='split')sb2.innerHTML='<span>'+t('ld.sumL')+': <b class="g">'+f0(R.loadedMiles)+' mi</b></span><span>'+t('ld.sumD')+': <b class="r">'+f0(R.deadheadMiles)+' mi ('+f0(dhPct)+'%)</b></span><span>'+t('ld.sumR')+': <b class="a">$'+f2(R.loadedRpm)+'</b></span>';
+ var sb2=$('#loads-sum'),hasP=R.partialCount>0;sb2.hidden=S.milesMode!=='split'&&!hasP;
+ sb2.innerHTML=(hasP?'<span>📦 '+t('pt.sumBar',{n:R.partialCount})+': <b class="v">+'+money(R.partialPay,0)+' · +'+f0(R.partialMiles)+' mi</b></span>':'');
+ if(S.milesMode==='split')sb2.innerHTML='<span>'+t('ld.sumL')+': <b class="g">'+f0(R.loadedMiles)+' mi</b></span><span>'+t('ld.sumD')+': <b class="r">'+f0(R.deadheadMiles)+' mi ('+f0(dhPct)+'%)</b></span><span>'+t('ld.sumR')+': <b class="a">$'+f2(R.loadedRpm)+'</b></span>'+(hasP?'<span>📦 '+t('pt.sumBar',{n:R.partialCount})+': <b class="v">+'+money(R.partialPay,0)+' · +'+f0(R.partialMiles)+' mi</b></span>':'');
  // driver
  if(isD){$('#dr-gross').textContent=money(R.driverGrossPay);$('#dr-gross-mi').textContent=t('dr.mi',{a:'$'+f2(R.totalMiles>0?R.driverGrossPay/R.totalMiles:0)});$('#dr-net').textContent=money(R.netProfit);$('#dr-net-day').textContent=t('dr.day',{a:money(R.netProfit/act)});}
  // fuel
@@ -1270,7 +1420,8 @@ function renderInsights(R,dhPct){
  if(R.totalMiles>0){
   if(dhPct>15&&S.milesMode==='split')out.push(['w',t('i.dh',{p:f0(dhPct)})]);
   if(!isD&&R.avgRpm<R.cpm)out.push(['w',t('i.below',{r:'$'+f2(R.avgRpm),c:'$'+f2(R.cpm)})]);
-  var lanes={};S.loads.forEach(function(l){var mi=num(l.miles)+(S.milesMode==='split'?num(l.deadhead):0);if(mi>0&&l.route&&num(l.gross)>0){var k=l.route;if(!lanes[k])lanes[k]={m:0,g:0};lanes[k].m+=mi;lanes[k].g+=num(l.gross);}});
+  if(R.partialCount>0)out.push(['o',R.partialMiles>0?t('i.pt',{a:money(R.partialPay,0),m:f0(R.partialMiles),r:'$'+f2(R.partialPay/R.partialMiles)}):t('i.pt0',{a:money(R.partialPay,0)})]);
+  var lanes={};S.loads.forEach(function(l){var mi=tripLoaded(l)+(S.milesMode==='split'?num(l.deadhead):0),lg=tripGross(l);if(mi>0&&l.route&&lg>0){var k=l.route;if(!lanes[k])lanes[k]={m:0,g:0};lanes[k].m+=mi;lanes[k].g+=lg;}});
   var best=null;Object.keys(lanes).forEach(function(k){var r=lanes[k].g/lanes[k].m;if(!best||r>best.r)best={l:k,r:r};});
   if(best&&Object.keys(lanes).length>1)out.push(['o',t('i.lane',{l:esc(best.l),r:'$'+f2(best.r)})]);
   if(R.unpaidCount>0)out.push(['',t('i.unpaid',{a:money(R.unpaidAmount,0),n:R.unpaidCount})]);
@@ -1347,13 +1498,28 @@ async function calcAllMiles(resolve){
  for(var i=0;i<list.length;i++){
   if(resolve){await ensureGeo(list[i],'from');await ensureGeo(list[i],'to');}
   await calcLoadMiles(list[i]);
+  await recalcPartials(list[i]);
  }
  S.loads.forEach(syncMilesUI);refresh();
 }
+/* auto mode: a partial picked up and dropped on the way A → P1 → P2 → B adds d(A,P1)+d(P1,P2)+d(P2,B)−d(A,B).
+   Only fills miles the user has not typed (empty, or filled by us before); typed miles are never touched. */
+async function calcPartialMiles(l,q,force){
+ if(S.milesCalc!=='auto'||!(q.mAuto||!num(q.miles))||!(l.fromGeo&&l.toGeo&&q.fromGeo&&q.toGeo))return;
+ var tok=q._tok=(q._tok||0)+1;
+ var rd=async function(a,b){return hav(a,b)<8?0:(await roadInfo(a,b,force)).mi;};
+ var ab=await rd(l.fromGeo,l.toGeo),a1=await rd(l.fromGeo,q.fromGeo),x=await rd(q.fromGeo,q.toGeo),b2=await rd(q.toGeo,l.toGeo);
+ if(q._tok!==tok||ptList(l).indexOf(q)<0)return;
+ q.miles=Math.max(0,Math.round(a1+x+b2-ab));q.mAuto=true;
+ var inp=$('[data-list="partials"][data-id="'+q.id+'"] [data-k="miles"]');if(inp&&document.activeElement!==inp)inp.value=q.miles;
+}
+async function recalcPartials(l,force){var a=ptList(l).slice();for(var k=0;k<a.length;k++)await calcPartialMiles(l,a[k],force);}
+async function afterPartialPlace(q){var l=S.loads.find(function(x){return ptList(x).indexOf(q)>=0;});if(!l)return;await calcPartialMiles(l,q);refresh();queueSave();}
+function placeDone(card,it){if(card.dataset.list==='partials')afterPartialPlace(it);else afterLoadPlace(it);}
 async function afterLoadPlace(l){
  l.route=[l.fromText,l.toText].filter(Boolean).join(' -> ');
  var i=S.loads.indexOf(l),n=S.loads[i+1];
- if(S.milesCalc==='auto'){await calcLoadMiles(l);if(n)await calcLoadMiles(n);}
+ if(S.milesCalc==='auto'){await calcLoadMiles(l);if(n)await calcLoadMiles(n);await recalcPartials(l);}
  syncMilesUI(l);if(n)syncMilesUI(n);
  refresh();queueSave();
 }
@@ -1570,7 +1736,7 @@ async function archiveWeek(){
  if(!sb||!S.user)return toast(t('t.login'));
  var d=calc();
  if(!confirm(t('wk.confirmArch',{n:d.weekLabel})))return;
- d.loads=S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:S.milesMode==='split'?num(l.deadhead):0,gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid};});
+ d.loads=S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:S.milesMode==='split'?num(l.deadhead):0,gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid,partials:ptList(l).map(ptOut)};});
  d.startText=S.startText||'';d.startGeo=S.startGeo||null;
  Object.keys(d).forEach(function(k){if(k.charAt(0)==='_')delete d[k];});
  var payload={week_end_date:d.endDate||todayISO(),gross_revenue:d.totalGross,total_miles:d.totalMiles,net_profit:d.netProfit,net_per_mile:d.netRpm,fuel_total:d.fuelCost,expenses_total:d.totalExpenses,full_payload:d};
@@ -1705,11 +1871,12 @@ function fillArchiveControls(){
  if(S.archSel!=null&&S.archive[S.archSel]){sel.value=S.archSel;showArchived(S.archSel);}else{sel.value='';$('#arch-body').style.display='none';}
  renderSummary(ms.value);
 }
-function expTypeLabel(type,val){if(type==='fixed')return t('ex.fixed').replace('($)','')+'$'+f0(val);if(type==='percent')return f1(val)+t('ex.pct').replace('%','');if(type==='cpm')return f1(val)+' ¢/mi';if(type==='dlr_mile')return'$'+f2(val)+'/mi';return'';}
+function expTypeLabel(type,val){if(type==='fixed')return t('ex.fixed').replace('($)','')+'$'+f0(val);if(type==='percent')return f1(val)+'% '+t('ex.pct').replace('%','').trim();if(type==='cpm')return f1(val)+' ¢/mi';if(type==='dlr_mile')return'$'+f2(val)+'/mi';return'';}
 function showArchived(idx){
  var w=S.archive[idx];var body=$('#arch-body');
  if(!w){body.style.display='none';$('#btn-del-arch').hidden=true;S.archSel=null;return;}
  S.archSel=+idx;body.style.display='flex';$('#btn-del-arch').hidden=S.ro;
+ $('#ar-from').value=w.startDate||'';$('#ar-to').value=w.endDate||w.weekEndDate||'';$('#ar-dates-src').textContent=t(w.datesManual?'ar.dManual':'ar.dLoads');
  var isD=w.userRole==='driver',mi=num(w.totalMiles),dh=num(w.deadheadMiles),ld=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,mi-dh),hasDh=w.milesMode==='split'||dh>0;
  var gross=num(w.totalGross),exp=num(w.totalExpenses),net=num(w.netProfit),rpm=mi>0?gross/mi:num(w.avgRpm),ldRpm=ld>0?gross/ld:rpm,cpm=mi>0?exp/mi:num(w.cpm),nrpm=mi>0?net/mi:num(w.netRpm);
  $('#arch-kpis').innerHTML=kpi('Gross',money(gross),'g')+
@@ -1737,6 +1904,8 @@ function showArchived(idx){
  if(!loads.length){rows='<tr><td>'+esc((w.startDate||'')+' - '+(w.endDate||''))+'</td><td>'+t('ar.sumLoad')+'</td><td>'+f0(mi)+'</td><td class="r">'+f0(dh)+'</td><td class="g">'+money(gross)+'</td><td>$'+f2(rpm)+'</td><td class="a">'+money(net)+'</td><td></td></tr>';labels.push(t('ar.sumLoad'));rp.push(+f2(rpm));be.push(+f2(cpm));}
  else loads.forEach(function(l,k){var lm=num(l.miles)+num(l.deadhead),lg=num(l.gross),lr=lm>0?lg/lm:0,ln=isD?lg*num(w.driverPct||30)/100:lg-lm*cpm;
   rows+='<tr><td>'+esc((l.pickup||'')+' - '+(l.delivery||''))+'</td><td><b>'+esc(l.route||('#'+(k+1)))+'</b></td><td>'+f0(lm)+'</td><td class="r">'+f0(l.deadhead)+'</td><td class="g">'+money(lg)+'</td><td>$'+f2(lr)+'</td><td style="color:'+(ln>=0?'var(--acc)':'var(--red)')+'">'+money(ln)+'</td><td>'+esc(l.broker||'')+(l.unpaid?' ⏳':'')+'</td></tr>';
+  ptList(l).forEach(function(q){var pm=num(q.miles),pg=num(q.pay),pn=isD?pg*num(w.driverPct||30)/100:pg-pm*cpm;
+   rows+='<tr class="pt-row"><td></td><td><b>↳ 📦 '+esc(ptRoute(q)||'Partial')+'</b></td><td>+'+f0(pm)+'</td><td class="r">—</td><td class="g">'+money(pg)+'</td><td>'+(pm>0?'$'+f2(pg/pm):'—')+'</td><td style="color:'+(pn>=0?'var(--acc)':'var(--red)')+'">'+money(pn)+'</td><td>'+esc(q.broker||'')+(q.unpaid?' ⏳':'')+'</td></tr>';});
   labels.push(l.route?l.route.slice(0,18):('#'+(k+1)));rp.push(+f2(lr));be.push(+f2(cpm));});
  $('#t-loads tbody').innerHTML=rows;
  // charts
@@ -1893,7 +2062,7 @@ async function drawSumMap(list,box,info,token){
  /* 2. places (merged within 15 mi), lanes (merged by place pair) */
  var places=[],lanes={},missing=0,nLoads=0,LD=0,DHm=0;
  function place(g){for(var k=0;k<places.length;k++){if(hav(places[k].g,g)<=15)return k;}places.push({g:g,v:0});return places.length-1;}
- function lane(ty,a,b,l){if(a===b)return;var key=ty+'|'+a+'|'+b,x=lanes[key];if(!x)x=lanes[key]={t:ty,a:a,b:b,c:0,g:0,m:0};x.c++;if(l){x.g+=num(l.gross);x.m+=num(l.miles)+num(l.deadhead);}}
+ function lane(ty,a,b,l){if(a===b)return;var key=ty+'|'+a+'|'+b,x=lanes[key];if(!x)x=lanes[key]={t:ty,a:a,b:b,c:0,g:0,m:0};x.c++;if(l){x.g+=tripGross(l);x.m+=tripLoaded(l)+num(l.deadhead);}}
  weeks.forEach(function(w){
   var wm=num(w.totalMiles),wd=num(w.deadheadMiles);LD+=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd);DHm+=wd;
   var loads=(Array.isArray(w.loads)?w.loads:[]).slice().sort(function(a,b){return String(a.pickup||'').localeCompare(String(b.pickup||''));});
@@ -1953,22 +2122,23 @@ async function drawSumMap(list,box,info,token){
    result, never the weeks themselves.
    ========================================================= */
 var SUMCTX=null;
+/* the days a week covers: its picked dates exactly; weeks dated only by loads are stretched to whole Mon–Sun so a weekend payment still counts */
+function weekSpan(w){
+ var s=w.startDate||w.endDate||w.weekEndDate||'',e=w.endDate||w.weekEndDate||w.startDate||'';
+ if(!isISO(s)||!isISO(e))return null;if(e<s){var x=s;s=e;e=x;}
+ return w.datesManual?{a:s,b:e}:{a:mondayOf(s),b:addDaysISO(mondayOf(e),6)};
+}
+function spansRange(list){var sp=(list||[]).map(weekSpan).filter(Boolean);if(!sp.length)return{none:true};var a=sp[0].a,b=sp[0].b;sp.forEach(function(x){if(x.a<a)a=x.a;if(x.b>b)b=x.b;});return{a:a,b:b,spans:sp};}
+function monthRange(m){var p=m.split('-');return{a:m+'-01',b:m+'-'+String(new Date(+p[0],+p[1],0).getDate()).padStart(2,'0')};}
+function inRange(x,r){if(!r||r.none)return false;if(r.all)return true;var d=String(x.date||'');if(r.spans)return r.spans.some(function(s){return d>=s.a&&d<=s.b;});return d>=r.a&&d<=r.b;}
 function xtRange(){
  var c=SUMCTX;if(!c)return null;
  if(c.val==='ALL')return{all:true};
- if(c.val==='CUSTOM'){
-  if(!c.list.length)return{none:true};
-  var a='9999-12-31',b='0000-01-01';
-  c.list.forEach(function(w){var s=w.startDate||w.endDate||w.weekEndDate||'',e=w.endDate||w.weekEndDate||w.startDate||'';if(s&&s<a)a=s;if(e&&e>b)b=e;});
-  if(b<a)return{none:true};
-  /* stretch to whole Mon–Sun weeks so a weekend payment still counts */
-  var da=new Date(a+'T00:00:00'),db=new Date(b+'T00:00:00');
-  return{a:addDaysISO(a,-((da.getDay()+6)%7)),b:addDaysISO(b,6-((db.getDay()+6)%7))};
- }
- if(/^\d{4}-\d{2}$/.test(c.val)){var p=c.val.split('-');return{a:c.val+'-01',b:c.val+'-'+String(new Date(+p[0],+p[1],0).getDate()).padStart(2,'0')};}
+ if(c.val==='CUSTOM')return spansRange(c.list);
+ if(/^\d{4}-\d{2}$/.test(c.val))return monthRange(c.val);
  return{none:true};
 }
-function xtIn(x,r){if(!r||r.none)return false;if(r.all)return true;var d=String(x.date||'');return d>=r.a&&d<=r.b;}
+function xtIn(x,r){return inRange(x,r);}
 function xtDefaultDate(){
  var r=xtRange(),td=todayISO();
  if(!r||r.all||r.none)return td;
@@ -2033,8 +2203,8 @@ function renderSummary(val){
   lab.push((w.weekLabel&&w.weekLabel.indexOf('(')>-1)?w.weekLabel.split('(')[0].trim():('W'+(i+1)));
   dG.push(num(w.totalGross));dE.push(num(w.totalExpenses));dN.push(num(w.netProfit));dM.push(num(w.margin));dR.push(num(w.avgRpm));dC.push(num(w.cpm));dNR.push(num(w.netRpm));dL.push(wl);dD.push(wd);dP.push(wm>0?+f1(wd/wm*100):0);
   var loads=Array.isArray(w.loads)?w.loads:[];
-  if(loads.length){loads.forEach(function(l){var mi=num(l.miles)+num(l.deadhead),gr=num(l.gross),b=mi<600?hs:(mi<=1200?hm:hl);b.c++;b.g+=gr;b.m+=mi;
-   if(l.unpaid&&gr>0){unpaid+=gr;unpaidN++;}
+  if(loads.length){loads.forEach(function(l){var mi=tripLoaded(l)+num(l.deadhead),gr=tripGross(l),g0=num(l.gross),ps=ptSum(l),b=mi<600?hs:(mi<=1200?hm:hl);b.c++;b.g+=gr;b.m+=mi;
+   if(l.unpaid&&g0>0){unpaid+=g0;unpaidN++;}unpaid+=ps.unp;unpaidN+=ps.unpN;
    var sa=stateCodes(l.route),key=sa.length>=2?sa[0]+' ➔ '+sa[sa.length-1]:(sa.length===1?'● '+sa[0]:(l.route||'').trim().slice(0,22));
    if(key&&mi>0){if(!lanes[key])lanes[key]={c:0,m:0,g:0};lanes[key].c++;lanes[key].m+=mi;lanes[key].g+=gr;}});}
   else{var b2=wm<600?hs:(wm<=1200?hm:hl);b2.c++;b2.g+=num(w.totalGross);b2.m+=wm;}
@@ -2072,7 +2242,10 @@ function updateGoal(){
 /* =========================================================
    Reports
    ========================================================= */
+function weekDatesText(w){var s=w.startDate||'',e=w.endDate||w.weekEndDate||'';return s&&e?shortDate(s)+' – '+shortDate(e):(s||e?shortDate(s||e):'');}
+function buildReportCustomList(){var box=$('#rp-clist');if(!box)return;box.innerHTML=S.archive.map(function(w,i){return'<label class="rc" style="display:flex;align-items:center;gap:10px;margin:0;padding:10px;cursor:pointer;color:var(--tx);font-size:13px"><input type="checkbox" class="chk-rw" value="'+i+'" checked><div style="min-width:0"><b>'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</b><div class="cs">'+esc(weekDatesText(w))+' · Net <span class="a">'+money(w.netProfit,0)+'</span></div></div></label>';}).join('');}
 function fillReportFilters(){
+ buildReportCustomList();
  var ms=$('#rp-month'),ws=$('#rp-week'),months={};
  ws.innerHTML=S.archive.map(function(w,i){months[w.monthYear]=1;return'<option value="'+i+'">'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</option>';}).join('');
  ms.innerHTML=Object.keys(months).sort().reverse().map(function(m){return'<option value="'+m+'">'+m+'</option>';}).join('');
@@ -2082,31 +2255,237 @@ function reportList(){
  if(mode==='all')list=S.archive.slice();
  else if(mode==='month'){var m=$('#rp-month').value;sub=t('rp.pMonth',{m:m});list=S.archive.filter(function(w){return w.monthYear===m;});}
  else if(mode==='week'){var i=$('#rp-week').value;if(i!==''&&S.archive[i]){list=[S.archive[i]];sub=S.archive[i].weekLabel||'';}}
+ else if(mode==='custom'){$$('.chk-rw').forEach(function(c){if(c.checked&&S.archive[+c.value])list.push(S.archive[+c.value]);});sub=t('rp.pCustom',{n:list.length});var cn=$('#rp-cnt');if(cn)cn.textContent=t('sm.sel',{a:list.length,b:S.archive.length});}
  else{var a=$('#rp-from').value,b=$('#rp-to').value;sub=t('rp.pRange',{a:a||t('rp.start'),b:b||t('rp.today')});list=S.archive.filter(function(w){var r=w.weekEndDate||w.endDate||w.startDate||'';return(!a||r>=a)&&(!b||r<=b);});}
- return{list:list,sub:sub};
+ /* oldest first reads naturally in a report */
+ list=list.slice().sort(function(a,b){return String(a.endDate||a.weekEndDate||'').localeCompare(String(b.endDate||b.weekEndDate||''));});
+ return{list:list,sub:sub,mode:mode};
+}
+function reportRange(rl){
+ if(rl.mode==='all')return{all:true};
+ if(rl.mode==='month'){var m=$('#rp-month').value;return/^\d{4}-\d{2}$/.test(m)?monthRange(m):{none:true};}
+ if(rl.mode==='range'){var a=$('#rp-from').value,b=$('#rp-to').value;return{a:isISO(a)?a:'0000-01-01',b:isISO(b)?b:'9999-12-31'};}
+ return spansRange(rl.list);
+}
+/* one week's expenses as separate items (fuel, then every expense line) */
+function weekExpItems(w){
+ var isD=w.userRole==='driver',gross=num(w.totalGross),mi=num(w.totalMiles),out=[];
+ if(!isD){
+  var fuel=num(w.fuelCost),dz=0,df=0;(w.fuelLogs||[]).forEach(function(f){dz+=num(f.dieselCost);df+=num(f.defCost);});
+  if(fuel>0){
+   if(w.fuelMode!=='mpg'&&dz+df>0&&Math.abs(dz+df-fuel)<0.5){if(dz>0)out.push({key:'~diesel',name:t('rp.diesel'),type:'',sum:dz});if(df>0)out.push({key:'~def',name:'DEF',type:'',sum:df});}
+   else out.push({key:'~fuel',name:t('ar.fuelItem'),type:w.fuelMode==='mpg'?t('rp.byMpg'):'',sum:fuel});
+  }
+ }
+ if(Array.isArray(w.expensesList)&&w.expensesList.length){
+  w.expensesList.forEach(function(e,i){var v=num(e.val),s=num(e.calculatedSum);if(!s)s=e.type==='fixed'?v:e.type==='percent'?gross*v/100:e.type==='cpm'?mi*v/100:mi*v;
+   if(s>0){var nm=String(e.name||'').trim()||('#'+(i+1));out.push({key:nm.toLowerCase()+'|'+(e.type||''),name:nm,type:expTypeLabel(e.type,v),sum:s});}});
+ }else{
+  [['ar.fixed',w.fixedExpenses,'fixed'],['ar.percent',w.percentExpenses,'percent'],['ar.permile',w.cpmExpenses,'cpm']].forEach(function(a){if(num(a[1])>0)out.push({key:'~'+a[2],name:t(a[0]),type:'',sum:num(a[1])});});
+ }
+ return out;
+}
+function reportData(){
+ var rl=reportList(),list=rl.list;
+ var R={list:list,sub:rl.sub,rate:num(S.perDiem)||80,G:0,E:0,N:0,M:0,LD:0,DH:0,D:0,F:0,st:{},cats:[],det:[],weeks:[],loads:[],xs:[],X:0},cats={};
+ list.forEach(function(w,i){
+  var wm=num(w.totalMiles),wd=num(w.deadheadMiles),wl=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd),we=num(w.totalExpenses);
+  R.G+=num(w.totalGross);R.E+=we;R.N+=num(w.netProfit);R.M+=wm;R.LD+=wl;R.DH+=wd;R.D+=num(w.totalDays);R.F+=num(w.fuelCost);
+  (w.fuelLogs||[]).forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);if(g>0||c>0){var sc=stateCodes(f.loc),k=sc.length?sc[sc.length-1]:'OTHER';if(!R.st[k])R.st[k]={g:0,c:0};R.st[k].g+=g;R.st[k].c+=c;}});
+  var lab=w.weekLabel||t('c.week.n',{n:i+1}),items=weekExpItems(w),isum=0;
+  items.forEach(function(x){isum+=x.sum;});
+  /* keep the table equal to the week total even for weeks saved without a breakdown */
+  if(we-isum>0.5)items.push({key:'~other',name:t('rp.other'),type:'',sum:we-isum});
+  items.forEach(function(x){var c=cats[x.key];if(!c)c=cats[x.key]={name:x.name,types:{},sum:0,weeks:0};c.sum+=x.sum;c.weeks++;if(x.type)c.types[x.type]=1;});
+  R.det.push({label:lab,dates:weekDatesText(w),items:items,total:we});
+  R.weeks.push({label:lab,dates:(w.startDate||'')+' — '+(w.endDate||w.weekEndDate||''),mi:wm,days:num(w.totalDays),g:num(w.totalGross),e:we,n:num(w.netProfit)});
+  (w.loads||[]).forEach(function(l){var lm=num(l.miles),ld=num(l.deadhead),lg=num(l.gross);R.loads.push({wk:(w.weekLabel||'').split('(')[0],dates:(l.pickup||'')+' — '+(l.delivery||''),sdates:[l.pickup,l.delivery].filter(Boolean).map(shortDate).join(' – '),route:l.route||'',lm:lm,ld:ld,g:lg,rpm:lm+ld>0?lg/(lm+ld):0,broker:(l.broker||'')+(l.unpaid?' ⏳':'')});
+   ptList(l).forEach(function(q){var pm=num(q.miles),pg=num(q.pay);R.loads.push({pt:1,wk:'',dates:'',sdates:'',route:'↳ 📦 '+(ptRoute(q)||'Partial'),lm:pm,ld:0,g:pg,rpm:pm>0?pg/pm:0,broker:(q.broker||'')+(q.unpaid?' ⏳':'')});});});
+ });
+ R.cats=Object.keys(cats).map(function(k){var c=cats[k],ty=Object.keys(c.types);return{name:c.name,type:ty.length===1?ty[0]:(ty.length?t('rp.tMixed'):''),sum:c.sum,weeks:c.weeks};}).sort(function(a,b){return b.sum-a.sum;});
+ R.range=list.length||rl.mode==='range'||rl.mode==='all'?reportRange(rl):{none:true};
+ R.xs=S.extras.filter(function(x){return num(x.amt)>0&&inRange(x,R.range);}).sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+ R.X=R.xs.reduce(function(s,x){return s+num(x.amt);},0);
+ return R;
 }
 function renderReport(){
- var rl=reportList(),list=rl.list,rate=num(S.perDiem)||80;
- $('#rp-sub').textContent=t('rp.period',{p:rl.sub});$('#rp-email').textContent=S.user?S.user.email:'';$('#rp-date').textContent=t('rp.gen',{d:todayISO()});
- var G=0,E=0,N=0,M=0,LD=0,DH=0,D=0,F=0,st={};
- var tw=$('#rp-t-weeks tbody'),tl=$('#rp-t-loads tbody');tw.innerHTML='';tl.innerHTML='';
- list.forEach(function(w,i){
-  var wm=num(w.totalMiles),wd=num(w.deadheadMiles),wl=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd);
-  G+=num(w.totalGross);E+=num(w.totalExpenses);N+=num(w.netProfit);M+=wm;LD+=wl;DH+=wd;D+=num(w.totalDays);F+=num(w.fuelCost);
-  (w.fuelLogs||[]).forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);if(g>0||c>0){var sc=stateCodes(f.loc),k=sc.length?sc[sc.length-1]:'OTHER';if(!st[k])st[k]={g:0,c:0};st[k].g+=g;st[k].c+=c;}});
-  tw.innerHTML+='<tr><td><b>'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</b></td><td>'+esc((w.startDate||'')+' — '+(w.endDate||w.weekEndDate||''))+'</td><td>'+f0(wm)+'</td><td>'+num(w.totalDays)+'</td><td class="g">'+money(w.totalGross)+'</td><td class="r">'+money(w.totalExpenses)+'</td><td class="a"><b>'+money(w.netProfit)+'</b></td><td>$'+f2(wm>0?num(w.netProfit)/wm:0)+'</td></tr>';
-  (w.loads||[]).forEach(function(l){var lm=num(l.miles),ld=num(l.deadhead),lg=num(l.gross);tl.innerHTML+='<tr><td>'+esc((w.weekLabel||'').split('(')[0])+'</td><td>'+esc((l.pickup||'')+' — '+(l.delivery||''))+'</td><td><b>'+esc(l.route||'')+'</b></td><td>'+f0(lm)+'</td><td>'+f0(ld)+'</td><td class="g">'+money(lg)+'</td><td>$'+f2(lm+ld>0?lg/(lm+ld):0)+'</td><td>'+esc(l.broker||'')+(l.unpaid?' ⏳':'')+'</td></tr>';});
+ var R=reportData(),rate=R.rate,G=R.G,E=R.E,N=R.N,M=R.M,X=R.X;
+ $('#rp-sub').textContent=t('rp.period',{p:R.sub});$('#rp-email').textContent=S.user?S.user.email:'';$('#rp-date').textContent=t('rp.gen',{d:todayISO()});
+ $('#rp-t-weeks tbody').innerHTML=R.weeks.map(function(w){return'<tr><td><b>'+esc(w.label)+'</b></td><td>'+esc(w.dates)+'</td><td>'+f0(w.mi)+'</td><td>'+w.days+'</td><td class="g">'+money(w.g)+'</td><td class="r">'+money(w.e)+'</td><td class="a"><b>'+money(w.n)+'</b></td><td>$'+f2(w.mi>0?w.n/w.mi:0)+'</td></tr>';}).join('');
+ $('#rp-t-loads tbody').innerHTML=R.loads.map(function(l){return'<tr'+(l.pt?' class="pt-row"':'')+'><td>'+esc(l.wk)+'</td><td>'+esc(l.dates)+'</td><td><b>'+esc(l.route)+'</b></td><td>'+(l.pt?'+':'')+f0(l.lm)+'</td><td>'+(l.pt?'—':f0(l.ld))+'</td><td class="g">'+money(l.g)+'</td><td>'+(l.pt&&!(l.lm>0)?'—':'$'+f2(l.rpm))+'</td><td>'+esc(l.broker)+'</td></tr>';}).join('');
+ var ks=Object.keys(R.st).sort();
+ $('#rp-ifta').innerHTML=ks.length?ks.map(function(k){return'<span class="pill"><span class="a">'+esc(k)+'</span> '+f1(R.st[k].g)+' gal ('+money(R.st[k].c)+')</span>';}).join(''):'<span class="cs">'+t('rp.noIfta')+'</span>';
+ $('#rp-kpis').innerHTML=kpi(t('rp.gP'),money(G),'g')+kpi(t('sm.expD'),money(E),'r')+kpi(t('rp.net'),money(N),'a')+kpi('Net RPM','$'+f2(M>0?N/M:0),'a','',true)+kpi(t('sm.margin'),f1(G>0?N/G*100:0)+'%')+kpi(t('rp.allMiles'),f0(M))+kpi(t('k.rpm'),'$'+f2(M>0?G/M:0),'','CPM $'+f2(M>0?E/M:0))+
+  (X>0?kpi(t('rp.kX'),'−'+money(X),'r',t('rp.kXs',{n:R.xs.length}))+kpi(t('rp.kNX'),money(N-X),N-X<0?'r':'a','Net RPM $'+f2(M>0?(N-X)/M:0),true):'');
+ $('#rp-pd').textContent=money(R.D*rate);$('#rp-pd-d').textContent=t('rp.pdDays',{n:R.D,r:rate});$('#rp-pd-ded').textContent=t('rp.ded',{a:money(R.D*rate*0.8)});
+ $('#rp-mi').textContent=t('rp.milesVal',{m:f0(M),n:R.list.length});$('#rp-fuel').textContent=t('rp.fuelVal',{a:money(R.F)});
+ $('#rp-dh').textContent=t('rp.dhNote',{a:f0(R.LD),b:f0(R.DH),p:f1(M>0?R.DH/M*100:0)});
+ renderRpExp(R);
+}
+function renderRpExp(R){
+ var E=R.E,M=R.M,X=R.X,N=R.N,tb=$('#rp-t-exp tbody'),tf=$('#rp-t-exp tfoot');
+ if(!R.cats.length){tb.innerHTML='<tr><td class="cs">'+t('rp.noExp')+'</td><td class="hm"></td><td class="hm"></td><td></td><td class="hm"></td><td></td></tr>';tf.innerHTML='';}
+ else{
+  tb.innerHTML=R.cats.map(function(c){var sub=[c.type,t('rp.nWeeks',{n:c.weeks}),'$'+f2(M>0?c.sum/M:0)+'/mi'].filter(Boolean).join(' · ');return'<tr><td><b>'+esc(c.name)+'</b><div class="cs sm-only">'+esc(sub)+'</div></td><td class="muted hm">'+esc(c.type)+'</td><td class="ar hm">'+c.weeks+'</td><td class="ar r">'+money(c.sum)+'</td><td class="ar hm">$'+f2(M>0?c.sum/M:0)+'</td><td class="ar">'+f1(E>0?c.sum/E*100:0)+'%</td></tr>';}).join('');
+  tf.innerHTML='<tr><td>'+t('rp.expTotal')+'</td><td class="hm"></td><td class="hm"></td><td class="ar r">'+money(E)+'</td><td class="ar hm">$'+f2(M>0?E/M:0)+'</td><td class="ar">100%</td></tr>';
+ }
+ $('#rp-xt').innerHTML=R.xs.length?'<div class="ct">'+t('rp.xtTitle')+'</div><div class="tscroll"><table class="rp-t rp-xt-t"><thead><tr><th>'+t('xt.date')+'</th><th>'+t('rp.expItem')+'</th><th class="ar">'+t('rp.expSum')+'</th></tr></thead><tbody>'+
+  R.xs.map(function(x){return'<tr><td>'+esc(shortDate(x.date))+'</td><td><b>'+esc(x.name||t('xt.extra'))+'</b></td><td class="ar r">'+money(x.amt)+'</td></tr>';}).join('')+
+  '</tbody><tfoot><tr><td colspan="2">'+t('rp.xtTotal')+'</td><td class="ar r">'+money(X)+'</td></tr><tr><td colspan="2">'+t('rp.allExp')+'</td><td class="ar r">'+money(E+X)+'</td></tr><tr><td colspan="2">'+t('rp.netX')+'</td><td class="ar '+(N-X<0?'r':'a')+'">'+money(N-X)+'</td></tr></tfoot></table></div>':'';
+ $('#rp-t-det tbody').innerHTML=R.det.map(function(d){return'<tr class="grp"><td>'+esc(d.label)+(d.dates?' <span class="cs">'+esc(d.dates)+'</span>':'')+'</td><td class="hm"></td><td class="ar r">'+money(d.total)+'</td></tr>'+d.items.map(function(x){return'<tr><td>'+esc(x.name)+(x.type?'<div class="cs sm-only">'+esc(x.type)+'</div>':'')+'</td><td class="muted hm">'+esc(x.type||'')+'</td><td class="ar">'+money(x.sum)+'</td></tr>';}).join('');}).join('')||'<tr><td class="cs">'+t('rp.noExp')+'</td><td class="hm"></td><td></td></tr>';
+ $('#rp-detail').hidden=!S.rpDetail;$('#rp-dbtn').textContent=t(S.rpDetail?'rp.detailHide':'rp.detailShow');
+}
+/* =========================================================
+   Report as a real PDF file. In a home-screen app on a phone
+   window.print() does nothing, so the report is drawn page by
+   page on a canvas (A4) and packed into a small PDF here —
+   no extra libraries, works offline.
+   ========================================================= */
+function pdfWanted(){try{return navigator.standalone===true||/iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent||'')||matchMedia('(display-mode: standalone)').matches||matchMedia('(pointer: coarse)').matches;}catch(e){return false;}}
+var PDF={blob:null,url:'',name:''};
+function pdfFile(){return new File([PDF.blob],PDF.name,{type:'application/pdf'});}
+function canShareFile(){try{return!!(PDF.blob&&navigator.share&&navigator.canShare&&navigator.canShare({files:[pdfFile()]}));}catch(e){return false;}}
+function pdfSheet(ready,info){
+ $('#pdf-bg').hidden=false;$('#pdf-ttl').textContent=t(ready?'pdf.ready':'pdf.making');$('#pdf-info').textContent=info||'';
+ $('#pdf-share').hidden=!(ready&&canShareFile());$('#pdf-dl').hidden=!ready;$('#pdf-open').hidden=!ready;$('#pdf-prev').hidden=!ready;$('#pdf-hint').textContent=ready?t('pdf.hint'):'';
+}
+async function pdfReport(){
+ pdfSheet(false);
+ try{
+  var out=await buildReportPdf();
+  if(PDF.url)URL.revokeObjectURL(PDF.url);
+  PDF.blob=out.blob;PDF.name='ownergladiator-report-'+todayISO()+'.pdf';PDF.url=URL.createObjectURL(out.blob);
+  var dl=$('#pdf-dl');dl.href=PDF.url;dl.setAttribute('download',PDF.name);dl.textContent=t('pdf.dl');
+  var op=$('#pdf-open');op.href=PDF.url;op.textContent=t('pdf.open');
+  $('#pdf-share').textContent=t('pdf.share');$('#pdf-prev').src=out.preview;
+  pdfSheet(true,t('pdf.pages',{n:out.pages,kb:Math.max(1,Math.round(out.blob.size/1024))}));
+ }catch(e){$('#pdf-bg').hidden=true;toast(t('pdf.fail',{e:(e&&e.message)||e}),4000);}
+}
+function makePdf(jpgs,pw,ph,iw,ih){
+ var enc=new TextEncoder(),parts=[],off=0,offs=[];
+ function add(x){var u=typeof x==='string'?enc.encode(x):x;parts.push(u);off+=u.length;}
+ function obj(n,chunks){offs[n]=off;add(n+' 0 obj\n');chunks.forEach(add);add('\nendobj\n');}
+ add('%PDF-1.4\n');add(new Uint8Array([37,226,227,207,211,10]));
+ var n=jpgs.length,info=3+n*3,kids=[],W=pw.toFixed(2),H=ph.toFixed(2);
+ for(var i=0;i<n;i++)kids.push((3+i*3)+' 0 R');
+ obj(1,['<< /Type /Catalog /Pages 2 0 R >>']);
+ obj(2,['<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+n+' >>']);
+ jpgs.forEach(function(j,i){var pg=3+i*3,c=pg+1,im=pg+2,cs='q '+W+' 0 0 '+H+' 0 0 cm /Im0 Do Q';
+  obj(pg,['<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /XObject << /Im0 '+im+' 0 R >> /ProcSet [/PDF /ImageC] >> /Contents '+c+' 0 R >>']);
+  obj(c,['<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream']);
+  obj(im,['<< /Type /XObject /Subtype /Image /Width '+iw+' /Height '+ih+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+j.length+' >>\nstream\n',j,'\nendstream']);
  });
- var ks=Object.keys(st).sort();
- $('#rp-ifta').innerHTML=ks.length?ks.map(function(k){return'<span class="pill"><span class="a">'+esc(k)+'</span> '+f1(st[k].g)+' gal ('+money(st[k].c)+')</span>';}).join(''):'<span class="cs">'+t('rp.noIfta')+'</span>';
- $('#rp-kpis').innerHTML=kpi(t('rp.gP'),money(G),'g')+kpi(t('sm.expD'),money(E),'r')+kpi(t('rp.net'),money(N),'a')+kpi('Net RPM','$'+f2(M>0?N/M:0),'a','',true)+kpi(t('sm.margin'),f1(G>0?N/G*100:0)+'%')+kpi(t('rp.allMiles'),f0(M))+kpi(t('k.rpm'),'$'+f2(M>0?G/M:0),'','CPM $'+f2(M>0?E/M:0));
- $('#rp-pd').textContent=money(D*rate);$('#rp-pd-d').textContent=t('rp.pdDays',{n:D,r:rate});$('#rp-pd-ded').textContent=t('rp.ded',{a:money(D*rate*0.8)});
- $('#rp-mi').textContent=t('rp.milesVal',{m:f0(M),n:list.length});$('#rp-fuel').textContent=t('rp.fuelVal',{a:money(F)});
- $('#rp-dh').textContent=t('rp.dhNote',{a:f0(LD),b:f0(DH),p:f1(M>0?DH/M*100:0)});
+ var d=new Date(),z=function(v){return(v<10?'0':'')+v;};
+ obj(info,['<< /Title (OwnerGladiator Hub report) /Producer (OwnerGladiator Hub) /CreationDate (D:'+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+z(d.getHours())+z(d.getMinutes())+z(d.getSeconds())+') >>']);
+ var xr=off,tot=info+1,x='xref\n0 '+tot+'\n0000000000 65535 f \n';
+ for(var k=1;k<tot;k++)x+=String(offs[k]).padStart(10,'0')+' 00000 n \n';
+ add(x);add('trailer\n<< /Size '+tot+' /Root 1 0 R /Info '+info+' 0 R >>\nstartxref\n'+xr+'\n%%EOF\n');
+ return new Blob(parts,{type:'application/pdf'});
+}
+async function buildReportPdf(){
+ var R=reportData();
+ if(document.fonts&&document.fonts.load){try{await Promise.race([Promise.all(['400 16px Barlow','600 16px Barlow','700 16px Barlow','700 16px "Barlow Condensed"','800 16px "Barlow Condensed"'].map(function(f){return document.fonts.load(f);})),new Promise(function(r){setTimeout(r,2500);})]);}catch(e){}}
+ var K=2,PW=595.28,PH=841.89,W=Math.round(PW*K),H=Math.round(PH*K),MX=34,TOP=34,BOT=44,TW=PW-2*MX;
+ var FB='Barlow,"Helvetica Neue",Arial,sans-serif',FD='"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif';
+ var C={tx:'#14181d',mut:'#5d6672',line:'#d5dae1',fill:'#f3f5f8',acc:'#b57c00',g:'#0a8f5c',r:'#c62f3b',hd:'#1b1f26',tot:'#fff3d1',grp:'#e9edf2'};
+ var emb=$('.rp-brand .og-em'),emP=emb?[].map.call(emb.querySelectorAll('path'),function(q){return{d:q.getAttribute('d'),f:q.getAttribute('fill'),clip:!!q.getAttribute('clip-path')};}):[];
+ var cv=null,ctx=null,y=0,pageNo=0,TOTAL=0,dry=true,jpgs=[],preview='',scratch=document.createElement('canvas').getContext('2d');
+ function font(sz,wt,fam){return(wt||400)+' '+(sz*K)+'px '+(fam||FB);}
+ function X(v){return v*K;}
+ function measure(s,f){var c=dry?scratch:ctx;c.font=f;return c.measureText(s).width/K;}
+ function fit(s,f,w){s=String(s==null?'':s);if(measure(s,f)<=w)return s;while(s.length>1&&measure(s+'…',f)>w)s=s.slice(0,-1);return s+'…';}
+ function txt(s,x,yy,f,col,al){if(dry)return;ctx.font=f;ctx.fillStyle=col||C.tx;ctx.textAlign=al||'left';ctx.fillText(String(s),X(x),X(yy));}
+ function box(x,yy,w,hh,fill){if(dry)return;ctx.fillStyle=fill;ctx.fillRect(X(x),X(yy),X(w),X(hh));}
+ function rbox(x,yy,w,hh,fill,stroke){if(dry)return;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(X(x),X(yy),X(w),X(hh),X(5));else ctx.rect(X(x),X(yy),X(w),X(hh));ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=K*.75;ctx.stroke();}}
+ function hr(x1,yy,x2,col,wd){if(dry)return;ctx.strokeStyle=col;ctx.lineWidth=(wd||.75)*K;ctx.beginPath();ctx.moveTo(X(x1),X(yy));ctx.lineTo(X(x2),X(yy));ctx.stroke();}
+ function emblem(x,yy,hh){if(dry||!emP.length||typeof Path2D==='undefined')return;var s=hh/442*K;ctx.save();ctx.translate(X(x),X(yy));ctx.scale(s,s);ctx.translate(-108,-24);
+  emP.forEach(function(q){ctx.save();if(q.clip){ctx.beginPath();ctx.rect(256,0,256,512);ctx.clip();}ctx.fillStyle=q.f||'#FFC400';ctx.fill(new Path2D(q.d));ctx.restore();});ctx.restore();}
+ async function finishPage(){
+  if(dry||!cv)return;
+  hr(MX,PH-30,PW-MX,C.line);txt('OwnerGladiator Hub · '+t('rp.pdfTitle')+' · '+R.sub,MX,PH-18,font(7.5,500),C.mut);txt(t('rp.pageOf',{n:pageNo,m:TOTAL}),PW-MX,PH-18,font(7.5,700),C.mut,'right');
+  var b=await new Promise(function(res){cv.toBlob(res,'image/jpeg',0.9);});if(!b)throw new Error('canvas');
+  jpgs.push(new Uint8Array(await b.arrayBuffer()));if(!preview)preview=cv.toDataURL('image/jpeg',0.72);
+  cv.width=1;cv.height=1;cv=null;ctx=null;
+ }
+ async function newPage(){
+  await finishPage();pageNo++;
+  if(!dry){cv=document.createElement('canvas');cv.width=W;cv.height=H;ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.textBaseline='alphabetic';}
+  y=TOP;
+  if(pageNo>1){emblem(MX,y-4,16);txt('OwnerGladiator Hub · '+R.sub,MX+14,y+8,font(8,600),C.mut);hr(MX,y+15,PW-MX,C.line);y+=26;}
+ }
+ async function need(hh){if(y+hh>PH-BOT)await newPage();}
+ async function section(title){await need(46);y+=8;txt(title,MX,y+13,font(13.5,700,FD),C.tx);y+=20;}
+ async function note(s){await need(16);txt(s,MX,y+10,font(8.5,400),C.mut);y+=18;}
+ async function table(cols,rows){
+  var rh=15,fs=8,pad=5,xs=[],acc=MX;cols.forEach(function(c){xs.push(acc);acc+=c.w*TW;});
+  function cellAt(x,w,al,s,f,col){s=fit(s,f,w-2*pad);txt(s,al==='r'?x+w-pad:x+pad,y+rh-4.5,f,col,al==='r'?'right':'left');}
+  function head(){box(MX,y,TW,rh+1,C.hd);cols.forEach(function(c,i){cellAt(xs[i],c.w*TW,c.a,c.h,font(fs,700),'#ffffff');});y+=rh+1;}
+  await need(rh*2+3);head();
+  for(var i=0;i<rows.length;i++){var r=rows[i];
+   if(y+rh>PH-BOT){await newPage();head();}
+   if(r.fill)box(MX,y,TW,rh,r.fill);else if(i%2)box(MX,y,TW,rh,C.fill);
+   var sp=r.span||1;
+   cols.forEach(function(c,j){if(j>0&&j<sp)return;var v=r.c[j];if(v==null||v==='')return;var w=c.w*TW;if(j===0&&sp>1){w=0;for(var q=0;q<sp;q++)w+=cols[q].w*TW;}cellAt(xs[j],w,c.a,v,font(fs,r.b||(r.bc&&r.bc[j])?700:400),(r.col&&r.col[j])||C.tx);});
+   y+=rh;
+  }
+  hr(MX,y,PW-MX,C.line);y+=6;
+ }
+ async function kpis(list){
+  var n=4,gap=6,bw=(TW-gap*(n-1))/n,bh=40;
+  for(var i=0;i<list.length;i+=n){await need(bh+gap);
+   for(var j=0;j<n&&i+j<list.length;j++){var k=list[i+j],x=MX+j*(bw+gap);rbox(x,y,bw,bh,C.fill,C.line);txt(fit(k.l,font(7.5,600),bw-12),x+6,y+12,font(7.5,600),C.mut);txt(fit(k.v,font(15.5,700,FD),bw-12),x+6,y+31,font(15.5,700,FD),k.col||C.tx);}
+   y+=bh+gap;}
+ }
+ async function layout(){
+  pageNo=0;y=0;await newPage();
+  var M=R.M,G=R.G,E=R.E,N=R.N,Xx=R.X,pm=function(v){return'$'+f2(M>0?v/M:0);};
+  /* header */
+  emblem(MX,y,48);
+  txt('OwnerGladiator Hub',MX+40,y+19,font(20,800,FD),C.tx);txt(t('rp.pdfTitle'),MX+40,y+33,font(10,600),C.mut);txt(fit(t('rp.period',{p:R.sub}),font(9,500),TW-220),MX+40,y+46,font(9,500),C.tx);
+  txt((S.user&&S.user.email)||'',PW-MX,y+19,font(9,600),C.tx,'right');txt(t('rp.gen',{d:todayISO()}),PW-MX,y+33,font(8.5,500),C.mut,'right');
+  y+=56;hr(MX,y,PW-MX,'#e3a300',1.6);y+=10;
+  var K1=[{l:t('rp.gP'),v:money(G),col:C.g},{l:t('sm.expD'),v:money(E),col:C.r},{l:t('rp.net'),v:money(N),col:C.acc},{l:'Net RPM',v:pm(N),col:C.acc},
+   {l:t('sm.margin'),v:f1(G>0?N/G*100:0)+'%'},{l:t('rp.allMiles'),v:f0(M)},{l:t('k.rpm'),v:pm(G)},{l:'CPM',v:pm(E)}];
+  if(Xx>0)K1.push({l:t('rp.kX'),v:'−'+money(Xx),col:C.r},{l:t('rp.kNX'),v:money(N-Xx),col:N-Xx<0?C.r:C.acc},{l:'Net RPM '+t('rp.withX'),v:pm(N-Xx),col:C.acc},{l:'CPM '+t('rp.withX'),v:pm(E+Xx)});
+  await kpis(K1);
+  await need(60);var bw=(TW-8)/2;
+  rbox(MX,y,bw,52,C.fill,C.line);txt(t('rp.perdiem'),MX+8,y+13,font(8,700),C.mut);txt(money(R.D*R.rate),MX+8,y+33,font(17,700,FD),C.g);txt(fit(t('rp.pdDays',{n:R.D,r:R.rate})+' · '+t('rp.ded',{a:money(R.D*R.rate*0.8)}),font(7.5,500),bw-16),MX+8,y+46,font(7.5,500),C.mut);
+  var x2=MX+bw+8;rbox(x2,y,bw,52,C.fill,C.line);txt(t('rp.milesFuel'),x2+8,y+13,font(8,700),C.mut);txt(fit(t('rp.milesVal',{m:f0(M),n:R.list.length})+' · '+t('rp.fuelVal',{a:money(R.F)}),font(12,700,FD),bw-16),x2+8,y+32,font(12,700,FD),C.tx);
+  txt(fit(t('rp.dhNote',{a:f0(R.LD),b:f0(R.DH),p:f1(M>0?R.DH/M*100:0)}),font(7.5,500),bw-16),x2+8,y+46,font(7.5,500),C.mut);y+=60;
+  /* expenses by item */
+  await section(t('rp.expTitle'));
+  if(R.cats.length)await table([{h:t('rp.expItem'),w:.34},{h:t('rp.expType'),w:.22},{h:t('rp.expWeeks'),w:.1,a:'r'},{h:t('rp.expSum'),w:.14,a:'r'},{h:'$/mi',w:.1,a:'r'},{h:'%',w:.1,a:'r'}],
+   R.cats.map(function(c){return{c:[c.name,c.type,String(c.weeks),money(c.sum),pm(c.sum),f1(E>0?c.sum/E*100:0)+'%'],bc:[1],col:[0,C.mut,0,C.r]};}).concat([{c:[t('rp.expTotal'),'','',money(E),pm(E),'100%'],b:1,span:3,fill:C.tot,col:[0,0,0,C.r]}]));
+  else await note(t('rp.noExp'));
+  if(R.xs.length){await section(t('rp.xtTitle'));
+   await table([{h:t('xt.date'),w:.16},{h:t('rp.expItem'),w:.6},{h:t('rp.expSum'),w:.24,a:'r'}],R.xs.map(function(x){return{c:[shortDate(x.date),x.name||t('xt.extra'),money(x.amt)],col:[0,0,C.r]};}).concat([
+    {c:[t('rp.xtTotal'),'',money(Xx)],b:1,span:2,fill:C.tot,col:[0,0,C.r]},{c:[t('rp.allExp'),'',money(E+Xx)],b:1,span:2,col:[0,0,C.r]},{c:[t('rp.netX'),'',money(N-Xx)],b:1,span:2,col:[0,0,N-Xx<0?C.r:C.g]}]));}
+  /* IFTA */
+  var ks=Object.keys(R.st).sort();
+  await section(t('rp.ifta'));
+  if(ks.length)await table([{h:t('rp.state'),w:.4},{h:'Gal',w:.3,a:'r'},{h:'$',w:.3,a:'r'}],ks.map(function(k){return{c:[k,f1(R.st[k].g),money(R.st[k].c)]};}));else await note(t('rp.noIfta'));
+  /* weeks */
+  await section(t('rp.weeks'));
+  if(R.weeks.length)await table([{h:t('c.week'),w:.2},{h:t('th.dates'),w:.2},{h:t('th.miles'),w:.09,a:'r'},{h:t('rp.daysShort'),w:.06,a:'r'},{h:'Gross',w:.12,a:'r'},{h:t('k.exp'),w:.12,a:'r'},{h:t('th.net'),w:.12,a:'r'},{h:'Net RPM',w:.09,a:'r'}],
+   R.weeks.map(function(w){return{c:[w.label,w.dates,f0(w.mi),String(w.days),money(w.g),money(w.e),money(w.n),'$'+f2(w.mi>0?w.n/w.mi:0)],bc:[1,0,0,0,0,0,1],col:[0,0,0,0,C.g,C.r,C.acc]};}));
+  else await note(t('t.nodata'));
+  /* loads */
+  if(R.loads.length){await section(t('rp.loads'));
+   await table([{h:t('c.week'),w:.13},{h:t('th.dates'),w:.17},{h:t('th.route'),w:.27},{h:'Loaded',w:.08,a:'r'},{h:'DH',w:.06,a:'r'},{h:'Gross',w:.11,a:'r'},{h:'RPM',w:.07,a:'r'},{h:t('th.broker'),w:.11}],
+    R.loads.map(function(l){return l.pt?{c:['','',l.route,'+'+f0(l.lm),'—',money(l.g),l.lm>0?'$'+f2(l.rpm):'—',l.broker],col:[0,0,'#6a54dd',C.mut,C.mut,C.g,C.mut,C.mut]}:{c:[l.wk,l.sdates,l.route,f0(l.lm),f0(l.ld),money(l.g),'$'+f2(l.rpm),l.broker],bc:[0,0,1],col:[0,0,0,0,0,C.g]};}));}
+  /* every expense, week by week */
+  if(R.det.length){await section(t('rp.detailTitle'));var rows=[];
+   R.det.forEach(function(d){rows.push({c:[d.label+(d.dates?'  ·  '+d.dates:''),'',money(d.total)],b:1,span:2,fill:C.grp,col:[0,0,C.r]});d.items.forEach(function(x){rows.push({c:['    '+x.name,x.type||'',money(x.sum)]});});});
+   await table([{h:t('rp.expItem'),w:.56},{h:t('rp.expType'),w:.24},{h:t('rp.expSum'),w:.2,a:'r'}],rows);}
+ }
+ dry=true;await layout();TOTAL=pageNo;
+ dry=false;await layout();await finishPage();
+ return{blob:makePdf(jpgs,PW,PH,W,H),pages:jpgs.length,preview:preview};
 }
 function csvExport(){
- var rl=reportList(),rows=[['Week','Pickup','Delivery','Route','Loaded mi','Deadhead mi','Gross','Broker','Awaiting payment']];
- rl.list.forEach(function(w){(w.loads||[]).forEach(function(l){rows.push([w.weekLabel||'',l.pickup||'',l.delivery||'',l.route||'',num(l.miles),num(l.deadhead),num(l.gross),l.broker||'',l.unpaid?'yes':'']);});});
+ var rl=reportList(),rows=[['Week','Pickup','Delivery','Route','Loaded mi','Deadhead mi','Gross','Broker','Awaiting payment','Type']];
+ rl.list.forEach(function(w){(w.loads||[]).forEach(function(l){rows.push([w.weekLabel||'',l.pickup||'',l.delivery||'',l.route||'',num(l.miles),num(l.deadhead),num(l.gross),l.broker||'',l.unpaid?'yes':'','load']);
+  ptList(l).forEach(function(q){rows.push([w.weekLabel||'',l.pickup||'',l.delivery||'',[q.fromText,q.toText].filter(Boolean).join(' -> '),num(q.miles),0,num(q.pay),q.broker||'',q.unpaid?'yes':'','partial']);});});});
  if(rows.length<2)return toast(t('t.nodata'));
  var csv=rows.map(function(r){return r.map(function(c){var s=String(c);return/[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',');}).join('\n');
  download('ownergladiator-loads-'+todayISO()+'.csv','\uFEFF'+csv,'text/csv;charset=utf-8');
@@ -2128,7 +2507,9 @@ function go(p){
 }
 function guardWrite(){if(S.ro){toast(t('t.ro'));return false;}return true;}
 function changed(){refresh();queueSave();}
-function findItem(card){var arr=S[card.dataset.list];return arr&&arr.find(function(x){return x.id===card.dataset.id;});}
+function findItem(card){
+ if(card.dataset.list==='partials'){var lc=card.parentElement&&card.parentElement.closest('[data-list="loads"]'),ld=lc&&findItem(lc);return ld?ptList(ld).find(function(x){return x.id===card.dataset.id;}):null;}
+ var arr=S[card.dataset.list];return arr&&arr.find(function(x){return x.id===card.dataset.id;});}
 
 var ACT={
  lang:function(){LANG=LANG==='ru'?'en':'ru';SafeStorage.set('hs_lang',LANG);rerender();},
@@ -2170,7 +2551,9 @@ var ACT={
  closeImp:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#imp-bg').hidden=true;},
  addFuel:function(){if(!guardWrite())return;S.fuel.push(newFuel());renderFuel();changed();},
  addExp:function(){if(!guardWrite())return;S.exps.push(newExp());renderExps();changed();},
- del:async function(b){if(!guardWrite())return;var c=b.closest('[data-list]');if(!c)return;var key=c.dataset.list;S[key]=S[key].filter(function(x){return x.id!==c.dataset.id;});
+ del:async function(b){if(!guardWrite())return;var c=b.closest('[data-list]');if(!c)return;var key=c.dataset.list;
+  if(key==='partials'){var lc=c.parentElement.closest('[data-list="loads"]'),ld=lc&&findItem(lc);if(ld){ld.partials=ptList(ld).filter(function(x){return x.id!==c.dataset.id;});renderLoads();changed();}return;}
+ S[key]=S[key].filter(function(x){return x.id!==c.dataset.id;});
   if(key==='extras'){renderXt();queueSave();return;}
   if(key==='loads'&&!S.loads.length)S.loads=[newLoad()];if(key==='loads')renderLoads();else if(key==='fuel')renderFuel();else renderExps();changed();
   if(key==='loads'&&S.milesCalc==='auto'){await calcAllMiles(false);queueSave();}},
@@ -2184,8 +2567,12 @@ var ACT={
    if(S.loads.indexOf(l)===0&&S.startText&&!S.startGeo){var sg=await resolvePlace(S.startText);if(sg){S.startGeo=sg;S.startText=sg.label;}}
    if(!canLd(l)&&!canDh(S.loads.indexOf(l))){toast(t('mc.need'),3200);return;}
    await calcLoadMiles(l,true);
+   await recalcPartials(l,true);
   }finally{b.disabled=false;}
   changed();},
+ ptAdd:function(b){if(!guardWrite())return;var c=b.closest('[data-list="loads"]'),l=c&&findItem(c);if(!l)return;
+  var q=newPartial();l.partials=ptList(l).concat([q]);l._open=true;renderLoads();
+  var el=$('[data-list="partials"][data-id="'+q.id+'"] [data-place="from"]');if(el)el.focus();changed();},
  archiveWeek:archiveWeek,
  newWeek:function(){if(!guardWrite())return;if(!confirm(t('wk.confirmNew')))return;resetWeek(true);renderStatic();queueSave();},
  saveTpl:function(){if(!guardWrite())return;S.template={userRole:S.role,driverPct:num(S.driverPct)||30,mpg:S.mpg,dieselPrice:S.diesel,milesMode:S.milesMode,milesCalc:S.milesCalc,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,taxPct:S.taxPct,expenses:S.exps.map(function(e){return{name:e.name,type:e.type,val:num(e.val)};})};SafeStorage.set(tplKey(),JSON.stringify(S.template));queueSave();toast(t('ex.saved'),3200);},
@@ -2196,7 +2583,25 @@ var ACT={
  replay:function(){var box=$('#map-box');if(box._svg){box.innerHTML='';requestAnimationFrame(function(){box.innerHTML=box._svg;});}},
  selAll:function(){$$('.chk-w').forEach(function(c){c.checked=true;});renderSummary('CUSTOM');},
  selNone:function(){$$('.chk-w').forEach(function(c){c.checked=false;});renderSummary('CUSTOM');},
- print:function(){window.print();},
+ rpAll:function(){$$('.chk-rw').forEach(function(c){c.checked=true;});renderReport();},
+ rpNone:function(){$$('.chk-rw').forEach(function(c){c.checked=false;});renderReport();},
+ rpDetail:function(){S.rpDetail=!S.rpDetail;renderReport();},
+ print:function(){if(pdfWanted())pdfReport();else window.print();},
+ pdfClose:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#pdf-bg').hidden=true;},
+ pdfShare:async function(){try{await navigator.share({files:[pdfFile()],title:PDF.name});}catch(e){if(e&&e.name!=='AbortError')toast(t('pdf.fail',{e:e.message||e}),4000);}},
+ wkThis:function(){if(!guardWrite())return;var a=mondayOf(todayISO());setWeekDates(a,addDaysISO(a,6));},
+ wkLoads:function(){if(!guardWrite())return;var s=loadsSpan();if(!s.a)return toast(t('wk.dNoLoads'));setWeekDates(s.a,s.b);},
+ arDates:async function(){
+  if(!guardWrite())return;var w=S.archive[S.archSel];if(!w||!sb)return;
+  var a=$('#ar-from').value,b=$('#ar-to').value;if(!isISO(a)||!isISO(b))return toast(t('ar.datesBad'));
+  if(b<a){var x=a;a=b;b=x;}
+  var p={};Object.keys(w).forEach(function(k){if(k!=='db_id'&&k!=='weekEndDate')p[k]=w[k];});
+  p.startDate=a;p.endDate=b;p.datesManual=true;p.monthYear=monthOf({startDate:a,endDate:b});
+  var r=await sb.from('weekly_reports').update({week_end_date:b,full_payload:p}).eq('id',w.db_id);
+  if(r&&r.error)return toast(t('t.err',{e:r.error.message}),4000);
+  var keep=w.db_id;toast(t('ar.datesOk'));await loadArchive();
+  var ni=S.archive.findIndex(function(z){return z.db_id===keep;});if(ni>=0){$('#archive-select').value=ni;showArchived(ni);}
+ },
  csv:csvExport,
  backup:function(){download('ownergladiator-backup-'+todayISO()+'.json',JSON.stringify({exportedAt:new Date().toISOString(),draft:draftObj(),archive:S.archive},null,1),'application/json');},
  logout:async function(){$('#menu-bg').hidden=true;if(sb)await sb.auth.signOut();handleSession(null);},
@@ -2207,7 +2612,7 @@ var ACT={
   if(dh>0&&S.milesMode!=='split')S.milesMode='split';
   var o={pickup:td,delivery:addDaysISO(td,days-1),miles:num($('#ev-loaded').value),deadhead:dh,gross:num($('#ev-gross').value),fromText:EV.from.geo?EV.from.geo.label:EV.from.text,toText:EV.to.geo?EV.to.geo.label:EV.to.text,fromGeo:EV.from.geo,toGeo:EV.to.geo};
   o.route=[o.fromText,o.toText].filter(Boolean).join(' -> ');
-  if(S.loads.length===1&&!num(S.loads[0].gross)&&!num(S.loads[0].miles)&&!S.loads[0].fromText)S.loads=[];
+  if(S.loads.length===1&&isBlankLoad(S.loads[0]))S.loads=[];
   var nl=newLoad(o);nl._open=true;S.loads.forEach(function(x){x._open=false;});S.loads.push(nl);
   if(S.milesCalc==='auto'&&S.loads.length===1&&!S.startGeo&&EV.pos.geo){S.startGeo=EV.pos.geo;S.startText=EV.pos.geo.label||'';}
   renderStatic();queueSave();toast(t('tl.booked'));go('week');
@@ -2225,11 +2630,12 @@ document.addEventListener('input',function(e){
  if(el.id==='goal-in'){updateGoal();return;}
  var card=el.closest('[data-list]');if(!card)return;
  var it=findItem(card);if(!it)return;
- if(el.dataset.place){var side=el.dataset.place;it[side+'Text']=el.value;if(/^\d{5}$/.test(el.value.trim())){resolveInto(el,it,side+'Text',side+'Geo',function(){afterLoadPlace(it);});}return;}
+ if(el.dataset.place){var side=el.dataset.place;it[side+'Text']=el.value;if(/^\d{5}$/.test(el.value.trim())){resolveInto(el,it,side+'Text',side+'Geo',function(){placeDone(card,it);});}return;}
  var k2=el.dataset.k;if(!k2)return;
  if(el.readOnly)return;
  if(el.type==='checkbox')it[k2]=el.checked;else if(el.type==='number')it[k2]=el.value===''?0:num(el.value);else it[k2]=el.value;
  if(card.dataset.list==='extras'){if(k2==='amt')renderXtRes();queueSave();return;}
+ if(card.dataset.list==='partials'&&k2==='miles')it.mAuto=false;
  changed();
 });
 document.addEventListener('change',function(e){
@@ -2239,13 +2645,15 @@ document.addEventListener('change',function(e){
  if(el.dataset.evplace){evPlace(el);return;}
  if(el.dataset.wplace){resolveInto(el,S,'startText','startGeo',afterStart);return;}
  if(el.dataset.k==='date'&&el.closest('[data-list="extras"]')){renderXt();return;}
+ if(el.id==='in-wFrom'||el.id==='in-wTo'){onWeekDate(el);return;}
  if(el.id==='archive-select'){showArchived(el.value);return;}
  if(el.id==='month-select'){renderSummary(el.value);return;}
  if(el.id==='admin-select'){switchAdmin(el.value);return;}
- if(el.id==='rp-mode'){var m=el.value;$('#rp-w-month').hidden=m!=='month';$('#rp-w-week').hidden=m!=='week';$('#rp-w-from').hidden=m!=='range';$('#rp-w-to').hidden=m!=='range';renderReport();return;}
+ if(el.id==='rp-mode'){var m=el.value;$('#rp-custom').hidden=m!=='custom';$('#rp-w-month').hidden=m!=='month';$('#rp-w-week').hidden=m!=='week';$('#rp-w-from').hidden=m!=='range';$('#rp-w-to').hidden=m!=='range';renderReport();return;}
  if(el.id==='rp-month'||el.id==='rp-week'||el.id==='rp-from'||el.id==='rp-to'){renderReport();return;}
  if(el.classList&&el.classList.contains('chk-w')){renderSummary('CUSTOM');return;}
- if(el.dataset.place){var card=el.closest('[data-list]'),it=card&&findItem(card);if(it){var side=el.dataset.place;resolveInto(el,it,side+'Text',side+'Geo',function(){afterLoadPlace(it);});}return;}
+ if(el.classList&&el.classList.contains('chk-rw')){renderReport();return;}
+ if(el.dataset.place){var card=el.closest('[data-list]'),it=card&&findItem(card);if(it){var side=el.dataset.place;resolveInto(el,it,side+'Text',side+'Geo',function(){placeDone(card,it);});}return;}
  if(el.closest&&el.closest('[data-list]')&&el.tagName==='SELECT'){var c2=el.closest('[data-list]'),it2=findItem(c2);if(it2){it2[el.dataset.k]=el.value;changed();}}
 });
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.dataset&&(e.target.dataset.place||e.target.dataset.evplace||e.target.dataset.wplace)){e.preventDefault();e.target.blur();}});
@@ -2326,7 +2734,7 @@ function rerender(){
    ========================================================= */
 function init(){
  applyTheme();applyI18n();
- S.label=t('wk.defLabel',{d:todayISO()});S.loads=[newLoad()];S.exps=defaultExps('owner');
+ S.label=t('wk.defLabel',{d:todayISO()});S.wFrom='';S.wTo='';S.loads=[newLoad()];S.exps=defaultExps('owner');
  $('#auth-db').textContent=DB_REF?t('auth.db',{r:DB_REF}):'';
  if(!sb){noSb();}
  else{
