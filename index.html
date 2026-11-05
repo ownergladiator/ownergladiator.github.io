@@ -398,6 +398,9 @@ body.light .sm-net:not(.neg){color:#a87800}
 .sm-cat .n{display:flex;align-items:center;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sm-cat .p{color:var(--dim);font-size:12px;text-align:right;white-space:nowrap}
 .sm-cat.o{cursor:pointer}
+.sm-cats.pp .sm-cat{grid-template-columns:minmax(0,1fr) auto 40px 40px}
+.sm-cat.hd{padding:2px 0 4px;font-size:11px;color:var(--dim)}
+.sm-cat .p.g2{color:var(--tx);font-weight:600}
 .sm-cat.sub{padding:6px 0 6px 17px;font-size:12.5px;color:var(--mut)}
 .sm-fu .sm-cat{grid-template-columns:minmax(0,1fr) auto auto}
 .sm-fu{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
@@ -1004,7 +1007,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.2';
+var APP_VER='7.3';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1058,7 +1061,7 @@ var DICT=[
 ['sm.h.all','Показать все {n}','Show all {n}'],
 ['sm.h.note','Цвет — место среди недель периода: зелёный лучше, красный хуже. Нажми на заголовок для сортировки, на строку — чтобы открыть неделю под лупой.','Color shows the rank among the period’s weeks: green is better, red is worse. Tap a header to sort, tap a row to open the week under the lens.'],
 ['sm.money','💵 Куда уходят деньги','💵 Where the money goes'],['sm.mv.period','За период','Period'],['sm.mv.weeks','По неделям','By week'],['sm.mu.usd','$','$'],['sm.mu.mi','На милю','Per mile'],
-['sm.mo.of100','Из каждых $100 gross чистыми остаётся {a}','Out of every $100 gross, {a} stays as net'],['sm.mo.neg','Расходы больше gross на {a}','Costs exceed gross by {a}'],
+['sm.mo.of100','Из каждых $100 gross чистыми остаётся {a}','Out of every $100 gross, {a} stays as net'],['sm.mo.neg','Расходы больше gross на {a}','Costs exceed gross by {a}'],['sm.pc.g','от gross','of gross'],['sm.pc.x','от расх.','of costs'],['sm.pc.note','«от gross» — какая часть заработанного ушла на статью (это и есть реальная ставка комиссии). «от расх.» — доля статьи среди всех расходов.','“Of gross” is the share of earnings spent on the item (for commission, the real rate). “Of costs” is the item’s share of all costs.'],
 ['sm.mo.xin','Включая доп. расходы {a}','Including extra costs {a}'],['sm.mo.xout','Доп. расходы здесь не показаны: они не привязаны к неделе.','Extra costs aren’t shown here: they don’t belong to a week.'],
 ['sm.fu','⛽ Топливо по чекам','⛽ Fuel from receipts'],['sm.fu.ppg','Дизель, средняя','Diesel, average'],['sm.fu.gal','за галлон','per gallon'],['sm.fu.mi','Топливо на милю','Fuel per mile'],['sm.fu.incDef','вместе с DEF','incl. DEF'],
 ['sm.fu.n','Заправок','Fill-ups'],['sm.fu.cheap','Дешевле всего','Cheapest'],['sm.fu.dear','Дороже всего','Most expensive'],
@@ -2999,11 +3002,12 @@ function smMoney(c,light){
   var h='<div class="sm-bar" role="img" aria-label="'+esc(t('sm.money'))+'">'+segs.map(function(x){return'<i style="flex:'+x.v.toFixed(2)+';background:'+(x.k==='net'?'var(--acc)':SM_CC[x.k])+'" title="'+esc(t('sm.cat.'+x.k))+'"></i>';}).join('')+'</div>';
   if(A.G>0&&A.N>0)h+='<div class="cs" style="margin-top:6px"><span class="sm-dot" style="background:var(--acc)"></span>'+t('sm.mo.of100',{a:'$'+f0(A.N/A.G*100)})+'</div>';
   else if(A.N<0)h+='<div class="cs r" style="margin-top:6px">'+t('sm.mo.neg',{a:money(-A.N,0)})+'</div>';
-  h+='<div class="sm-cats">'+cats.map(function(x){var isO=x.k==='other',it='';
+  var pp=A.G>0,pg=function(v){return f0(Math.max(0,v)/A.G*100)+'%';};
+  h+='<div class="sm-cats'+(pp?' pp':'')+'">'+(pp?'<div class="sm-cat hd"><span></span><span></span><span class="p">'+t('sm.pc.g')+'</span><span class="p">'+t('sm.pc.x')+'</span></div>':'')+cats.map(function(x){var isO=x.k==='other',it='';
    if(isO&&SM.othOpen){var on=Object.keys(A.oth).map(function(n){return{n:n,v:A.oth[n]};}).filter(function(o){return Math.abs(o.v)>=0.5;}).sort(function(a,b){return b.v-a.v;});
     var top=on.slice(0,10),rv=on.slice(10).reduce(function(s,o){return s+o.v;},0);if(on.length>10)top.push({n:t('sm.sp.rest'),v:rv});
-    it='<div class="sm-oth">'+top.map(function(o){return'<div class="sm-cat sub"><span class="n">'+esc(o.n)+'</span><b>'+fv(o.v)+'</b><span class="p"></span></div>';}).join('')+'</div>';}
-   return'<div class="sm-cat'+(isO?' o':'')+'"'+(isO?' data-act="smOth" role="button" aria-expanded="'+(SM.othOpen?'true':'false')+'"':'')+'><span class="n"><span class="sm-dot" style="background:'+SM_CC[x.k]+'"></span>'+t('sm.cat.'+x.k)+(isO?'<span class="dim" style="margin-left:6px">'+(SM.othOpen?'▴':'▾')+'</span>':'')+'</span><b>'+fv(x.v)+'</b><span class="p">'+f0(Math.max(0,x.v)/tot*100)+'%</span></div>'+it;}).join('')+'</div>';
+    it='<div class="sm-oth">'+top.map(function(o){return'<div class="sm-cat sub"><span class="n">'+esc(o.n)+'</span><b>'+fv(o.v)+'</b><span class="p"></span>'+(pp?'<span class="p"></span>':'')+'</div>';}).join('')+'</div>';}
+   return'<div class="sm-cat'+(isO?' o':'')+'"'+(isO?' data-act="smOth" role="button" aria-expanded="'+(SM.othOpen?'true':'false')+'"':'')+'><span class="n"><span class="sm-dot" style="background:'+SM_CC[x.k]+'"></span>'+t('sm.cat.'+x.k)+(isO?'<span class="dim" style="margin-left:6px">'+(SM.othOpen?'▴':'▾')+'</span>':'')+'</span><b>'+fv(x.v)+'</b>'+(pp?'<span class="p g2">'+pg(x.v)+'</span>':'')+'<span class="p">'+f0(Math.max(0,x.v)/tot*100)+'%</span></div>'+it;}).join('')+'</div>'+(pp?'<div class="cs" style="margin-top:6px">'+t('sm.pc.note')+'</div>':'');
   if(A.X>0)h+='<div class="cs" style="margin-top:6px">'+t('sm.mo.xin',{a:money(A.X,0)})+'</div>';
   box.innerHTML=h;$('#sm-mnote').textContent='';
  }
