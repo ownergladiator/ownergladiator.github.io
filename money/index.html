@@ -368,6 +368,7 @@ function budget(D, p, memo) {
     byKey[k].sort(function (a, b) { var x = a.due_date || '9999', y = b.due_date || '9999'; return x < y ? -1 : x > y ? 1 : 0; });
   });
   txs.forEach(function (t) {
+    if (t.prepaid) return; /* paid from money already put on a card: counted when the card was topped up */
     var a = num(t.amount);
     kinds[t.kind].fact += a;
     var ls = byKey[t.kind + '|' + norm(t.category)];
@@ -427,6 +428,7 @@ function forecastSeries(D, p, todayStr, memo) {
   var deltas = [], i;
   for (i = 0; i < n; i++) deltas.push(0);
   periodTx(D, p).forEach(function (t) {
+    if (t.prepaid) return;
     var k = daysBetween(start, t.date), a = num(t.amount);
     deltas[k] += t.kind === 'income' ? a : -a;
   });
@@ -533,10 +535,11 @@ function goalStats(D, g, todayStr) {
 }
 
 /* ---------- statistics ---------- */
-function spendByCategory(D, p, kinds) {
+function spendByCategory(D, p, kinds, withPrepaid) {
   var m = {};
   periodTx(D, p).forEach(function (t) {
     if (kinds.indexOf(t.kind) < 0) return;
+    if (t.prepaid && !withPrepaid) return;
     var key = t.kind + '|' + norm(t.category);
     var e = m[key] || (m[key] = { kind: t.kind, name: String(t.category || '').trim() || '—', v: 0, count: 0 });
     e.v += num(t.amount); e.count++;
@@ -686,7 +689,8 @@ var L = {
   'tx.cat': ['Категория', 'Category'], 'tx.own': ['+ Своя', '+ New'], 'tx.ownPh': ['Название категории', 'Category name'],
   'tx.goal.saving': ['Копилка', 'Savings goal'], 'tx.goal.debt': ['Какой долг гасишь', 'Which debt'], 'tx.goal.owed': ['Кто вернул долг', 'Who paid you back'],
   'tx.needAmt': ['Введи сумму', 'Enter an amount'], 'tx.needAccs': ['Выбери два разных счёта', 'Pick two different accounts'], 'tx.save': ['Сохранить {v}', 'Save {v}'],
-  'tx.repeat': ['Повторить последнюю', 'Repeat last'], 'tx.cardHint': ['Если покупки по этой карте ты вносишь как траты, оплату карты вноси как «Перевод» — иначе расход посчитается дважды.', 'If you log purchases on this card as expenses, record the card payment as a «Transfer» — otherwise it counts twice.'],
+  'tx.prepaid': ['Из пополнения карты — уже учтено', 'From card top-up — already counted'], 'tx.prepaidHint': ['Трата не уменьшит остаток до конца месяца: эти деньги уже ушли, когда ты пополнял карту. В статистике по категориям она видна.', 'Won\'t reduce what\'s left this month: that money was counted when you topped up the card. It still shows in category stats.'], 'tx.prepaidS': ['из пополнения', 'from top-up'],
+  'tx.repeat': ['Повторить последнюю', 'Repeat last'], 'tx.cardHint': ['Покупки по этой карте вноси как трату с отметкой «Из пополнения карты» — тогда они не вычтутся второй раз.', 'Log purchases on this card as expenses marked «From card top-up» — then they are not counted twice.'],
   'tx.search': ['Поиск по категории и заметке', 'Search category and note'], 'tx.empty': ['Записей нет', 'No records'], 'tx.emptyTxt': ['Нажми «+» внизу, чтобы добавить трату или доход', 'Tap «+» below to add an expense or income'],
   'tx.csv': ['Скачать CSV', 'Download CSV'], 'tx.allAcc': ['Все счета', 'All accounts'], 'tx.transfers': ['Переводы', 'Transfers'], 'tx.incomes': ['Доходы', 'Income'],
   'tx.simpleT': ['Корректировка', 'Correction'], 'tx.signPlus': ['Плюс', 'Plus'], 'tx.signMinus': ['Минус', 'Minus'],
@@ -861,7 +865,7 @@ var COLS = {
   periods: ['id', 'name', 'start_date', 'end_date', 'rollover'],
   lines: ['id', 'period_id', 'kind', 'name', 'planned', 'due_date', 'done', 'goal_id', 'sort'],
   goals: ['id', 'kind', 'name', 'debt_type', 'target', 'start_amount', 'goal_date', 'monthly', 'closed', 'sort'],
-  tx: ['id', 'date', 'kind', 'category', 'amount', 'account_id', 'to_account_id', 'goal_id', 'line_id', 'note', 'source']
+  tx: ['id', 'date', 'kind', 'category', 'amount', 'account_id', 'to_account_id', 'goal_id', 'line_id', 'note', 'source', 'prepaid']
 };
 var TBL = { accounts: 'accounts', periods: 'periods', lines: 'lines', goals: 'goals', tx: 'transactions' };
 function pick(coll, row) { var o = { user_id: S.user.id }; COLS[coll].forEach(function (k) { if (row[k] !== undefined) o[k] = row[k]; }); return o; }
@@ -1192,6 +1196,7 @@ function txRow(x, accView) {
     sub.push(t('k1.' + x.kind));
     var an = accName(x.account_id); if (an) sub.push(an + (x.to_account_id ? ' → ' + accName(x.to_account_id) : ''));
     if (x.goal_id) sub.push(goalName(x.goal_id));
+    if (x.prepaid) sub.push(t('tx.prepaidS'));
   }
   if (accView) {
     var e = C.accountEffect(find(D.accounts, accView), x); sg = e > 0 ? 1 : e < 0 ? -1 : 0;
@@ -1225,7 +1230,7 @@ function txListHtml() {
   list.forEach(function (x) {
     if (x.date !== day) { flushDay(); day = x.date; buf = []; sum = 0; }
     buf.push(txRow(x));
-    var sg = x.kind === 'income' ? 1 : C.OUT_KINDS.indexOf(x.kind) >= 0 ? -1 : 0;
+    var sg = x.prepaid ? 0 : x.kind === 'income' ? 1 : C.OUT_KINDS.indexOf(x.kind) >= 0 ? -1 : 0;
     sum += sg * C.num(x.amount);
   });
   flushDay();
@@ -1458,7 +1463,7 @@ function statsMonth(p) {
     h += '<div class="card pad"><div class="sec" style="margin:0"><h2>' + t('st.byDate') + '</h2><span class="mut" style="font-size:11.5px">' + esc(t('st.avg', { v: money0(avg) })) + '</span></div><div class="wk" style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))"><div class="avg" style="bottom:' + (20 + 110 * avg / mx).toFixed(0) + 'px"></div>' +
       ib.slice(-12).map(function (x) { return '<div class="c"><b>' + money0(x.v) + '</b><i style="height:' + Math.max(2, 110 * x.v / mx).toFixed(0) + 'px"></i><span>' + esc(dShort(x.date)) + '</span></div>'; }).join('') + '</div></div>';
   }
-  var kinds = S.onlyExp ? ['expense'] : C.OUT_KINDS.filter(function (k) { return k !== 'saving'; }), sp = C.spendByCategory(D, p, kinds);
+  var kinds = S.onlyExp ? ['expense'] : C.OUT_KINDS.filter(function (k) { return k !== 'saving'; }), sp = C.spendByCategory(D, p, kinds, !!S.onlyExp);
   h += '<div class="card pad"><div class="sec" style="margin:0 0 6px"><h2>' + t('st.where') + '</h2></div><div class="seg" style="grid-template-columns:1fr 1fr;margin-bottom:6px"><button class="' + (!S.onlyExp ? 'on' : '') + '" data-act="onlyExp" data-v="0">' + t('st.allOut') + '</button><button class="' + (S.onlyExp ? 'on' : '') + '" data-act="onlyExp" data-v="1">' + t('st.onlyExp') + '</button></div>';
   h += sp.items.length ? sp.items.slice(0, 15).map(function (e, i) {
     return '<div style="padding:7px 0;border-top:1px solid ' + (i ? 'var(--line2)' : 'transparent') + '"><div style="display:flex;align-items:baseline;gap:8px"><span style="flex:1;font-size:14px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(e.name) + ' <span style="font-size:11px;color:' + KC[e.kind] + '">' + t('k1.' + e.kind).toLowerCase() + '</span></span><b class="fd" style="font-size:16px">' + money0(e.v) + '</b><span style="width:46px;text-align:right;font-size:12px;font-weight:700" class="mut">' + (e.share * 100).toFixed(1) + '%</span></div><div class="bar" style="height:6px;margin-top:5px"><i style="width:' + (e.share * 100).toFixed(1) + '%;background:' + KC[e.kind] + '"></i></div></div>';
@@ -1522,11 +1527,12 @@ function openTx(id, preset) {
   if (x) {
     TX = Object.assign({}, x, { amtStr: amtStr(x.amount), orig: x });
   } else {
-    TX = Object.assign({ id: null, kind: 'expense', category: '', account_id: null, to_account_id: null, goal_id: null, line_id: null, note: '', date: C.today(), source: 'manual', amtStr: '0' }, preset || {});
+    TX = Object.assign({ id: null, kind: 'expense', category: '', account_id: null, to_account_id: null, goal_id: null, line_id: null, note: '', date: C.today(), source: 'manual', amtStr: '0', prepaid: false }, preset || {});
     if (TX.account_id === undefined || TX.account_id === null) { var a = defAcc(TX.kind); TX.account_id = a ? a.id : null; }
+    TX.prepaid = autoPrepaid();
     if (!TX.category && TX.kind !== 'transfer') TX.category = (catOptions(TX.kind, TX.date)[0] || '');
   }
-  TX.newCat = false;
+  TX.newCat = false; TX.prepaidSet = !!x;
   var head = sheetHead(x ? t('tx.editT') : t('tx.newT'));
   if (!x && lastTx()) head = head.replace('<button class="ib" data-act="close"', '<button class="ib" data-act="txRepeat" aria-label="' + t('tx.repeat') + '" title="' + t('tx.repeat') + '">' + I.repeat + '</button><button class="ib" data-act="close"');
   var h = head +
@@ -1540,6 +1546,9 @@ function openTx(id, preset) {
   openSheet(h, { tx: true, cls: 'tx' });
   txRefresh();
 }
+function isCreditAcc(id) { var a = id && find(D.accounts, id); return !!(a && a.kind === 'credit'); }
+function autoPrepaid() { return TX.kind === 'expense' && isCreditAcc(TX.account_id); }
+function syncPrepaid() { if (!TX.prepaidSet) TX.prepaid = autoPrepaid(); if (TX.kind !== 'expense') TX.prepaid = false; }
 function lastTx() { var l = D.tx.filter(function (x) { return TX_KINDS.indexOf(x.kind) >= 0; }).sort(function (a, b) { return String(b.created_at || '').localeCompare(String(a.created_at || '')); }); return l[0] || null; }
 function txAmtDisplay() {
   var a = TX.amtStr || '0', parts = a.split('.'), ip = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -1576,6 +1585,7 @@ function txRefresh() {
       if (ta && ta.kind === 'credit' && k !== 'debt') h += '<div class="hint" style="margin-top:6px">' + t('tx.cardHint') + '</div>';
     }
   }
+  if (k === 'expense' && TX.account_id) h += '<div style="margin-top:8px">' + chip((TX.prepaid ? '✓ ' : '') + t('tx.prepaid'), !!TX.prepaid, 'txPrepaid', '', c) + '</div>' + (TX.prepaid ? '<div class="hint" style="margin-top:6px">' + t('tx.prepaidHint') + '</div>' : '');
   $('#tx-accs').innerHTML = h;
   var gs = goalOptions(k);
   $('#tx-goals').innerHTML = gs.length ? '<div class="sub-lbl">' + t(k === 'saving' ? 'tx.goal.saving' : k === 'income' ? 'tx.goal.owed' : 'tx.goal.debt') + '</div><div class="chips sc">' + chip(t('c.none'), !TX.goal_id, 'txGoal', ' data-id=""') + gs.map(function (g) { return chip(g.name, TX.goal_id === g.id, 'txGoal', ' data-id="' + g.id + '"', goalColor(g)); }).join('') + '</div>' : '';
@@ -1614,7 +1624,8 @@ function txSave() {
   if (C.BUDGET_KINDS.indexOf(k) >= 0 && !C.periodForDate(D, date)) created = createPeriodFor(date, { copy: true, defaults: true });
   var row = { id: TX.id || uuid(), date: date, kind: k, category: cat, amount: amt, account_id: TX.account_id || null,
     to_account_id: (k === 'transfer' || k === 'bill' || k === 'saving' || k === 'debt') ? (TX.to_account_id || null) : null,
-    goal_id: goalOptions(k).some(function (g) { return g.id === TX.goal_id; }) ? TX.goal_id : null, line_id: lineId, note: note || null, source: o ? (o.source || 'manual') : 'manual' };
+    goal_id: goalOptions(k).some(function (g) { return g.id === TX.goal_id; }) ? TX.goal_id : null, line_id: lineId, note: note || null, source: o ? (o.source || 'manual') : 'manual',
+    prepaid: k === 'expense' && !!TX.prepaid };
   if (row.to_account_id && row.to_account_id === row.account_id) row.to_account_id = null;
   var isNew = !TX.id, r = upsert('tx', row);
   if (row.account_id) { P.lastAcc = P.lastAcc || {}; if (P.lastAcc[k] !== row.account_id || P.lastAcc.any !== row.account_id) { P.lastAcc[k] = row.account_id; P.lastAcc.any = row.account_id; savePrefs(); } }
@@ -1825,10 +1836,10 @@ function openPass() {
 
 /* ---------------- export ---------------- */
 function csvOf(list) {
-  var rows = [['Date', 'Type', 'Category', 'Amount', 'Account', 'To account', 'Goal', 'Note']];
+  var rows = [['Date', 'Type', 'Category', 'Amount', 'Account', 'To account', 'Goal', 'Note', 'From top-up']];
   list.slice().sort(function (a, b) { return -byDateDesc(a, b); }).forEach(function (x) {
     var s = txSign(x), a = C.num(x.amount);
-    rows.push([x.date, t('k1.' + x.kind) === 'k1.' + x.kind ? t('k.' + x.kind) : t('k1.' + x.kind), x.category || '', (x.kind === 'transfer' ? a : s >= 0 ? Math.abs(a) : -Math.abs(a)).toFixed(2), accName(x.account_id), accName(x.to_account_id), goalName(x.goal_id), x.note || '']);
+    rows.push([x.date, t('k1.' + x.kind) === 'k1.' + x.kind ? t('k.' + x.kind) : t('k1.' + x.kind), x.category || '', (x.kind === 'transfer' ? a : s >= 0 ? Math.abs(a) : -Math.abs(a)).toFixed(2), accName(x.account_id), accName(x.to_account_id), goalName(x.goal_id), x.note || '', x.prepaid ? 'yes' : '']);
   });
   return rows.map(function (r) { return r.map(function (v) { v = String(v == null ? '' : v); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\n');
 }
@@ -1975,12 +1986,13 @@ var ACT = {
     TX.kind = k; TX.goal_id = null; TX.newCat = false;
     if (k === 'transfer') { TX.category = ''; var acs = activeAccs(); if (!TX.account_id && acs[0]) TX.account_id = acs[0].id; if (!TX.to_account_id || TX.to_account_id === TX.account_id) { var o = acs.filter(function (a) { return a.id !== TX.account_id; })[0]; TX.to_account_id = o ? o.id : null; } }
     else { TX.to_account_id = null; TX.category = catOptions(k, TX.date)[0] || ''; if (!TX.id) { var a = defAcc(k); if (a) TX.account_id = a.id; } }
-    txRefresh();
+    syncPrepaid(); txRefresh();
   },
   txCat: function (el) { TX.category = el.dataset.n; txRefresh(); },
   txCatNew: function () { TX.newCat = true; txRefresh(); },
   txCatOk: function () { var v = ($('#tx-newcat').value || '').trim(); if (v) TX.category = v; TX.newCat = false; txRefresh(); },
-  txAccF: function (el) { TX.account_id = el.dataset.id || null; if (TX.to_account_id === TX.account_id && TX.kind !== 'transfer') TX.to_account_id = null; txRefresh(); },
+  txAccF: function (el) { TX.account_id = el.dataset.id || null; if (TX.to_account_id === TX.account_id && TX.kind !== 'transfer') TX.to_account_id = null; syncPrepaid(); txRefresh(); },
+  txPrepaid: function () { TX.prepaid = !TX.prepaid; TX.prepaidSet = true; txRefresh(); },
   txAccT: function (el) { TX.to_account_id = el.dataset.id || null; txRefresh(); },
   txGoal: function (el) {
     var prev = TX.goal_id ? goalName(TX.goal_id) : '';
@@ -1991,7 +2003,7 @@ var ACT = {
   },
   txRepeat: function () {
     var l = lastTx(); if (!l || !TX) return;
-    TX.kind = l.kind; TX.category = l.category; TX.amtStr = amtStr(l.amount); TX.account_id = l.account_id; TX.to_account_id = l.to_account_id; TX.goal_id = l.goal_id;
+    TX.kind = l.kind; TX.category = l.category; TX.amtStr = amtStr(l.amount); TX.account_id = l.account_id; TX.to_account_id = l.to_account_id; TX.goal_id = l.goal_id; TX.prepaid = !!l.prepaid && l.kind === 'expense'; TX.prepaidSet = true;
     txRefresh();
   },
   kp: function (el) { kpPress(el.dataset.k); },
