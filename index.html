@@ -144,13 +144,106 @@ nav#nav button{border:0;background:transparent;color:var(--mut);display:flex;fle
 nav#nav button .ic{font-size:21px;line-height:1}
 nav#nav button.on{color:var(--acc)}
 nav#nav button.on .ic{transform:translateY(-1px)}
-@media(min-width:980px){
- .shell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:0;max-width:1360px;margin:0 auto}
- nav#nav{position:sticky;top:64px;align-self:start;height:calc(100vh - 80px);grid-template-columns:1fr;grid-auto-rows:52px;align-content:start;gap:4px;background:transparent;backdrop-filter:none;border:0;padding:16px 10px}
- nav#nav button{flex-direction:row;justify-content:flex-start;gap:12px;padding:0 14px;font-size:14px}
- nav#nav button.on{background:var(--card);border:1px solid var(--line)}
- main{padding-bottom:40px}
+/* ---------- computer layout (1000px and wider). Below that nothing here applies ---------- */
+.side,.dlist,.ar-cur{display:none}
+.dcols,.dmain,.dside{display:contents}
+@media(min-width:1000px){
+ body{overflow-x:clip}/* "hidden" turns body into a scroll box and breaks the sticky columns */
+ .top{display:none}
+ .side{display:flex;flex-direction:column;gap:16px;position:fixed;left:0;top:0;bottom:0;width:244px;padding:18px 14px 14px;background:var(--bg2);border-right:1px solid var(--line);z-index:30;overflow-y:auto;scrollbar-width:thin}
+ .side-brand .brand{flex-wrap:wrap;row-gap:6px;font-size:21px;overflow:visible}
+ .side-brand .brand .og-em{height:34px}
+ .side-brand .tag{margin-left:42px}
+ .side-add{display:flex;align-items:center;justify-content:center;gap:10px;min-height:46px;font-size:16px;width:100%}
+ .side-add kbd{font-family:var(--fb);font-size:11px;font-weight:700;line-height:1;padding:3px 6px;border-radius:6px;border:1px solid rgba(0,0,0,.35);opacity:.7}
+ #side nav#nav{position:static;display:flex;flex-direction:column;gap:2px;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;padding:0;height:auto;z-index:auto}
+ #side nav#nav button{flex-direction:row;justify-content:flex-start;gap:12px;min-height:44px;padding:0 12px;border:0;border-radius:11px;font-size:15px;font-weight:600;color:var(--mut)}
+ #side nav#nav button .ic{font-size:19px;transform:none}
+ #side nav#nav button:hover{background:var(--card);color:var(--tx)}
+ #side nav#nav button.on{background:var(--card);color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
+ .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+ .side-foot .top-r{flex-wrap:wrap;gap:6px}
+ .side-foot .sync{order:9;width:100%;display:block;min-height:14px}
+ .side-user{font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .shell{display:block}
+ main{margin-left:244px;max-width:none;width:auto;padding:24px 32px 48px}
+ main>.page,main>.ro-banner{max-width:1360px;margin-left:auto;margin-right:auto;width:100%}
+ #toast{bottom:30px;left:calc(50% + 122px)}
+ .ed-bar{left:auto;right:24px;bottom:24px;width:min(560px,calc(100vw - 300px))}
+ body.editing main{padding-bottom:110px}body.editing #toast{bottom:96px}
+ /* week: settings as one toolbar, inputs on the left, results on the right */
+ #card-wk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 16px;align-items:center}
+ #card-wk>.fgrid{grid-column:1/-1;grid-template-columns:minmax(0,1fr) 190px 190px}
+ #card-wk>.fgrid>.s2:first-child{grid-column:auto}
+ #card-wk>.fgrid>.wdates-row{grid-column:1/-1}
+ #card-wk>.row{margin-top:0!important;grid-row:2;grid-column:1}
+ #card-wk>.wk-acts{grid-column:2;justify-content:flex-end}
+ #card-wk>.ed-hint{grid-row:3;grid-column:1/-1;margin-top:0}
+ #wk-cols{display:flex;flex-direction:column;gap:14px}
+ #wk-main,#wk-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+ #wk-side{order:-1}
+ /* archive: list of weeks on the left, the chosen week on the right */
+ #ar-cols{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+ #ar-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+ #ar-list{display:flex;flex-direction:column;gap:2px;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;scrollbar-width:thin;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px}
+ #archive-select{display:none}
+ #ar-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 12px}
+ #ar-head>.ch{display:contents}#ar-head>.ch>.ct{display:none}#ar-head>.ch>.row{grid-column:2;grid-row:1}
+ #ar-cur{display:block;grid-column:1;grid-row:1;margin:0;font-family:var(--fd);font-size:22px;font-weight:700;color:var(--tx);line-height:1.2}
+ #ar-edited{grid-column:1/-1}
+ .arl-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 8px 10px;font-family:var(--fd);font-size:19px;font-weight:700}
+ .arl-h span{font-family:var(--fb);font-size:12px;color:var(--mut);font-weight:700;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+ .arl{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:9px 10px;border:1px solid transparent;border-radius:12px;background:none;color:var(--tx);text-align:left;cursor:pointer;font:inherit}
+ .arl:hover{background:var(--card2)}
+ .arl.on{background:var(--card2);border-color:var(--line);box-shadow:inset 3px 0 0 var(--acc)}
+ .arl-t,.arl-v{display:flex;flex-direction:column;gap:2px;min-width:0}
+ .arl-t b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .arl small{font-size:11.5px;color:var(--mut);white-space:nowrap}
+ .arl-v{align-items:flex-end;flex:none}
+ .arl-v b{font-family:var(--fd);font-size:18px;font-variant-numeric:tabular-nums}
+ /* loads tools: the two calculators side by side, each only as tall as it needs */
+ #tl-grid{align-items:start}
+ /* reports: compact filter bar, the report itself gets the full width */
+ #rp-filters .fgrid{grid-template-columns:repeat(auto-fill,minmax(200px,240px))!important}
+ #rp-custom{grid-column:1/-1}
+ #rp-clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+ #rp-clist .rc{border:1px solid var(--line);border-radius:12px}
+ /* mouse */
+ .btn:hover{filter:brightness(1.07)}
+ .icon-btn:hover{border-color:var(--mut)}
+ .ld-h:hover{background:var(--card2)}
+ .sm-hm tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--line)}
 }
+@media(min-width:1000px) and (max-width:1279px){
+ .side{width:220px}
+ .side-brand .brand{font-size:18px}.side-brand .brand .og-em{height:30px}.side-brand .tag{margin-left:36px}
+ main{margin-left:220px;padding:20px 22px 40px}
+ #toast{left:calc(50% + 110px)}
+ .ed-bar{width:min(560px,calc(100vw - 270px))}
+ #ar-cols{grid-template-columns:250px minmax(0,1fr)}
+}
+@media(min-width:1000px) and (max-width:1199px){
+ #card-wk>.wk-acts{grid-column:1/-1;grid-row:3;justify-content:flex-start}#card-wk>.ed-hint{grid-row:4}
+}
+@media(min-width:1200px){
+ #wk-cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+ #wk-side{order:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;scrollbar-width:thin}
+ #wk-side .big{font-size:46px}
+ #wk-side .ring{width:78px;height:78px}#wk-side .ring>div{width:62px;height:62px}
+ #wk-side .chips,#wk-side .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #wk-side .kpi .v{font-size:23px}
+ #wk-side #card-tax .crow{row-gap:12px}#wk-side #card-tax .grow{flex:1 0 100%}#wk-side #card-tax .tval{margin-left:auto}
+ #sm-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);grid-template-areas:"num tiles" "goal tiles" "recs tiles" "unp unp" "xrow xrow" "xt xt";column-gap:24px;align-items:start}
+ #sm-hnum{grid-area:num}#sm-hero>.sm-goal{grid-area:goal}#sm-recs{grid-area:recs}#sm-unp{grid-area:unp}#sm-xrow{grid-area:xrow}#xt-card{grid-area:xt}
+ #sm-tiles{grid-area:tiles;margin-top:0;grid-template-columns:repeat(3,minmax(0,1fr))}
+ /* loads tools: inputs on the left, the answer on the right and always in view */
+ #tl-grid{grid-template-columns:minmax(0,1fr)}
+ #card-ev,#card-wt{display:grid;grid-template-columns:minmax(0,1fr) 400px;column-gap:28px;align-items:start}
+ #ev-in,#wt-in{display:block;min-width:0}
+ #ev-out,#wt-out{display:block;position:sticky;top:24px}
+ #ev-out>.verdict,#wt-out>.verdict{margin-top:0}
+}
+@media(min-width:1500px){#wk-cols{grid-template-columns:minmax(0,1fr) 400px}}
 .page{display:none;flex-direction:column;gap:14px}
 .page.active{display:flex}
 
@@ -169,7 +262,6 @@ nav#nav button.on .ic{transform:translateY(-1px)}
 .ed-bar{position:fixed;left:10px;right:10px;bottom:calc(70px + var(--sb));z-index:45;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 8px 7px 12px;border-radius:14px;border:1px solid var(--vio);background:color-mix(in srgb,var(--vio) 15%,var(--card));box-shadow:0 8px 26px rgba(0,0,0,.38)}
 body.editing main{padding-bottom:calc(150px + var(--sb))}
 body.editing #toast{bottom:calc(134px + var(--sb))}
-@media(min-width:980px){.ed-bar{left:auto;right:24px;bottom:24px;width:min(560px,calc(100vw - 280px))}body.editing main{padding-bottom:110px}body.editing #toast{bottom:96px}}
 .ed-t{min-width:0;display:flex;flex-direction:column;font-size:12px;line-height:1.3}
 .ed-t b{color:var(--vio);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ed-t span{color:var(--tx);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -512,16 +604,15 @@ body.map-full{overflow:hidden}
 .sheet{width:100%;max-width:520px;background:var(--card);border-radius:20px 20px 0 0;border:1px solid var(--line);padding:16px 16px calc(16px + var(--sb));display:flex;flex-direction:column;gap:12px;max-height:88dvh;overflow:auto}
 @media(min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:20px}}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + var(--sb));z-index:80;background:var(--tx);color:var(--bg);padding:11px 16px;border-radius:12px;font-weight:700;font-size:14px;max-width:90vw;display:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
-@media(min-width:980px){#toast{bottom:30px}}
 
 @media print{
  body{background:#fff!important;color:#000!important}
- .top,nav#nav,.no-print,.page:not(#page-reports){display:none!important}
+ .top,.side,nav#nav,.no-print,.page:not(#page-reports){display:none!important}
  #page-reports{display:flex!important}
  .rp-detail{display:block!important}
  .card,.kpi,.chip{background:#fff!important;border:1px solid #bbb!important;color:#000!important}
  *{color:#000!important}
- main{padding:0}
+ main{padding:0;margin:0!important;max-width:none!important}
 }
 </style>
 </head>
@@ -551,6 +642,12 @@ body.map-full{overflow:hidden}
 
 <!-- ===================== APP ===================== -->
 <div id="app" hidden>
+  <aside class="side" id="side">
+    <div class="side-brand" id="side-brand"></div>
+    <button type="button" class="btn pri side-add need-write" data-act="deskAdd"><span data-i18n="ld.add"></span><kbd>N</kbd></button>
+    <div class="side-nav" id="side-nav"></div>
+    <div class="side-foot"><div id="side-ctl"></div><div class="side-user" id="side-user"></div></div>
+  </aside>
   <header class="top">
     <div class="brand"><svg class="og-em" viewBox="108 24 296 442" aria-hidden="true"><defs><clipPath id="ogc1"><rect x="256" y="0" width="256" height="512"/></clipPath></defs><path fill="#FFC400" d="M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 310 458 L 268 332 L 256 332 L 244 332 L 202 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 208.1 167.9 L 161.6 76.7 Q 151.6 57.1 164.3 51.1 A 230 230 0 0 1 347.7 51.1 Q 360.4 57.1 350.4 76.7 L 303.9 167.9 L 298.1 165.8 L 292.1 164 L 286.2 162.5 L 280.2 161.2 L 274.2 160.2 L 268.1 159.6 L 262.1 159.1 L 256 159 L 249.9 159.1 L 243.9 159.6 L 237.8 160.2 L 231.8 161.2 L 225.8 162.5 L 219.8 164 L 213.9 165.8 L 208.1 167.9 Z"/><path fill="#E3A300" clip-path="url(#ogc1)" d="M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 310 458 L 268 332 L 256 332 L 244 332 L 202 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 208.1 167.9 L 161.6 76.7 Q 151.6 57.1 164.3 51.1 A 230 230 0 0 1 347.7 51.1 Q 360.4 57.1 350.4 76.7 L 303.9 167.9 L 298.1 165.8 L 292.1 164 L 286.2 162.5 L 280.2 161.2 L 274.2 160.2 L 268.1 159.6 L 262.1 159.1 L 256 159 L 249.9 159.1 L 243.9 159.6 L 237.8 160.2 L 231.8 161.2 L 225.8 162.5 L 219.8 164 L 213.9 165.8 L 208.1 167.9 Z"/><path fill="#121418" d="M 256 322 L 265 306 L 268 298 L 348 270 Q 360 266 358 280 L 354 300 Q 352 306 344 308 L 275 329 Q 268 331 268 334 L 310 459 L 256 459 L 202 459 L 244 334 Q 244 331 237 329 L 168 308 Q 160 306 158 300 L 154 280 Q 152 266 164 270 L 244 298 L 247 306 L 256 322 Z"/><path fill="#FFC400" d="M 250.7 362 L 261.3 362 L 262.5 377 L 249.5 377 Z M 248.2 394 L 263.8 394 L 265.6 416 L 246.4 416 Z M 245.1 432 L 266.9 432 L 269 459 L 243 459 Z"/></svg><span class="bn"><span class="bn-o">Owner</span><span class="bn-g">Gladiator</span><span class="bn-h">HUB</span></span> <span class="tag" id="role-tag"></span></div>
     <div class="top-r">
@@ -577,7 +674,7 @@ body.map-full{overflow:hidden}
 
       <!-- ============ WEEK ============ -->
       <section id="page-week" class="page active">
-        <div class="card">
+        <div class="card" id="card-wk">
           <div class="fgrid">
             <div class="s2"><label data-i18n="wk.label"></label><input type="text" id="in-label" data-set="label" style="font-weight:700"></div>
             <div><label data-i18n="wk.from"></label><input type="date" id="in-wFrom"></div>
@@ -604,7 +701,7 @@ body.map-full{overflow:hidden}
         <div class="card" id="card-ins"><div class="ch"><span class="ct" data-i18n="i.title"></span></div><div class="ins" id="ins"></div></div>
 
         <!-- loads -->
-        <div class="card">
+        <div class="card" id="card-loads">
           <div class="ch">
             <span class="ct" data-i18n="ld.title"></span>
             <button class="btn pri sm" data-act="addLoad" data-i18n="ld.add"></button>
@@ -715,7 +812,7 @@ body.map-full{overflow:hidden}
         </div>
 
         <!-- expenses -->
-        <div class="card">
+        <div class="card" id="card-exp">
           <div class="ch">
             <div><span class="ct" id="ex-title"></span><div class="cs" id="ex-sub" hidden></div></div>
             <div class="row wrap need-write">
@@ -725,12 +822,13 @@ body.map-full{overflow:hidden}
           </div>
           <div class="tlist" id="exp-list"></div>
         </div>
+        <div class="dcols" id="wk-cols"><div class="dmain" id="wk-main"></div><div class="dside" id="wk-side"></div></div>
       </section>
 
       <!-- ============ TOOLS ============ -->
       <section id="page-tools" class="page">
-        <div class="grid2">
-          <div class="card">
+        <div class="grid2" id="tl-grid">
+          <div class="card" id="card-ev"><div class="dmain" id="ev-in">
             <div class="ch"><span class="ct a" data-i18n="tl.eval"></span></div>
             <div class="cs" style="margin-bottom:12px" data-i18n="tl.evalDesc"></div>
             <div class="mlbl" data-i18n="mc.how"></div>
@@ -769,6 +867,7 @@ body.map-full{overflow:hidden}
                 <div id="ev-dexp-w"><label data-i18n="tl.drvExp"></label><input type="number" inputmode="decimal" id="ev-dexp" value="0"></div>
               </div>
             </div>
+            </div><div class="dside" id="ev-out">
             <div class="verdict g" id="ev-verdict"></div>
             <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
               <div class="kpi"><div class="l" data-i18n="tl.net"></div><div class="v a" id="ev-net">$0</div><div class="s" id="ev-day"></div></div>
@@ -777,9 +876,9 @@ body.map-full{overflow:hidden}
             </div>
             <div class="chip" style="margin-top:10px"><div class="l" data-i18n="tl.minRate"></div><div class="v g" id="ev-min">$0</div><div class="cs" id="ev-min-sub"></div></div>
             <button class="btn grn block need-write" style="margin-top:12px" data-act="evBook" data-i18n="tl.book"></button>
-          </div>
+          </div></div>
 
-          <div class="card">
+          <div class="card" id="card-wt"><div class="dmain" id="wt-in">
             <div class="ch"><span class="ct b" data-i18n="wt.title"></span></div>
             <div class="cs" style="margin-bottom:12px" data-i18n="wt.desc"></div>
             <div class="fgrid">
@@ -792,21 +891,23 @@ body.map-full{overflow:hidden}
               <div><label data-i18n="wt.pin"></label><input type="number" inputmode="decimal" id="wt-pin" value="20"></div>
               <div><label data-i18n="wt.rawr"></label><input type="number" inputmode="numeric" id="wt-rawr" value="9750"></div>
             </div>
+            </div><div class="dside" id="wt-out">
             <div class="verdict g" id="wt-verdict"></div>
             <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
               <div class="kpi"><div class="l" data-i18n="wt.gcw"></div><div class="v" id="wt-gcw">0</div><div class="s" id="wt-margin"></div></div>
               <div class="kpi"><div class="l" data-i18n="wt.maxpay"></div><div class="v g" id="wt-maxpay">0</div><div class="s"><span data-i18n="wt.empty"></span>: <span id="wt-empty"></span></div></div>
               <div class="kpi"><div class="l" data-i18n="wt.drive"></div><div class="v a" id="wt-axle">0</div><div class="s" id="wt-pinw"></div></div>
             </div>
-          </div>
+          </div></div>
         </div>
       </section>
 
       <!-- ============ ARCHIVE ============ -->
       <section id="page-archive" class="page">
-        <div class="card">
+        <div class="card" id="ar-head">
           <div class="ch"><span class="ct" data-i18n="ar.title"></span><span class="row" style="gap:6px"><button class="btn sm pri need-write" id="btn-edit-arch" data-act="arEdit" hidden data-i18n="ar.edit"></button><button class="btn dng sm need-write" id="btn-del-arch" data-act="delArchive">🗑️ <span data-i18n="ar.delete"></span></button></span></div>
           <select id="archive-select"></select>
+          <div class="cs ar-cur" id="ar-cur"></div>
           <div class="cs" id="ar-edited" hidden style="margin-top:6px"></div>
         </div>
         <div id="arch-body" class="page" style="display:none">
@@ -848,6 +949,7 @@ body.map-full{overflow:hidden}
             <div class="tscroll"><table id="t-loads"><thead><tr><th data-i18n="th.dates"></th><th data-i18n="th.route"></th><th data-i18n="th.miles"></th><th class="r">DH</th><th>Gross</th><th>RPM</th><th class="a" data-i18n="th.net"></th><th data-i18n="th.broker"></th></tr></thead><tbody></tbody></table></div>
           </div>
         </div>
+        <div class="dcols" id="ar-cols"><div class="dlist" id="ar-list"></div><div class="dmain" id="ar-main"></div></div>
       </section>
 
       <!-- ============ SUMMARY ============ -->
@@ -914,7 +1016,7 @@ body.map-full{overflow:hidden}
 
       <!-- ============ REPORTS ============ -->
       <section id="page-reports" class="page">
-        <div class="card no-print">
+        <div class="card no-print" id="rp-filters">
           <div class="ch"><span class="ct" data-i18n="rp.title"></span>
             <div class="row wrap"><button class="btn" data-act="csv" data-i18n="rp.csv"></button><button class="btn pri" data-act="print" data-i18n="rp.print"></button></div></div>
           <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
@@ -1007,7 +1109,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.3';
+var APP_VER='7.4';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -2185,11 +2287,11 @@ function legendOpts(pos){return{position:pos||'top',labels:{boxWidth:10,font:{si
    ========================================================= */
 function fillArchiveControls(){
  var sel=$('#archive-select');
- if(!S.archive.length){sel.innerHTML='<option value="">'+t('ar.empty')+'</option>';$('#arch-body').style.display='none';$('#btn-del-arch').hidden=true;$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;renderSummary();fillReportFilters();return;}
+ if(!S.archive.length){sel.innerHTML='<option value="">'+t('ar.empty')+'</option>';$('#arch-body').style.display='none';$('#btn-del-arch').hidden=true;$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;renderSummary();fillReportFilters();renderArList();return;}
  sel.innerHTML='<option value="">'+t('ar.pick')+'</option>'+S.archive.map(function(w,i){return'<option value="'+i+'">'+(w.userRole==='driver'?'👨‍✈️ ':'🚚 ')+esc(w.weekLabel||t('c.week.n',{n:i+1}))+' ('+money(w.totalGross,0)+' / '+money(w.netProfit,0)+')</option>';}).join('');
  buildCustomList();fillReportFilters();
  if(S.archSel!=null&&S.archive[S.archSel]){sel.value=S.archSel;showArchived(S.archSel);}else{sel.value='';$('#arch-body').style.display='none';$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;}
- renderSummary();
+ renderSummary();renderArList();
 }
 function expTypeLabel(type,val){if(type==='fixed')return t('ex.fixed').replace('($)','')+'$'+f0(val);if(type==='percent')return f1(val)+'% '+t('ex.pct').replace('%','').trim();if(type==='cpm')return f1(val)+' ¢/mi';if(type==='dlr_mile')return'$'+f2(val)+'/mi';return'';}
 function showArchived(idx){
@@ -3309,7 +3411,10 @@ function go(p){
  $$('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===p);});
  window.scrollTo(0,0);
  if(p==='tools'){syncEval();runEval();runWeight();}
+ var su=$('#side-user');if(su)su.textContent=S.user?S.user.email:'';
+ if(p==='archive'&&DESK&&S.archSel==null&&S.archive.length){S.archSel=0;var as=$('#archive-select');if(as)as.value=0;}
  if(p==='archive'&&S.archSel!=null)showArchived(S.archSel);
+ if(p==='archive')renderArList();
  if(p==='summary')renderSummary();
  if(p==='reports')renderReport();
 }
@@ -3341,6 +3446,8 @@ var ACT={
   runEval();},
  fuelMode:function(b){if(!guardWrite())return;S.fuelMode=b.dataset.v;renderStatic();queueSave();},
  maint:function(b){if(!guardWrite())return;S.maintOn=b.dataset.v==='1';renderStatic();queueSave();},
+ deskAdd:function(){if(!guardWrite())return;if(curPage!=='week')go('week');ACT.addLoad();setTimeout(function(){var c=$$('#loads-list [data-list="loads"]').pop(),i=c&&c.querySelector('input[data-place="from"]');if(i)i.focus({preventScroll:true});},80);},
+ arPick:function(b){var i=+b.dataset.i;var sel=$('#archive-select');if(sel)sel.value=i;showArchived(i);renderArList();window.scrollTo(0,0);},
  addLoad:function(){if(!guardWrite())return;var prev=S.loads[S.loads.length-1];
   S.loads.forEach(function(x){if(!isBlankLoad(x))x._open=false;});
   var nl=newLoad(prev?{pickup:prev.delivery||todayISO(),delivery:prev.delivery||todayISO()}:{});nl._open=true;S.loads.push(nl);
@@ -3564,8 +3671,50 @@ function rerender(){
 /* =========================================================
    Init
    ========================================================= */
+/* =========================================================
+   Computer layout (1000px+): sidebar, two-column pages.
+   Elements are only moved while the window is wide; on phones and
+   tablets nothing moves, so their markup and look stay the same.
+   ========================================================= */
+var DMQ=window.matchMedia?window.matchMedia('(min-width:1000px)'):null,DESK=false,PRINTING=false,DMOVES=null;
+var DESK_MOVES=[['.top .brand','#side-brand'],['#nav','#side-nav'],['.top .top-r','#side-ctl'],
+ ['#card-loads','#wk-main'],['#card-driver','#wk-main'],['#card-fuel','#wk-main'],['#card-exp','#wk-main'],['#card-maint','#wk-main'],['#card-ins','#wk-main'],
+ ['#hero','#wk-side'],['#kpis','#wk-side'],['#card-tax','#wk-side'],
+ ['#ar-head','#ar-main'],['#arch-body','#ar-main']];
+function deskApply(on){
+ if(!DMOVES)DMOVES=DESK_MOVES.map(function(m){var el=$(m[0]),ph=document.createComment('desk');if(el)el.parentNode.insertBefore(ph,el);return{el:el,to:m[1],ph:ph};});
+ DMOVES.forEach(function(m){if(!m.el)return;if(on){var to=$(m.to);if(to)to.appendChild(m.el);}else m.ph.parentNode.insertBefore(m.el,m.ph.nextSibling);});
+ document.body.classList.toggle('desk',on);
+}
+function deskSync(){
+ var on=!!(DMQ&&DMQ.matches);if(PRINTING||on===DESK)return;
+ DESK=on;deskApply(on);
+ if(S.user&&curPage)go(curPage);
+}
+if(DMQ){if(DMQ.addEventListener)DMQ.addEventListener('change',deskSync);else if(DMQ.addListener)DMQ.addListener(deskSync);}
+window.addEventListener('beforeprint',function(){PRINTING=true;});
+window.addEventListener('afterprint',function(){PRINTING=false;setTimeout(deskSync,0);});
+function renderArList(){
+ var box=$('#ar-list'),cur=$('#ar-cur');if(!box)return;
+ var w0=S.archSel!=null?S.archive[S.archSel]:null;
+ if(cur)cur.textContent=w0?(w0.weekLabel||'')+(wStart(w0)&&wEnd(w0)&&(w0.weekLabel||'').indexOf('(')<0?' · '+dShort(wStart(w0))+' – '+dShort(wEnd(w0)):''):t('ar.title');
+ if(!S.archive.length){box.innerHTML='<div class="cs" style="padding:10px">'+t('ar.empty')+'</div>';return;}
+ box.innerHTML='<div class="arl-h">'+t('ar.title')+'<span>'+S.archive.length+'</span></div>'+S.archive.map(function(w,i){
+  var lbl=wTag(w)||w.weekLabel||t('c.week.n',{n:i+1}),a=wStart(w),e=wEnd(w),N=num(w.netProfit),M=num(w.totalMiles);
+  return'<button type="button" class="arl'+(S.archSel===i?' on':'')+'" data-act="arPick" data-i="'+i+'"'+(S.archSel===i?' aria-current="true"':'')+'><span class="arl-t"><b>'+(w.userRole==='driver'?'👨‍✈️ ':'')+esc(lbl)+'</b><small>'+(a&&e?esc(dShort(a)+' – '+dShort(e)):'')+'</small></span>'+
+   '<span class="arl-v"><b class="'+(N<0?'r':'a')+'">'+m0(N)+'</b><small>'+money(num(w.totalGross),0)+(M>0?' · '+r2(N/M)+'/mi':'')+'</small></span></button>';}).join('');
+}
+function deskKey(e){
+ if(!DESK||!S.user||e.ctrlKey||e.metaKey||e.altKey)return;
+ var open=['#menu-bg','#pdf-bg','#imp-bg'].filter(function(s){var x=$(s);return x&&!x.hidden;});
+ if(e.key==='Escape'){if(open.length){open.forEach(function(s){$(s).hidden=true;});e.preventDefault();}return;}
+ var tg=e.target&&e.target.tagName;if(open.length||tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT'||(e.target&&e.target.isContentEditable))return;
+ if(e.key==='n'||e.key==='N'||e.key==='т'||e.key==='Т'){e.preventDefault();ACT.deskAdd();}
+}
+document.addEventListener('keydown',deskKey);
+
 function init(){
- applyTheme();applyI18n();
+ applyTheme();applyI18n();deskSync();
  S.label=t('wk.defLabel',{d:todayISO()});S.wFrom='';S.wTo='';S.loads=[newLoad()];S.exps=defaultExps('owner');
  $('#auth-db').textContent=DB_REF?t('auth.db',{r:DB_REF}):'';
  if(!sb){noSb();}
