@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dispatch Gladiator</title>
+<meta name="description" content="Dispatch Gladiator — рейсы, цель по чистому заработку и бонус диспетчера. Работает на данных OwnerGladiator Hub.">
+<meta name="theme-color" content="#0d0f12" id="meta-theme">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dispatch">
+<meta name="application-name" content="Dispatch Gladiator">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{var th=localStorage.getItem('dg_theme');if(th)document.documentElement.setAttribute('data-theme',th);}catch(e){}</script>
+<style>
+:root{--bg:#0d0f12;--bg2:#101318;--card:#15181d;--card2:#1b1f26;--line:#2a2f38;--line2:#22262e;--tx:#f4f4f2;--tx2:#c9ced6;--mut:#9aa1ad;--dim:#6c7480;--acc:#ffc400;--acc2:#e3a300;--ink:#171200;--grn:#3ddc97;--red:#ff5a5f;--red2:#ff8a8d;--blu:#5cc8ff;--vio:#b39cff;--amb:#ffb547;--road:#23272f;--shadow:0 10px 30px rgba(0,0,0,.45);--fd:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;--fb:"Barlow",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
+[data-theme=light]{--bg:#e9ecf0;--bg2:#dde1e7;--card:#ffffff;--card2:#f2f4f7;--line:#cfd5de;--line2:#e4e8ee;--tx:#12171f;--tx2:#2e3845;--mut:#4d5967;--dim:#74808f;--acc:#f2b600;--acc2:#a87800;--ink:#171200;--grn:#0a8f5c;--red:#d92d3a;--red2:#c4323a;--blu:#0b79b8;--vio:#6a54dd;--amb:#9a5a00;--road:#c3c9d3;--shadow:0 10px 30px rgba(20,30,45,.18)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--fb);font-size:15px;line-height:1.35;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--acc);text-decoration:none}
+[hidden]{display:none!important}
+h1,h2,h3,p{margin:0}
+.fd{font-family:var(--fd)}
+.mut{color:var(--mut)}.dim{color:var(--dim)}.grn{color:var(--grn)}.red{color:var(--red)}.acc{color:var(--acc)}.blu{color:var(--blu)}
+[data-theme=light] .acc{color:var(--acc2)}
+.nw{white-space:nowrap}
+.wrap{max-width:600px;margin:0 auto;padding:0 14px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* boot */
+.boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:var(--bg);z-index:50;color:var(--mut);font-size:14px}
+.boot svg{width:72px;height:auto}
+
+/* header (phone) */
+.hdr{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line2);padding-top:var(--st)}
+.hdr .wrap{display:flex;align-items:center;gap:10px;height:54px}
+.brand{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.brand svg{width:26px;height:auto;flex:none}
+.bn{font-family:var(--fd);font-weight:800;font-size:22px;letter-spacing:.3px;line-height:1;white-space:nowrap}
+.bn b{color:var(--acc);font-weight:800}
+[data-theme=light] .bn b{color:var(--acc2)}
+.sync{width:10px;height:10px;border-radius:50%;background:var(--grn);border:0;padding:0;flex:none}
+.sync.pend{background:var(--amb);animation:pulse 1s ease-in-out infinite}.sync.off{background:var(--red)}
+@keyframes pulse{50%{opacity:.35}}
+.ib{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;padding:0;flex:none;color:var(--tx)}
+.ib svg{width:20px;height:20px}
+
+/* page */
+main{padding:12px 0 calc(92px + var(--sb))}
+.pg{display:flex;flex-direction:column;gap:12px}
+.ttl{display:flex;align-items:center;gap:10px;min-height:40px}
+.ttl h1{font-family:var(--fd);font-weight:800;font-size:27px;line-height:1;flex:1;min-width:0}
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.sec h2{font-family:var(--fd);font-weight:700;font-size:19px;line-height:1.1}
+.sec .lnk{font-size:13px;font-weight:700;color:var(--acc);background:none;border:0;padding:4px 0}
+[data-theme=light] .sec .lnk{color:var(--acc2)}
+.sub{font-size:12.5px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:0}
+.pad{padding:13px 14px}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
+.who b{color:var(--tx)}
+.who .chip{margin-left:auto}
+
+/* trip switcher */
+.per{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:3px}
+.per button.nv{width:44px;height:44px;border:0;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--mut);flex:none}
+.per button.nv svg{width:20px;height:20px}
+.per button.nv:disabled{opacity:.25}
+.per .pm{flex:1;text-align:center;border:0;background:none;padding:2px 4px;min-width:0}
+.per .pm b{display:block;font-family:var(--fd);font-weight:700;font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.per .pm span{font-size:12px;color:var(--mut)}
+.st{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;vertical-align:2px;margin-left:6px;font-family:var(--fb);letter-spacing:0}
+.st.active{background:rgba(61,220,151,.14);color:var(--grn)}
+.st.done{background:var(--card2);color:var(--mut);border:1px solid var(--line)}
+.st.future{background:rgba(92,200,255,.14);color:var(--blu)}
+.st.auto{background:transparent;color:var(--dim);border:1px dashed var(--line)}
+.st.live{background:rgba(92,200,255,.14);color:var(--blu)}
+
+/* hero: the road to the goal */
+.hero{position:relative;overflow:hidden;padding:16px 14px 14px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-end;gap:6px 12px;flex-wrap:wrap}
+.hero .hl{font-size:12.5px;font-weight:600;color:var(--mut)}
+.hero .big{font-family:var(--fd);font-weight:800;font-size:clamp(38px,11.5vw,58px);line-height:.95;margin-top:3px;white-space:nowrap;letter-spacing:.3px}
+.hero .big.neg{color:var(--red)}
+.hero .of{font-size:13px;color:var(--mut);margin-top:5px}
+.hero .of b{color:var(--tx);font-weight:600}
+.pctb{text-align:right;flex:none;margin-left:auto}
+.pctb b{display:block;font-family:var(--fd);font-weight:800;font-size:clamp(38px,11.5vw,58px);line-height:.95;color:var(--acc)}
+[data-theme=light] .pctb b{color:var(--acc2)}
+.pctb.hit b{color:var(--grn)}
+.pctb span{font-size:12.5px;font-weight:600;color:var(--mut)}
+.rw{position:relative;margin-top:14px}
+.signs{position:relative;height:30px}
+.signs.two{height:54px}
+.sign{position:absolute;bottom:0;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);pointer-events:none}
+.sign.r{transform:translateX(-100%);align-items:flex-end}.sign.l{transform:none;align-items:flex-start}
+.sign b{font-family:var(--fd);font-weight:700;font-size:14px;line-height:1;padding:3px 6px;border-radius:6px;background:var(--card2);border:1px solid var(--line);color:var(--tx2);white-space:nowrap}
+.sign i{display:block;width:2px;height:9px;background:var(--line)}
+.sign.up i{height:33px}
+.sign.r i{margin-right:0}.sign.l i{margin-left:0}
+.sign.goal b{border-color:var(--acc);color:var(--acc)}
+[data-theme=light] .sign.goal b{color:var(--acc2)}
+.sign.goal i{background:var(--acc)}
+.sign.hit b{background:rgba(61,220,151,.14);border-color:var(--grn);color:var(--grn)}
+.sign.hit i{background:var(--grn)}
+.road{position:relative;height:34px;border-radius:9px;background:var(--road);overflow:hidden}
+.road::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:3px;margin-top:-1.5px;background:repeating-linear-gradient(90deg,var(--acc) 0 14px,transparent 14px 28px);opacity:.5}
+.road .fill{position:absolute;left:0;top:0;bottom:0;display:flex;gap:2px;min-width:3px}
+.road .fill i{display:block;height:100%;background:var(--acc);min-width:1px}
+.road .fill i.live{background:repeating-linear-gradient(135deg,var(--blu) 0 6px,color-mix(in srgb,var(--blu) 45%,var(--road)) 6px 12px)}
+.road .fill.won i{background:var(--grn)}
+.road .fill.won i.live{background:repeating-linear-gradient(135deg,var(--blu) 0 6px,color-mix(in srgb,var(--blu) 45%,var(--road)) 6px 12px)}
+.road .gl{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--tx);opacity:.75}
+.ticks{position:relative;height:18px;margin-top:4px;font-size:11px;color:var(--dim);font-family:var(--fd);font-weight:600}
+.ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.ticks span.l{transform:none}.ticks span.r{transform:translateX(-100%)}
+.lgd{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mut);margin-top:6px}
+.lgd span{display:inline-flex;align-items:center;gap:6px}
+.lgd i{width:12px;height:10px;border-radius:2px;background:var(--acc);flex:none}
+.lgd i.live{background:repeating-linear-gradient(135deg,var(--blu) 0 3px,color-mix(in srgb,var(--blu) 45%,var(--road)) 3px 6px)}
+.bline{margin-top:12px;padding-top:11px;border-top:1px solid var(--line2);display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px}
+.bline b{font-family:var(--fd);font-weight:700;font-size:17px}
+.note{font-size:13px;color:var(--tx2);background:var(--card2);border-left:3px solid var(--blu);border-radius:8px;padding:9px 11px;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* pace */
+.pace .pr{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13px;min-height:26px}
+.pace .pr .v{font-family:var(--fd);font-weight:700;font-size:16px;white-space:nowrap}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--acc)}
+.bar.t i{background:var(--dim)}
+.verd{margin-top:8px;font-size:13.5px;font-weight:600}
+.facts{display:flex;flex-direction:column;margin-top:8px}
+.facts div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0;border-top:1px solid var(--line2);font-size:13.5px}
+.facts div span{color:var(--mut)}
+.facts div b{font-family:var(--fd);font-weight:700;font-size:17px;white-space:nowrap;text-align:right}
+.facts div b small{font-family:var(--fb);font-weight:500;font-size:12px;color:var(--mut)}
+
+/* tiles */
+.kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi .k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px;min-width:0}
+.kpi .l{font-size:11.5px;font-weight:600;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-family:var(--fd);font-weight:800;font-size:25px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .s{font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .k.hl{border-color:var(--acc)}
+
+/* bars chart */
+.wkc{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;position:relative}
+.wkc .col{display:flex;flex-direction:column;align-items:stretch;gap:3px;background:none;border:0;padding:0;min-width:0;color:var(--tx)}
+.wkc .col .v{height:17px;font-family:var(--fd);font-weight:700;font-size:13px;text-align:center;white-space:nowrap}
+.wkc .col .plot{position:relative;height:118px}
+.wkc .col .plot i{position:absolute;left:50%;width:min(72%,88px);transform:translateX(-50%);border-radius:5px 5px 2px 2px;background:var(--acc);min-height:2px}
+.wkc .col .plot i.neg{background:var(--red);border-radius:2px 2px 5px 5px}
+.wkc .col .plot i.live{background:repeating-linear-gradient(135deg,var(--blu) 0 6px,color-mix(in srgb,var(--blu) 45%,var(--card)) 6px 12px)}
+.wkc .col .plot i.alt{background:var(--acc2)}
+.wkc .col .plot i.dimb{background:var(--dim)}
+.wkc .col .x{height:15px;font-size:10.5px;color:var(--mut);text-align:center;white-space:nowrap;overflow:hidden}
+.wkc .col.sel .x{color:var(--tx);font-weight:700}
+.wkc .zero{position:absolute;left:0;right:0;height:1px;background:var(--line);pointer-events:none}
+.wkc .tgt{position:absolute;left:0;right:0;border-top:1.5px dashed var(--grn);pointer-events:none}
+.wkc .tgt span{position:absolute;right:0;bottom:2px;font-size:10.5px;font-weight:700;color:var(--grn);background:var(--card);padding:0 3px;border-radius:3px}
+.wkc .sep{position:absolute;top:17px;bottom:15px;width:1px;border-left:1px dashed var(--line);pointer-events:none}
+.scr{overflow-x:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+
+/* dense rows / tables */
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 12px;border:0;border-top:1px solid var(--line2);width:100%;background:none;text-align:left;color:var(--tx)}
+.row:first-child{border-top:0}
+button.row:active{background:var(--card2)}
+.row .g{flex:1;min-width:0}
+.row .n{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .v{font-family:var(--fd);font-weight:700;font-size:18px;white-space:nowrap;text-align:right}
+.row .v small{display:block;font-family:var(--fb);font-weight:500;font-size:11.5px;color:var(--mut)}
+.row .chev{width:16px;height:16px;color:var(--dim);flex:none}
+.ghd{padding:7px 12px;background:var(--card2);font-size:12px;font-weight:700;color:var(--mut);border-top:1px solid var(--line2);display:flex;justify-content:space-between;gap:10px}
+.ghd:first-child{border-top:0}
+.tw{overflow-x:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th{font-size:11.5px;font-weight:700;color:var(--mut);text-align:right;padding:8px 10px;background:var(--card2);white-space:nowrap;border-bottom:1px solid var(--line2)}
+table.t td{padding:8px 10px;border-top:1px solid var(--line2);text-align:right;white-space:nowrap;font-family:var(--fd);font-weight:600;font-size:16px}
+table.t th:first-child,table.t td:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:1}
+table.t th:first-child{background:var(--card2)}
+table.t td:first-child{font-family:var(--fb);font-size:13.5px;font-weight:600;max-width:190px;white-space:normal}
+table.t td:first-child small{display:block;font-weight:500;font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+table.t tr.tap{cursor:pointer}
+table.t td.h2{background:rgba(61,220,151,.20)}table.t td.h1{background:rgba(61,220,151,.09)}
+table.t td.l1{background:rgba(255,90,95,.09)}table.t td.l2{background:rgba(255,90,95,.20)}
+table.t tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+table.t th[data-act]{cursor:pointer}
+
+/* trip cards */
+.tc{display:block;width:100%;text-align:left;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--tx)}
+.tc.cur{border-color:var(--acc)}
+.tc .h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.tc .nm{font-family:var(--fd);font-weight:700;font-size:20px;line-height:1.1}
+.tc .dt{font-size:12.5px;color:var(--mut);margin-top:2px}
+.tc .nt{font-family:var(--fd);font-weight:800;font-size:27px;line-height:1;text-align:right;white-space:nowrap}
+.tc .nt small{display:block;font-family:var(--fb);font-weight:600;font-size:12px;color:var(--mut);margin-top:3px}
+.tc .bar{margin-top:10px}
+.tc .ms{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}
+.tc .ms div{min-width:0}
+.tc .ms span{display:block;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc .ms b{font-family:var(--fd);font-weight:700;font-size:16px;white-space:nowrap}
+.cmp{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr);font-size:13.5px;align-items:stretch}
+.cmp>*{padding:8px 8px;border-top:1px solid var(--line2);text-align:right;white-space:nowrap;font-family:var(--fd);font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cmp>.m{text-align:left;font-family:var(--fb);font-weight:500;font-size:12.5px;line-height:1.25;color:var(--tx2);padding-left:14px;white-space:normal;display:flex;align-items:center}
+.cmp>.hd{font-family:var(--fb);font-size:11.5px;font-weight:700;color:var(--mut);background:var(--card2);border-top:0}
+.cmp>.d{padding-right:14px}
+
+/* money split */
+.stk{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;background:var(--line)}
+.stk i{display:block;height:100%;min-width:2px}
+.cats{margin-top:8px}
+.cats .c{display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:10px;min-height:32px;border-top:1px solid var(--line2);font-size:13.5px}
+.cats .c:first-child{border-top:0}
+.cats .c .nm{display:flex;align-items:center;gap:8px;min-width:0}
+.cats .c .nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cats .c i{width:9px;height:9px;border-radius:3px;flex:none}
+.cats .c b{font-family:var(--fd);font-weight:700;font-size:16.5px;white-space:nowrap}
+.cats .c em{font-style:normal;font-size:12px;color:var(--mut);text-align:right}
+
+/* loads */
+.ld{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:9px 12px;border-top:1px solid var(--line2)}
+.ld:first-child{border-top:0}
+.ld .rt{font-size:14px;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.ld .rt .ar{color:var(--dim);margin:0 4px}
+.ld .rp{font-family:var(--fd);font-weight:800;font-size:19px;text-align:right;white-space:nowrap}
+.ld .rp small{font-family:var(--fb);font-weight:500;font-size:11px;color:var(--mut)}
+.ld .mt{font-size:12px;color:var(--mut);min-width:0;overflow-wrap:anywhere}
+.ld .gr{font-family:var(--fd);font-weight:600;font-size:15px;text-align:right;color:var(--tx2);white-space:nowrap}
+.ld .pt{grid-column:1/-1;font-size:12px;color:var(--vio);padding-left:12px;border-left:2px solid var(--vio);margin-top:3px}
+.lane{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:42px;padding:4px 12px;border-top:1px solid var(--line2);font-size:13.5px}
+.lane:first-child{border-top:0}
+.lane .i{font-family:var(--fd);font-weight:800;font-size:15px;color:var(--dim);text-align:center}
+.lane .k{min-width:0}
+.lane .k b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.lane .k span{display:block;font-size:12px;color:var(--mut)}
+.lane .r{font-family:var(--fd);font-weight:800;font-size:18px;white-space:nowrap}
+.hb{display:grid;grid-template-columns:96px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:30px;font-size:13px}
+.hb .tr{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.hb .tr i{display:block;height:100%;background:var(--grn);border-radius:4px}
+.hb .v{font-size:12.5px;color:var(--mut);white-space:nowrap}
+.hb .v b{font-family:var(--fd);font-size:15.5px;color:var(--tx)}
+
+/* chips, segmented, buttons, inputs */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips.sc{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px}
+.chips.sc::-webkit-scrollbar{display:none}
+.chip{height:34px;padding:0 12px;border-radius:17px;border:1px solid var(--line);background:var(--card2);font-size:13px;font-weight:600;white-space:nowrap;flex:none;color:var(--tx);display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.chip svg{width:14px;height:14px}
+.seg{display:grid;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{height:36px;border-radius:9px;border:0;background:transparent;font-size:13px;font-weight:700;color:var(--mut);padding:0 8px;white-space:nowrap}
+.seg button.on{background:var(--acc);color:var(--ink)}
+.seg.in{display:inline-grid;grid-auto-flow:column}
+.btn{height:50px;border-radius:14px;border:0;background:var(--acc);color:var(--ink);font-family:var(--fd);font-weight:800;font-size:19px;letter-spacing:.02em;width:100%;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:disabled{opacity:.5}
+.btn.g{background:var(--card2);border:1px solid var(--line);color:var(--tx);font-family:var(--fb);font-weight:700;font-size:14px;height:44px}
+.btn.d{background:rgba(255,90,95,.1);border:1px solid rgba(255,90,95,.4);color:var(--red);font-family:var(--fb);font-weight:700;font-size:14px;height:44px}
+.btn.o{background:rgba(255,196,0,.08);border:1.5px solid var(--acc);color:var(--acc);font-family:var(--fb);font-weight:700;font-size:14px;height:44px}
+[data-theme=light] .btn.o{color:var(--acc2);border-color:var(--acc2)}
+.btn.sm{height:38px;font-size:13.5px;font-family:var(--fb);font-weight:700;width:auto;border-radius:11px;padding:0 13px}
+.btn svg{width:17px;height:17px;flex:none}
+.btns{display:flex;gap:8px}.btns>*{flex:1}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld>span{font-size:12px;font-weight:600;color:var(--mut)}
+.in{height:46px;border-radius:12px;border:1px solid var(--line);background:var(--bg);padding:0 12px;width:100%;font-size:16px;color:var(--tx);min-width:0}
+.in:focus{outline:2px solid var(--acc);outline-offset:-1px;border-color:transparent}
+textarea.in{height:auto;min-height:74px;padding:10px 12px;resize:vertical;line-height:1.35}
+input[type=date].in{-webkit-appearance:none;appearance:none;text-align:left}
+.in.money{font-family:var(--fd);font-weight:700;font-size:20px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:end}
+.hint{font-size:12.5px;color:var(--mut);line-height:1.4}
+.msg{font-size:13px;line-height:1.4}.msg:empty{display:none}.msg.err{color:var(--red)}.msg.ok{color:var(--grn)}
+.tier{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px;gap:8px;align-items:end}
+.tier .ib{height:46px;width:40px;color:var(--red);border-color:rgba(255,90,95,.35);background:rgba(255,90,95,.08)}
+.tier .eq{font-size:11.5px;color:var(--dim);grid-column:1/-1;margin-top:-4px}
+.sw{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.sw input{width:22px;height:22px;accent-color:var(--acc);flex:none}
+.alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.4;background:rgba(255,196,0,.08);border:1px solid rgba(255,196,0,.3)}
+.alert svg{width:18px;height:18px;flex:none;margin-top:1px;color:var(--acc)}
+.alert.b{background:rgba(92,200,255,.08);border-color:rgba(92,200,255,.3)}.alert.b svg{color:var(--blu)}
+.alert.r{background:rgba(255,90,95,.10);border-color:rgba(255,90,95,.35)}.alert.r svg{color:var(--red)}
+.alert .g{flex:1;min-width:0}
+.alert .btn{margin-top:8px}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:20px 16px;text-align:center;font-size:13.5px;color:var(--mut);line-height:1.5}
+.empty b{display:block;color:var(--tx);font-family:var(--fd);font-size:20px;margin-bottom:4px}
+.empty .btn{margin-top:12px}
+.menu-list{display:flex;flex-direction:column}
+.menu-list button,.menu-list a{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;border:0;border-top:1px solid var(--line2);background:none;text-align:left;font-size:15px;font-weight:600;color:var(--tx);width:100%}
+.menu-list>:first-child{border-top:0}
+.menu-list svg{width:20px;height:20px;color:var(--mut);flex:none}
+.menu-list .r{margin-left:auto;font-size:13px;color:var(--mut);font-weight:600}
+.ver{text-align:center;font-size:12px;color:var(--dim)}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--bg);border-top:1px solid var(--line);padding-bottom:var(--sb)}
+.nav .wrap{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;height:62px;padding:0 4px}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut);font-size:10.5px;font-weight:600;background:none;border:0;padding:8px 0;min-width:0}
+.nav button svg{width:22px;height:22px}
+.nav button.on{color:var(--acc);font-weight:700}
+[data-theme=light] .nav button.on{color:var(--acc2)}
+
+/* sheet */
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;animation:fade .15s ease}
+.sheet{width:100%;max-width:600px;max-height:94vh;max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:8px 16px calc(18px + var(--sb));display:flex;flex-direction:column;gap:11px;animation:up .2s ease}
+.sheet>*{flex-shrink:0}
+.sheet .hd{display:flex;align-items:center;gap:10px;position:sticky;top:-8px;background:var(--card);padding:6px 0 4px;z-index:3}
+.sheet .hd h3{flex:1;font-family:var(--fd);font-weight:800;font-size:23px;min-width:0;line-height:1.1}
+.sheet .hd h3 small{display:block;font-family:var(--fb);font-weight:500;font-size:12.5px;color:var(--mut);margin-top:2px}
+.sheet h4{margin:4px 0 0;font-family:var(--fd);font-weight:700;font-size:17px}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center;flex:none}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:22px;border-bottom:1px solid var(--line);max-height:90vh}.sheet .grab{display:none}.sheet.wide{max-width:860px}}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet-bg,.sync.pend{animation:none}}
+
+.toast{position:fixed;left:50%;bottom:calc(80px + var(--sb));transform:translateX(-50%);z-index:60;background:var(--tx);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);max-width:min(92vw,520px);text-align:center}
+
+/* auth */
+.auth{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(24px + var(--st)) 16px calc(24px + var(--sb))}
+.auth .box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
+.auth .logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:4px}
+.auth .logo svg{width:92px;height:auto}
+.auth .logo .bn{font-size:clamp(28px,9vw,36px)}
+.auth .tagline{font-size:14px;color:var(--mut);text-align:center;line-height:1.4;max-width:320px}
+.rdash{height:5px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--acc) 0 22px,transparent 22px 40px);opacity:.85}
+
+.side{display:none}
+.only-d{display:none}
+
+/* instant press feedback */
+button,a{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.chip:active,.seg button:active,.btn:active,.ib:active,.nav button:active,.tc:active{transform:scale(.97)}
+
+/* ---------- computer (1000px and wider) ---------- */
+@media (min-width:1000px){
+.hdr,.nav{display:none}
+.only-m{display:none!important}
+.only-d{display:revert}
+.side{display:flex;flex-direction:column;gap:16px;position:fixed;left:0;top:0;bottom:0;width:248px;padding:22px 14px 16px;background:var(--bg2);border-right:1px solid var(--line);z-index:30;overflow-y:auto}
+.side-brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.side-brand svg{width:38px;height:auto;flex:none}
+.side-brand .bn{font-size:22px;min-width:0;line-height:.95}
+.side-brand .bn b{display:block}
+.side-who{margin:0 2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:12.5px;color:var(--mut);text-align:left;width:calc(100% - 4px)}
+.side-who b{display:block;font-size:14.5px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.side-who:hover{border-color:var(--mut)}
+.side-nav{display:flex;flex-direction:column;gap:2px}
+.side-nav button{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border:0;border-radius:11px;background:none;color:var(--mut);font-size:15px;font-weight:600;text-align:left}
+.side-nav button svg{width:20px;height:20px;flex:none}
+.side-nav button:hover{background:var(--card);color:var(--tx)}
+.side-nav button.on{background:var(--card);color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
+[data-theme=light] .side-nav button.on{color:var(--acc2)}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:10px}
+.side-foot button{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 10px;border:0;border-radius:10px;background:none;color:var(--mut);font-size:13.5px;font-weight:600;text-align:left}
+.side-foot button:hover{background:var(--card);color:var(--tx)}
+.side-foot svg{width:18px;height:18px;flex:none}
+.side-foot .sync{margin:0 4px;width:10px;height:10px;min-height:0;padding:0}
+.side-user{font-size:12px;color:var(--dim);padding:4px 10px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+main{margin-left:248px;padding:26px 0 60px}
+.wrap{max-width:1340px;padding:0 32px}
+.toast{bottom:28px;left:calc(50% + 124px)}
+.pg{gap:16px}
+.ttl h1{font-size:34px}
+.dgrid{display:grid;gap:16px;align-items:start}
+.g-ms{grid-template-columns:minmax(0,1fr) 380px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.per{max-width:460px}
+.hero{padding:22px 24px 18px}
+.hero .big,.pctb b{font-size:68px}
+.road{height:40px}
+.kpi{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi .k{padding:12px 16px}
+.kpi .v{font-size:30px}
+.kpi.k6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.wkc .col .plot{height:170px}
+.wkc .col .v{font-size:15px;height:20px}
+.wkc .col .x{font-size:12px;height:17px}
+.wkc .sep{top:20px;bottom:17px}
+.tcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.pad{padding:16px 18px}
+.sec h2{font-size:21px}
+table.t td{padding:10px 12px;font-size:17px}
+table.t th{padding:9px 12px}
+table.t td:first-child{max-width:230px;font-size:14px}
+table.t tr.tap:hover td{background:var(--card2)}
+button.row:hover,.menu-list button:hover,.menu-list a:hover{background:var(--card2)}
+.tc:hover{border-color:var(--mut)}
+.chip:hover{border-color:var(--mut)}
+.btn:hover{filter:brightness(1.06)}
+.ib:hover{border-color:var(--mut)}
+.wkc .col:hover .x{color:var(--tx)}
+.ld{grid-template-columns:minmax(0,1.6fr) minmax(0,1.2fr) 110px 110px;align-items:center;gap:4px 16px;padding:10px 16px}
+.ld .rp{order:4}.ld .gr{order:3}.ld .mt{order:2}.ld .rt{order:1}.ld .pt{order:5}
+.mcols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+}
+@media (min-width:1000px) and (max-width:1279px){
+.side{width:220px}main{margin-left:220px}.wrap{padding:0 22px}.toast{left:calc(50% + 110px)}
+.g-ms{grid-template-columns:minmax(0,1fr) 320px}
+.kpi.k6{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:359px){.bn{font-size:19px}.tc .ms{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* layout helpers + small fixes */
+.dgrid{display:flex;flex-direction:column;gap:12px;min-width:0}
+.dcol{display:contents}
+.wkc{--ph:118px;--xh:15px}
+.wkc .col .plot{height:var(--ph)}
+.wkc .col .x{height:var(--xh)}
+.ib{position:relative}
+.ib.rf .sync{position:absolute;top:5px;right:5px;width:8px;height:8px;border:0}
+#boot-emb{display:contents}
+.st{white-space:nowrap}
+.per .pm b .st{vertical-align:3px}
+select.in{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}
+@media (min-width:1000px){
+.dgrid{display:grid;gap:16px;align-items:start}
+.dcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.wkc{--ph:170px;--xh:17px}
+}
+@media (min-width:1000px) and (max-width:1439px){table.t .xw{display:none}}
+.mcols,.tcs{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+section{min-width:0}
+.cmp>.d{font-size:15px}
+@media (min-width:1000px){
+.mcols{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.tcs{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.cmp>.m{font-size:13.5px}
+}
+@media (min-width:1000px){.kpi.k3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.lgd.won i:not(.live){background:var(--grn)}
+
+</style>
+</head>
+<body>
+<div id="boot" class="boot"><span id="boot-emb"><svg viewBox="84 22 344 446" aria-hidden="true"><defs><clipPath id="dgcb"><rect x="256" y="0" width="256" height="512"/></clipPath></defs><path fill="#FFC400" d="M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 302 458 L 265 330 L 256 330 L 247 330 L 210 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 211.6 170.9 L 163.9 73.2 Q 154.3 53.5 167.2 47.7 A 232 232 0 0 1 344.8 47.7 Q 357.7 53.5 348.1 73.2 L 300.4 170.9 L 295 169 L 289.5 167.4 L 284 166.1 L 278.4 165 L 272.8 164.1 L 267.2 163.5 L 261.6 163.1 L 256 163 L 250.4 163.1 L 244.8 163.5 L 239.2 164.1 L 233.6 165 L 228 166.1 L 222.5 167.4 L 217 169 L 211.6 170.9 Z"/><path fill="#E3A300" clip-path="url(#dgcb)" d="M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 302 458 L 265 330 L 256 330 L 247 330 L 210 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 211.6 170.9 L 163.9 73.2 Q 154.3 53.5 167.2 47.7 A 232 232 0 0 1 344.8 47.7 Q 357.7 53.5 348.1 73.2 L 300.4 170.9 L 295 169 L 289.5 167.4 L 284 166.1 L 278.4 165 L 272.8 164.1 L 267.2 163.5 L 261.6 163.1 L 256 163 L 250.4 163.1 L 244.8 163.5 L 239.2 164.1 L 233.6 165 L 228 166.1 L 222.5 167.4 L 217 169 L 211.6 170.9 Z"/><path fill="#121418" d="M 256 320 L 264 306 L 266 299 L 346 277 Q 356 274 354 285 L 350 298 Q 348 303 342 304 L 271 327 Q 265 329 265 332 L 302 459 L 256 459 L 210 459 L 247 332 Q 247 329 241 327 L 170 304 Q 164 303 162 298 L 158 285 Q 156 274 166 277 L 246 299 L 248 306 L 256 320 Z M 217.2 144.2 L 191.7 55.8 L 220.9 143.1 Z M 235.4 139.7 L 223.4 48.5 L 239.2 139.1 Z M 272.8 139.1 L 288.6 48.5 L 276.6 139.7 Z M 291.1 143.1 L 320.4 55.8 L 294.8 144.2 Z"/><path fill="#FFC400" d="M 253.7 338 L 258.3 338 L 258.7 345 L 253.3 345 Z M 252.7 356 L 259.3 356 L 260.1 369 L 251.9 369 Z M 251.1 384 L 260.9 384 L 262.2 406 L 249.8 406 Z M 248.7 426 L 263.4 426 L 265.3 459 L 246.7 459 Z"/><path d="M 124 290 C 124 196 182 150 256 150 C 330 150 388 196 388 290" fill="none" stroke="#121418" stroke-width="30" stroke-linecap="round"/><path d="M 124 290 C 124 196 182 150 256 150 C 330 150 388 196 388 290" fill="none" stroke="#5CC8FF" stroke-width="18" stroke-linecap="round"/><path d="M 124 290 C 124 196 182 150 256 150 C 330 150 388 196 388 290" fill="none" stroke="#2E9FDB" stroke-width="18" stroke-linecap="round" clip-path="url(#dgcb)"/><rect x="94" y="272" width="56" height="96" rx="22" fill="#5CC8FF" stroke="#121418" stroke-width="8"/><rect x="362" y="272" width="56" height="96" rx="22" fill="#2E9FDB" stroke="#121418" stroke-width="8"/><path d="M 120 360 C 118 408 150 424 196 420" fill="none" stroke="#121418" stroke-width="22" stroke-linecap="round"/><path d="M 120 360 C 118 408 150 424 196 420" fill="none" stroke="#5CC8FF" stroke-width="11" stroke-linecap="round"/><rect x="184" y="404" width="46" height="30" rx="15" fill="#5CC8FF" stroke="#121418" stroke-width="7" transform="rotate(-6 207 419)"/></svg></span><div>Dispatch Gladiator</div></div>
+
+<div id="auth" class="auth" hidden></div>
+
+<div id="app" hidden>
+  <aside class="side" id="side"></aside>
+  <header class="hdr"><div class="wrap">
+    <div class="brand"><span id="hdr-emb" style="display:contents"></span><div class="bn">Dispatch<b>Gladiator</b></div></div>
+    <button class="ib rf" data-act="refresh" aria-label="Обновить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 10-2.3 6.3"/><path d="M20 4v7h-7"/></svg><i class="sync" id="sync"></i></button>
+    <button class="ib" data-act="go" data-p="more" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div></header>
+  <main><div class="wrap" id="view"></div></main>
+  <nav class="nav" aria-label="Разделы"><div class="wrap" id="nav-in"></div></nav>
+</div>
+
+<div id="sheet-bg" class="sheet-bg" hidden><div id="sheet" class="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Dispatch Gladiator — the numbers (no DOM). Works in the browser and in Node tests.
+   Formulas are the same as in OwnerGladiator Hub (calc / Summary), so both apps show the same figures. */
+(function (G) {
+'use strict';
+
+var ST = {};
+'AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'
+  .split(' ').forEach(function (s) { ST[s] = 1; });
+
+var GAP_DAYS = 5;          /* a longer pause between saved weeks starts a new (auto) trip */
+var ACTIVE_DAYS = 9;       /* an auto trip counts as still going this long after its last week */
+
+function num(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function isISO(s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')); }
+function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function parseISO(s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2], 12, 0, 0); }
+function today() { return iso(new Date()); }
+function addDays(s, n) { var d = parseISO(s); d.setDate(d.getDate() + n); return iso(d); }
+function daysBetween(a, b) { return Math.round((parseISO(b) - parseISO(a)) / 864e5); }
+function mondayOf(s) { var d = parseISO(s); return addDays(s, -((d.getDay() + 6) % 7)); }
+function monthOf(sd, ed) {
+  if (/^\d{4}-\d{2}/.test(ed || '')) return String(ed).slice(0, 7);
+  if (isISO(sd)) { var d = parseISO(sd), dow = d.getDay() || 7; d.setDate(d.getDate() + (4 - dow)); return iso(d).slice(0, 7); }
+  return today().slice(0, 7);
+}
+
+/* ---------- loads ---------- */
+function stateCodes(text) { var m = String(text || '').toUpperCase().match(/\b[A-Z]{2}\b/g) || []; return m.filter(function (x) { return ST[x]; }); }
+function routeParts(r) {
+  r = String(r || '').trim(); if (!r) return ['', ''];
+  var m = r.split(/\s*(?:->|→|=>|—|–|\s-\s|\bto\b)\s*/i).filter(Boolean);
+  if (m.length >= 2) return [m[0].trim(), m[m.length - 1].trim()];
+  var s = r.match(/^([A-Za-z]{2})\s*-\s*([A-Za-z]{2})$/);
+  if (s) return [s[1].toUpperCase(), s[2].toUpperCase()];
+  return [r, ''];
+}
+function loadSide(l, side) { var p = routeParts(l.route), v = side === 'from' ? (l.fromText || p[0]) : (l.toText || p[1]); return String(v || '').trim(); }
+function ptList(l) { return l && Array.isArray(l.partials) ? l.partials : []; }
+/* a partial rides on the same trip as its load: its miles are loaded miles, its pay is gross */
+function ptSum(l) {
+  var o = { n: 0, pay: 0, mi: 0, unp: 0, unpN: 0 };
+  ptList(l).forEach(function (q) {
+    var pay = num(q.pay), mi = num(q.miles);
+    if (pay > 0 || mi > 0 || String(q.fromText || '').trim() || String(q.toText || '').trim()) o.n++;
+    o.pay += pay; o.mi += mi;
+    if (q.unpaid && pay > 0) { o.unp += pay; o.unpN++; }
+  });
+  return o;
+}
+function tripGross(l) { return num(l.gross) + ptSum(l).pay; }
+function tripLoaded(l) { return num(l.miles) + ptSum(l).mi; }
+function isTonu(l) { return /\btonu\b/i.test([l.route, l.fromText, l.toText].join(' ')) || (tripLoaded(l) <= 0 && tripGross(l) > 0); }
+function daysUnion(loads) {
+  var set = {};
+  (loads || []).forEach(function (l) {
+    if (!isISO(l.pickup) || !isISO(l.delivery) || l.delivery < l.pickup) return;
+    var d = l.pickup, n = 0;
+    while (d <= l.delivery && n < 62) { set[d] = 1; d = addDays(d, 1); n++; }
+  });
+  return Object.keys(set).length;
+}
+
+/* ---------- expense names -> groups (as in the Hub's Summary) ---------- */
+var CARRY_RX = /carry\s*-?\s*over|перенос\s+(минуса|долга|баланса|остатка)|(previous|prior|negative)\s+balance/i;
+function isMaintItem(name, type) {
+  var n = String(name || '').toLowerCase();
+  return type === 'cpm' || type === 'dlr_mile' || /(^|[^а-яa-z])то([^а-яa-z]|$)/i.test(n) || /maint|ремонт|oil|масл|аморт|reserve|резерв|tire|шин/.test(n);
+}
+function cleanName(nm) { var s = String(nm || '').replace(/\s*\([^)]*[\d@%$\/][^)]*\)/g, '').replace(/\s+/g, ' ').trim(); return s || String(nm || '').trim() || '—'; }
+function catOf(name, type) {
+  var n = String(name || '').toLowerCase();
+  if (/fuel|diesel|топлив|дизел|солярк|\bdef\b/.test(n)) return 'fuel';
+  if (/insur|страх/.test(n)) return 'ins';
+  if (/rent|аренд|lease|лизинг|truck\s*(pay|note|loan)|плат[аеыу]\s+за\s+трак|кредит/.test(n)) return 'truck';
+  if (/\beld\b|logbook|log\s*book|логбук|dash\s*cam|видеорег|pre-?pass|samsara|motive|keep\s*truckin|bestpass|phone|телефон|связь|tablet|планшет/.test(n)) return 'eld';
+  if (/toll|платн|scale|весы|parking|парков|e-?z\s*pass|i-?pass/.test(n)) return 'road';
+  if (/комисс|commission|dispatch|диспетч|factoring|факторинг/.test(n) || type === 'percent') return 'comm';
+  if (isMaintItem(name, type) || /repair|ремонт|service|сервис|wash|мойк/.test(n)) return 'maint';
+  return 'other';
+}
+var CATS = ['fuel', 'comm', 'truck', 'ins', 'eld', 'road', 'maint', 'owner', 'other'];
+
+/* ---------- the week being filled in right now: same maths as the Hub's Week tab ---------- */
+function calcDraft(d) {
+  d = d || {};
+  var isD = d.userRole === 'driver', split = d.milesMode === 'split', fuelMode = d.fuelMode === 'log' ? 'log' : 'mpg';
+  var loads = Array.isArray(d.loads) ? d.loads : [], fuel = Array.isArray(d.fuelLogs) ? d.fuelLogs : [], exps = Array.isArray(d.expenses) ? d.expenses : [];
+  var loaded = 0, dh = 0, gross = 0, first = '', last = '', unpaid = 0, unpaidN = 0, pPay = 0, pMi = 0, pN = 0;
+  loads.forEach(function (l) {
+    var ps = ptSum(l), g0 = num(l.gross);
+    loaded += num(l.miles) + ps.mi; dh += split ? num(l.deadhead) : 0; gross += g0 + ps.pay;
+    pPay += ps.pay; pMi += ps.mi; pN += ps.n;
+    if (l.pickup && (!first || l.pickup < first)) first = l.pickup;
+    if (l.delivery && (!last || l.delivery > last)) last = l.delivery;
+    if (l.unpaid && g0 > 0) { unpaid += g0; unpaidN++; }
+    unpaid += ps.unp; unpaidN += ps.unpN;
+  });
+  var miles = loaded + dh, dUsd = 0, defUsd = 0;
+  fuel.forEach(function (f) { dUsd += num(f.dieselCost); defUsd += num(f.defCost); });
+  var mpg = (d.mpg != null && d.mpg !== '') ? num(d.mpg) : 9, diesel = (d.dieselPrice != null && d.dieselPrice !== '') ? num(d.dieselPrice) : 6;
+  var fuelCost = 0;
+  if (!isD) fuelCost = fuelMode === 'mpg' ? miles / Math.max(0.1, mpg || 9) * diesel : dUsd + defUsd;
+  var fixed = 0, pct = 0, cpmS = 0, maint = 0, list = [];
+  exps.forEach(function (e) {
+    var v = num(e.val), sub = 0;
+    if (e.type === 'fixed') { sub = v; fixed += sub; }
+    else if (e.type === 'percent') { sub = gross * v / 100; pct += sub; }
+    else if (e.type === 'cpm') { sub = miles * v / 100; cpmS += sub; }
+    else if (e.type === 'dlr_mile') { sub = miles * v; cpmS += sub; }
+    if (!isD && isMaintItem(e.name, e.type)) maint += sub;
+    if (sub > 0) list.push({ name: e.name, type: e.type, val: v, calculatedSum: sub });
+  });
+  var own = fixed + pct + cpmS, drvPct = num(d.driverPct) || 30, drvPay = gross * drvPct / 100;
+  var totalExp = isD ? own : fuelCost + own, net = isD ? (drvPay - own) : (gross - totalExp);
+  var wa = isISO(d.weekFrom) ? d.weekFrom : '', wb = isISO(d.weekTo) ? d.weekTo : '';
+  var sd = wa || first || (wb ? addDays(wb, -6) : ''), ed = wb || last || (wa ? addDays(wa, 6) : '');
+  return {
+    weekLabel: d.weekLabel || '', tripName: tripNorm(d.tripName), startDate: sd, endDate: ed, datesManual: !!(wa || wb), weekFrom: wa, weekTo: wb, loadsFrom: first, loadsTo: last,
+    monthYear: monthOf(sd, ed), userRole: isD ? 'driver' : 'owner', driverPct: drvPct, driverGrossPay: drvPay,
+    milesMode: split ? 'split' : 'simple', fuelMode: fuelMode, mpg: mpg, dieselPrice: diesel,
+    loadedMiles: loaded, deadheadMiles: dh, totalMiles: miles, totalGross: gross, totalExpenses: totalExp, netProfit: net, totalDays: daysUnion(loads),
+    netRpm: miles > 0 ? net / miles : 0, margin: gross > 0 ? net / gross * 100 : 0, cpm: miles > 0 ? totalExp / miles : 0,
+    avgRpm: miles > 0 ? gross / miles : 0, loadedRpm: loaded > 0 ? gross / loaded : 0, fuelCost: fuelCost,
+    partialPay: pPay, partialMiles: pMi, partialCount: pN,
+    fixedExpenses: fixed, percentExpenses: pct, cpmExpenses: cpmS, maintSaved: maint, expensesList: list,
+    unpaidAmount: unpaid, unpaidCount: unpaidN,
+    fuelLogs: fuel,
+    loads: loads.map(function (l) { var o = {}; Object.keys(l).forEach(function (k) { o[k] = l[k]; }); o.deadhead = split ? num(l.deadhead) : 0; return o; }),
+    hasContent: gross > 0 || miles > 0 || dUsd + defUsd > 0
+  };
+}
+
+/* ---------- one week, normalised (the Hub's smWeek) ---------- */
+function wEnd(w) { return String(w.endDate || w.weekEndDate || ''); }
+function wStart(w) { return String(w.startDate || w.endDate || w.weekEndDate || ''); }
+function week(w, live) {
+  var G = num(w.totalGross), N0 = num(w.netProfit), M = num(w.totalMiles), DH = num(w.deadheadMiles), isD = w.userRole === 'driver';
+  var LD = (w.loadedMiles !== undefined && w.loadedMiles !== null) ? num(w.loadedMiles) : Math.max(0, M - DH);
+  var cat = {}, oth = {}, items = [], carry = 0, sum = 0;
+  function add(c, v, nm) { v = num(v); if (!v) return; cat[c] = (cat[c] || 0) + v; sum += v; if (c === 'other') { var k = nm || '?'; oth[k] = (oth[k] || 0) + v; } }
+  if (isD) { var os = G - (num(w.driverGrossPay) || G * (num(w.driverPct) || 30) / 100); add('owner', os); if (os > 0) items.push({ name: '', k: 'owner', type: '', val: 0, sum: os }); }
+  else { add('fuel', w.fuelCost); if (num(w.fuelCost) > 0) items.push({ name: '', k: 'fuel', type: '', val: 0, sum: num(w.fuelCost) }); }
+  var el = Array.isArray(w.expensesList) ? w.expensesList : [];
+  if (el.length) el.forEach(function (e) {
+    var val = num(e.val), v = num(e.calculatedSum);
+    if (!v) v = e.type === 'fixed' ? val : e.type === 'percent' ? G * val / 100 : e.type === 'cpm' ? M * val / 100 : e.type === 'dlr_mile' ? M * val : 0;
+    if (!(v > 0)) return;
+    var nm = String(e.name || '').trim();
+    items.push({ name: nm, k: '', type: e.type, val: val, sum: v });
+    if (e.type !== 'percent' && CARRY_RX.test(nm)) { carry += v; return; }
+    add(catOf(nm, e.type), v, cleanName(nm));
+  });
+  else { add('other', w.fixedExpenses, ''); add('comm', w.percentExpenses); add('maint', w.cpmExpenses); }
+  var N = N0 + carry, C = G - N, res = C - sum;
+  if (Math.abs(res) > 0.5) add('other', res, '');
+  var gal = 0, dz = 0, fills = 0, stops = [];
+  if (w.fuelMode !== 'mpg') (Array.isArray(w.fuelLogs) ? w.fuelLogs : []).forEach(function (f) {
+    var g = num(f.dieselGal), c = num(f.dieselCost);
+    if (g > 0 && c > 0) { gal += g; dz += c; fills++; var loc = String(f.loc || '').trim(); if (g >= 5 && loc && !/auto\s*fuel|deduction/i.test(loc)) stops.push({ loc: loc, ppg: c / g }); }
+  });
+  var nL = 0, tonuN = 0, tonuG = 0, unp = 0, unpN = 0, lanes = [], loads = [];
+  var cpm = M > 0 ? C / M : 0;
+  (Array.isArray(w.loads) ? w.loads : []).forEach(function (l, i) {
+    var g = tripGross(l), lm = tripLoaded(l), g0 = num(l.gross), ps = ptSum(l), dh = num(l.deadhead), mi = lm + dh;
+    if (l.unpaid && g0 > 0) { unp += g0; unpN++; } unp += ps.unp; unpN += ps.unpN;
+    if (!(g > 0 || lm > 0)) return;
+    nL++;
+    var tonu = isTonu(l), fa = loadSide(l, 'from'), ta = loadSide(l, 'to');
+    loads.push({
+      i: i, pickup: isISO(l.pickup) ? l.pickup : '', delivery: isISO(l.delivery) ? l.delivery : '', from: fa, to: ta, route: String(l.route || ''),
+      g: g, g0: g0, lm: lm, dh: dh, mi: mi, rpm: mi > 0 ? g / mi : null, lrpm: lm > 0 ? g / lm : null,
+      net: isD ? g * (num(w.driverPct) || 30) / 100 : g - mi * cpm,
+      broker: String(l.broker || '').trim(), unpaid: (!!l.unpaid && g0 > 0) || ps.unpN > 0, tonu: tonu,
+      parts: ptList(l).filter(function (q) { return num(q.pay) > 0 || num(q.miles) > 0; }).map(function (q) {
+        return { from: String(q.fromText || '').trim(), to: String(q.toText || '').trim(), mi: num(q.miles), pay: num(q.pay), broker: String(q.broker || '').trim(), unpaid: !!q.unpaid };
+      })
+    });
+    if (tonu) { tonuN++; tonuG += g; return; }
+    var fs = stateCodes(fa), ts = stateCodes(ta);
+    lanes.push({ a: fs.length ? fs[fs.length - 1] : cleanName(fa).slice(0, 18), b: ts.length ? ts[ts.length - 1] : cleanName(ta).slice(0, 18), g: g, lm: lm, mi: mi });
+  });
+  var s = wStart(w), e = wEnd(w);
+  if (isISO(s) && isISO(e) && e < s) { var x = s; s = e; e = x; }
+  var o = {
+    w: w, id: String(live ? 'live' : w.db_id), live: !!live, label: String(w.weekLabel || ''), tripName: tripNorm(w.tripName), tripKey: tripKey(w.tripName), start: s, end: e,
+    mid: isISO(s) && isISO(e) ? addDays(s, Math.floor(daysBetween(s, e) / 2)) : (isISO(e) ? e : s),
+    isD: isD, n: 1, G: G, N: N, C: C, M: M, LD: LD, DH: DH, D: num(w.totalDays), carry: carry, cat: cat, oth: oth, items: items,
+    gal: gal, galMi: gal > 0 ? M : 0, dz: dz, fills: fills, stops: stops,
+    nL: nL, tonuN: tonuN, tonuG: tonuG, unp: unp, unpN: unpN, lanes: lanes, loads: loads
+  };
+  loads.forEach(function (l) { l.wk = o; });
+  return o;
+}
+var SUMK = ['G', 'N', 'C', 'M', 'LD', 'DH', 'D', 'carry', 'gal', 'galMi', 'dz', 'fills', 'nL', 'tonuN', 'tonuG', 'unp', 'unpN'];
+function agg(ws) {
+  var a = { n: ws.length, cat: {}, oth: {}, stops: [], lanes: [], loads: [] };
+  SUMK.forEach(function (k) { a[k] = 0; });
+  ws.forEach(function (s) {
+    SUMK.forEach(function (k) { a[k] += s[k]; });
+    Object.keys(s.cat).forEach(function (k) { a.cat[k] = (a.cat[k] || 0) + s.cat[k]; });
+    Object.keys(s.oth).forEach(function (k) { a.oth[k] = (a.oth[k] || 0) + s.oth[k]; });
+    a.stops = a.stops.concat(s.stops); a.lanes = a.lanes.concat(s.lanes); a.loads = a.loads.concat(s.loads);
+  });
+  return a;
+}
+
+/* ---------- metrics: v() works on a week or on any sum of weeks ---------- */
+var MET = {
+  net: { v: function (a) { return a.N; }, hi: 1, sum: 1, f: 'usd' },
+  gross: { v: function (a) { return a.G; }, hi: 1, sum: 1, f: 'usd' },
+  cost: { v: function (a) { return a.C; }, hi: 0, sum: 1, f: 'usd' },
+  miles: { v: function (a) { return a.M; }, hi: null, sum: 1, f: 'int' },
+  loads: { v: function (a) { return a.nL; }, hi: null, sum: 1, f: 'int' },
+  grpm: { v: function (a) { return a.M > 0 ? a.G / a.M : null; }, hi: 1, f: 'rate' },
+  lrpm: { v: function (a) { return a.LD > 0 ? a.G / a.LD : null; }, hi: 1, f: 'rate' },
+  nrpm: { v: function (a) { return a.M > 0 ? a.N / a.M : null; }, hi: 1, f: 'rate' },
+  cpm: { v: function (a) { return a.M > 0 ? a.C / a.M : null; }, hi: 0, f: 'rate' },
+  dhp: { v: function (a) { return a.M > 0 ? a.DH / a.M * 100 : null; }, hi: 0, f: 'pct1' },
+  perday: { v: function (a) { return a.D > 0 ? a.N / a.D : null; }, hi: 1, f: 'usd' },
+  margin: { v: function (a) { return a.G > 0 ? a.N / a.G * 100 : null; }, hi: 1, f: 'pct0' },
+  perweek: { v: function (a) { return a.n > 0 ? a.N / a.n : null; }, hi: 1, f: 'usd' },
+  fuelmi: { v: function (a) { return a.M > 0 && (a.cat.fuel || 0) > 0 ? a.cat.fuel / a.M : null; }, hi: 0, f: 'rate' },
+  ppg: { v: function (a) { return a.gal > 0 ? a.dz / a.gal : null; }, hi: 0, f: 'rate' },
+  mpg: { v: function (a) { return a.gal > 0 ? a.galMi / a.gal : null; }, hi: 1, f: 'dec1' }
+};
+
+/* ---------- bonus levels ---------- */
+function normTiers(raw) {
+  var out = [];
+  (Array.isArray(raw) ? raw : []).forEach(function (x) {
+    if (!x) return;
+    var p = num(x.pct), a = num(x.amount);
+    if (p > 0 && p <= 1000 && a >= 0) out.push({ pct: p, amount: a });
+  });
+  out.sort(function (a, b) { return a.pct - b.pct; });
+  return out.filter(function (x, i) { return i === 0 || x.pct !== out[i - 1].pct; });
+}
+function bonusState(raw, goal, net) {
+  var ts = normTiers(raw), got = null, next = null;
+  goal = num(goal);
+  ts.forEach(function (x) {
+    x.at = goal * x.pct / 100;
+    x.hit = goal > 0 && net >= x.at - 0.005;
+    if (x.hit) got = x; else if (!next) next = x;
+  });
+  return { tiers: ts, got: got, next: next, amount: got ? got.amount : 0, toNext: next && goal > 0 ? next.at - net : null, max: ts.length ? ts[ts.length - 1] : null };
+}
+
+/* ---------- trips (рейсы) ----------
+   OwnerGladiator Hub 7.5 marks every week with the name of its trip (tripName); weeks that share
+   a name are one trip. The owner's goal for a trip is a dg_trips row with the same key. */
+function tripNorm(n) { return String(n == null ? '' : n).replace(/\s+/g, ' ').trim().slice(0, 60); }
+function tripKey(n) { return tripNorm(n).toLowerCase(); }
+/* the dates a week covers when extras are matched to it (as the Hub's Summary does) */
+function weekSpan(w) {
+  var s = w.startDate || w.endDate || w.weekEndDate || '', e = w.endDate || w.weekEndDate || w.startDate || '';
+  if (!isISO(s) || !isISO(e)) return null;
+  if (e < s) { var x = s; s = e; e = x; }
+  return w.datesManual ? { a: s, b: e } : { a: mondayOf(s), b: addDays(mondayOf(e), 6) };
+}
+function spansRange(list) {
+  var sp = (list || []).map(weekSpan).filter(Boolean); if (!sp.length) return null;
+  var a = sp[0].a, b = sp[0].b; sp.forEach(function (x) { if (x.a < a) a = x.a; if (x.b > b) b = x.b; });
+  return { a: a, b: b };
+}
+/* the owner's extra costs (Summary tab of the Hub) dated inside a range, by group */
+function extrasSum(extras, r) {
+  var o = { X: 0, n: 0, cat: {}, oth: {} }; if (!r) return o;
+  (Array.isArray(extras) ? extras : []).forEach(function (x) {
+    var v = num(x && x.amt), d = String((x && x.date) || '');
+    if (!v || !(d >= r.a && d <= r.b)) return;
+    o.X += v; o.n++;
+    var c = catOf(x.name, 'fixed'); o.cat[c] = (o.cat[c] || 0) + v;
+    if (c === 'other') { var k = cleanName(x.name || 'Extra'); o.oth[k] = (o.oth[k] || 0) + v; }
+  });
+  return o;
+}
+function withX(a, xs) {
+  var o = {}; Object.keys(a).forEach(function (k) { o[k] = a[k]; });
+  o.N = a.N - xs.X; o.C = a.C + xs.X; o.X = xs.X; o.cat = {}; o.oth = {};
+  Object.keys(a.cat).forEach(function (k) { o.cat[k] = a.cat[k]; }); Object.keys(a.oth).forEach(function (k) { o.oth[k] = a.oth[k]; });
+  Object.keys(xs.cat).forEach(function (k) { o.cat[k] = (o.cat[k] || 0) + xs.cat[k]; }); Object.keys(xs.oth).forEach(function (k) { o.oth[k] = (o.oth[k] || 0) + xs.oth[k]; });
+  return o;
+}
+/* ws: normalised weeks (incl. the live one); rows: the owner's goals (dg_trips); draft: the week being filled in.
+   Returns trips oldest first; .lost holds goals whose trip no longer exists in the Hub. */
+function buildTrips(ws, rows, todayStr, extras, draft) {
+  todayStr = todayStr || today();
+  var sorted = ws.filter(function (s) { return isISO(s.start) && isISO(s.end); }).sort(function (a, b) { return a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? -1 : a.end > b.end ? 1 : 0); });
+  var map = {}, hub = [], rest = [];
+  function mk(key, name) { var T = { id: 'hub:' + key, key: key, name: name, auto: false, weeks: [], row: null }; map[key] = T; hub.push(T); return T; }
+  sorted.forEach(function (s) { if (!s.tripKey) { rest.push(s); return; } (map[s.tripKey] || mk(s.tripKey, s.tripName)).weeks.push(s); });
+  /* a trip just started in the Hub exists before its first load is entered */
+  var dKey = draft ? tripKey(draft.tripName) : '';
+  if (dKey && !map[dKey]) mk(dKey, tripNorm(draft.tripName)).draftStart = isISO(draft.weekFrom) ? draft.weekFrom : todayStr;
+  /* weeks the owner has not put into a trip: weeks in a row are shown together */
+  var autos = [], cur = null, prev = null;
+  rest.forEach(function (s) {
+    if (!cur || daysBetween(prev.end, s.start) > GAP_DAYS) { cur = { id: 'auto:' + s.start, key: '', name: '', auto: true, weeks: [], row: null }; autos.push(cur); }
+    cur.weeks.push(s); prev = s;
+  });
+  var all = hub.concat(autos);
+  all.forEach(function (t) {
+    t.first = t.weeks.length ? t.weeks[0].start : '';
+    t.last = ''; t.weeks.forEach(function (s) { if (s.end > t.last) t.last = s.end; });
+    t.anchor = t.first || t.draftStart || todayStr;
+  });
+  /* goals: by the trip's key; a trip renamed in the Hub is found again by its dates */
+  var valid = (rows || []).filter(function (r) { return r && r.trip_key; }), used = {};
+  hub.forEach(function (t) { var r = valid.filter(function (x) { return x.trip_key === t.key; })[0]; if (r) { t.row = r; used[r.id] = 1; } });
+  valid.forEach(function (r) {
+    if (used[r.id] || !isISO(r.start_date)) return;
+    var re = isISO(r.end_date) && r.end_date >= r.start_date ? r.end_date : addDays(r.start_date, 45), best = null, bo = 0;
+    hub.forEach(function (t) {
+      if (t.row) return;
+      var a = t.anchor > r.start_date ? t.anchor : r.start_date, b = (t.last || t.anchor) < re ? (t.last || t.anchor) : re, o = daysBetween(a, b) + 1;
+      if (o > bo) { bo = o; best = t; }
+    });
+    if (best) { best.row = r; best.renamed = true; used[r.id] = 1; }
+  });
+  all.sort(function (a, b) { return a.anchor < b.anchor ? -1 : a.anchor > b.anchor ? 1 : (a.auto ? 1 : -1); });
+  all.forEach(function (t, i) {
+    var r = t.row;
+    t.no = i + 1;
+    t.start = r && isISO(r.start_date) ? r.start_date : t.anchor;
+    if (t.first && t.first < t.start) t.start = t.first;
+    t.end = r && isISO(r.end_date) && r.end_date >= t.start ? r.end_date : '';
+    t.goal = r && r.goal_net != null && r.goal_net !== '' ? Math.max(0, num(r.goal_net)) : 0;
+    t.tiers = r ? r.bonus : []; t.includeExtras = r ? r.include_extras !== false : true; t.note = r ? String(r.note || '').trim() : '';
+    t.live = null; t.weeks.forEach(function (s) { if (s.live) t.live = s; });
+    t.closed = t.weeks.filter(function (s) { return !s.live; });
+    t.weeks.sort(function (a, b) { return a.end < b.end ? 1 : a.end > b.end ? -1 : 0; });   /* newest first */
+    t.A0 = agg(t.weeks);
+    var xs = extrasSum(extras, spansRange(t.weeks.map(function (s) { return s.w; })));
+    t.X = xs.X; t.xN = xs.n;
+    t.A = t.includeExtras && xs.X ? withX(t.A0, xs) : t.A0;      /* like the Hub's trip summary: extras of its dates are a cost */
+    t.net = t.A.N;
+    t.pct = t.goal > 0 ? t.net / t.goal * 100 : null;
+    var latest = i === all.length - 1, isCur = !t.auto && !!dKey && dKey === t.key;
+    t.current = isCur;
+    if (t.auto) t.status = latest && (t.live || (t.last && daysBetween(t.last, todayStr) <= ACTIVE_DAYS)) ? 'active' : 'done';
+    else if (isCur) t.status = !t.weeks.length && t.start > todayStr ? 'future' : 'active';
+    else if (t.end && todayStr <= t.end && latest) t.status = 'active';
+    else t.status = 'done';
+    t.bonus = bonusState(t.tiers, t.goal, t.net);
+    t.pace = pace(t, todayStr);
+  });
+  all.lost = valid.filter(function (r) { return !used[r.id]; });
+  return all;
+}
+function pace(t, todayStr) {
+  if (!t.end) return null;
+  var total = daysBetween(t.start, t.end) + 1;
+  var dayNo = todayStr < t.start ? 0 : Math.min(total, daysBetween(t.start, todayStr) + 1);
+  var left = todayStr > t.end ? 0 : daysBetween(todayStr < t.start ? t.start : todayStr, t.end);
+  var over = todayStr > t.end ? daysBetween(t.end, todayStr) : 0;
+  var Nc = 0, lastC = '';
+  t.closed.forEach(function (s) { Nc += s.N; if (s.end > lastC) lastC = s.end; });
+  if (t.includeExtras) Nc -= t.X;
+  if (t.status === 'active' && over > 0) return { total: total, dayNo: total, left: 0, over: over, timePct: 100, weeks: total / 7, perDay: null, forecast: null, forecastPct: null, need: t.goal > 0 ? Math.max(0, t.goal - t.net) : null, needDay: null, weekGoal: t.goal > 0 ? t.goal / (total / 7) : null, gapUsd: null };
+  if (lastC > t.end) lastC = t.end;
+  var cov = lastC && lastC >= t.start ? daysBetween(t.start, lastC) + 1 : 0, perDay = null, forecast = null;
+  if (cov >= 5) { perDay = Nc / cov; forecast = Nc + perDay * daysBetween(lastC, t.end); }
+  else if (dayNo >= 3) { perDay = t.net / dayNo; forecast = perDay * total; }
+  if (forecast != null && forecast < t.net) forecast = t.net;
+  var o = {
+    total: total, dayNo: dayNo, left: left, over: over, timePct: total > 0 ? dayNo / total * 100 : 0, weeks: total / 7,
+    perDay: perDay, forecast: t.status === 'done' ? null : forecast, forecastPct: null, need: null, needDay: null, weekGoal: null, gapUsd: null
+  };
+  if (t.goal > 0) {
+    o.weekGoal = t.goal / o.weeks;
+    o.need = Math.max(0, t.goal - t.net);
+    if (o.forecast != null) o.forecastPct = o.forecast / t.goal * 100;
+    if (t.status === 'active') {
+      o.needDay = o.need > 0 ? o.need / Math.max(1, left) : 0;
+      o.gapUsd = t.net - t.goal * o.timePct / 100;      /* + ahead of an even schedule, − behind */
+    }
+  }
+  return o;
+}
+
+/* ---------- lanes, brokers, haul length ---------- */
+function lanesOf(a) {
+  var map = {};
+  a.lanes.forEach(function (x) { var k = x.a + ' → ' + x.b, o = map[k] || (map[k] = { k: k, c: 0, g: 0, mi: 0 }); o.c++; o.g += x.g; o.mi += x.mi; });
+  return Object.keys(map).map(function (k) { var o = map[k]; o.r = o.mi > 0 ? o.g / o.mi : 0; return o; });
+}
+function haulsOf(a) {
+  return [[0, 300, '≤ 300'], [300, 600, '300–600'], [600, 1000, '600–1000'], [1000, 1e9, '1000+']].map(function (b) {
+    var o = { l: b[2], c: 0, g: 0, mi: 0 };
+    a.lanes.forEach(function (x) { if ((x.lm > b[0] && x.lm <= b[1]) || (b[0] === 0 && x.lm === 0)) { o.c++; o.g += x.g; o.mi += x.mi; } });
+    o.r = o.mi > 0 ? o.g / o.mi : 0;
+    return o;
+  });
+}
+function brokersOf(a) {
+  /* g: everything the broker paid; the rate uses full loads only (a partial adds few miles, so its $/mi is not comparable) */
+  var map = {};
+  function put(name, g, mi, part) {
+    var k = String(name || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (!k || !(g > 0)) return;
+    var o = map[k] || (map[k] = { name: String(name).replace(/\s+/g, ' ').trim(), c: 0, g: 0, mi: 0, gr: 0 });
+    o.c++; o.g += g;
+    if (!part) { o.gr += g; o.mi += mi; }
+  }
+  a.loads.forEach(function (l) {
+    if (l.tonu) return;
+    var pm = 0; l.parts.forEach(function (q) { pm += q.mi; put(q.broker, q.pay, q.mi, true); });
+    put(l.broker, l.g0, l.mi - pm, false);
+  });
+  return Object.keys(map).map(function (k) { var o = map[k]; o.r = o.mi > 0 ? o.gr / o.mi : 0; return o; }).sort(function (x, y) { return y.g - x.g; });
+}
+
+/* the live week repeats a saved one when a week was archived and a new one was not started yet */
+function isDupLive(lv, saved) {
+  return saved.some(function (w) {
+    var sameDates = wStart(w) === lv.startDate && wEnd(w) === lv.endDate;
+    var sameManual = lv.weekFrom && lv.weekTo && w.weekFrom === lv.weekFrom && w.weekTo === lv.weekTo;
+    return (sameDates || sameManual) && Math.abs(num(w.totalGross) - lv.totalGross) < 0.5 && Math.abs(num(w.totalMiles) - lv.totalMiles) < 0.5;
+  });
+}
+
+G.DGCalc = {
+  num: num, isISO: isISO, iso: iso, parseISO: parseISO, today: today, addDays: addDays, daysBetween: daysBetween, mondayOf: mondayOf,
+  calcDraft: calcDraft, week: week, agg: agg, MET: MET, CATS: CATS, catOf: catOf, cleanName: cleanName,
+  normTiers: normTiers, bonusState: bonusState, buildTrips: buildTrips, pace: pace, extrasSum: extrasSum, tripNorm: tripNorm, tripKey: tripKey, weekSpan: weekSpan,
+  lanesOf: lanesOf, haulsOf: haulsOf, brokersOf: brokersOf, isDupLive: isDupLive, wStart: wStart, wEnd: wEnd,
+  GAP_DAYS: GAP_DAYS
+};
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function () {
+'use strict';
+/* Dispatch Gladiator — app (UI, sync, sign-in). All numbers come from window.DGCalc. */
+var C = window.DGCalc;
+var CFG = {
+  url: 'https://cbbqnocjrcalatlcjvzz.supabase.co',
+  key: 'sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3',
+  hub: 'https://ownergladiator.github.io/'
+};
+var VER = '1.0';
+
+/* ---------------- small helpers ---------------- */
+var Store = { mem: {},
+  get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return this.mem[k] == null ? null : this.mem[k]; } },
+  set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { this.mem[k] = String(v); } },
+  del: function (k) { try { window.localStorage.removeItem(k); } catch (e) { delete this.mem[k]; } } };
+function $(s, r) { return (r || document).querySelector(s); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function num(v) { return C.num(v); }
+function find(arr, id) { for (var i = 0; i < arr.length; i++) if (String(arr[i].id) === String(id)) return arr[i]; return null; }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+var LANG = Store.get('dg_lang') || ((navigator.language || 'ru').slice(0, 2) === 'ru' ? 'ru' : 'en');
+if (LANG !== 'ru' && LANG !== 'en') LANG = 'ru';
+var THEME = Store.get('dg_theme') || 'dark';
+
+/* ---------------- texts RU / EN ---------------- */
+var L = {
+  'app.tag': ['Владелец ставит цель на рейс — диспетчер видит прогресс, статистику и свой бонус', 'The owner sets a goal for the trip — the dispatcher sees progress, stats and the bonus'],
+  'auth.in': ['Вход', 'Sign in'], 'auth.up': ['Регистрация', 'Sign up'],
+  'auth.email': ['Email', 'Email'], 'auth.pass': ['Пароль', 'Password'], 'auth.passNew': ['Пароль (минимум 6 символов)', 'Password (at least 6 characters)'],
+  'auth.goIn': ['Войти', 'Sign in'], 'auth.goUp': ['Создать аккаунт', 'Create account'], 'auth.forgot': ['Забыли пароль?', 'Forgot password?'],
+  'auth.need': ['Введите email и пароль', 'Enter email and password'], 'auth.needEmail': ['Введите email — пришлём ссылку для нового пароля', 'Enter your email and we will send a reset link'],
+  'auth.short': ['Пароль — минимум 6 символов', 'Password must be at least 6 characters'],
+  'auth.exists': ['Этот email уже зарегистрирован — просто войдите. Пароль тот же, что в OwnerGladiator Hub.', 'This email is already registered — just sign in. The password is the same as in OwnerGladiator Hub.'],
+  'auth.bad': ['Неверный email или пароль', 'Wrong email or password'], 'auth.net': ['Нет связи с сервером. Проверьте интернет', 'No connection to the server. Check the internet'],
+  'auth.unconf': ['Почта ещё не подтверждена: откройте ссылку из письма и войдите снова', 'The email is not confirmed yet: open the link from the email and sign in again'],
+  'auth.wait': ['Секунду…', 'One moment…'], 'auth.reset': ['Письмо со ссылкой отправлено — проверьте почту', 'Reset link sent — check your email'],
+  'auth.sent': ['Письмо отправлено на {e}. Откройте ссылку из письма, потом вернитесь на эту страницу и войдите.', 'We sent an email to {e}. Open the link in it, then come back to this page and sign in.'],
+  'auth.nosdk': ['Не загрузилась библиотека входа. Обновите страницу', 'The sign-in library did not load. Reload the page'],
+  'auth.ownerHint': ['Владелец трака? Входите с тем же email и паролем, что в OwnerGladiator Hub. Диспетчер? Откройте ссылку-приглашение от владельца и создайте свой логин.', 'Truck owner? Use the same email and password as in OwnerGladiator Hub. Dispatcher? Open the invitation link from the owner and create your own login.'],
+  'auth.invited': ['Вас пригласили в Dispatch Gladiator. Создайте свой логин — email и пароль. Если логин уже есть, просто войдите.', 'You have been invited to Dispatch Gladiator. Create your own login — an email and a password. If you already have one, just sign in.'],
+  'auth.newPass': ['Новый пароль', 'New password'], 'auth.passOk': ['Пароль изменён', 'Password changed'], 'auth.setPass': ['Сохранить пароль', 'Save password'],
+  'nav.trip': ['Рейс', 'Trip'], 'nav.trips': ['Рейсы', 'Trips'], 'nav.weeks': ['Недели', 'Weeks'], 'nav.loads': ['Грузы', 'Loads'], 'nav.more': ['Ещё', 'More'], 'nav.manage': ['Цели и доступ', 'Goals & access'], 'nav.manageS': ['Цели', 'Goals'],
+  'c.save': ['Сохранить', 'Save'], 'c.cancel': ['Отмена', 'Cancel'], 'c.delete': ['Удалить', 'Delete'], 'c.edit': ['Изменить', 'Edit'], 'c.close': ['Закрыть', 'Close'], 'c.add': ['Добавить', 'Add'],
+  'c.all': ['Показать все {n}', 'Show all {n}'], 'c.less': ['Свернуть', 'Show less'], 'c.saved': ['Сохранено', 'Saved'], 'c.err': ['Не получилось: {e}', 'That did not work: {e}'],
+  'c.offline': ['Нет связи — показаны данные с прошлого раза', 'Offline — showing the data from last time'], 'c.upd': ['Обновлено {t}', 'Updated {t}'], 'c.refresh': ['Обновить данные', 'Refresh data'],
+  'c.copied': ['Скопировано', 'Copied'], 'c.now': ['только что', 'just now'],
+  'pl.wk.1': ['неделя', 'week'], 'pl.wk.2': ['недели', 'weeks'], 'pl.wk.5': ['недель', 'weeks'],
+  'pl.dy.1': ['день', 'day'], 'pl.dy.2': ['дня', 'days'], 'pl.dy.5': ['дней', 'days'],
+  'pl.ld.1': ['груз', 'load'], 'pl.ld.2': ['груза', 'loads'], 'pl.ld.5': ['грузов', 'loads'],
+  'pl.tr.1': ['рейс', 'trip'], 'pl.tr.2': ['рейса', 'trips'], 'pl.tr.5': ['рейсов', 'trips'],
+  'trip.n': ['Рейс {n}', 'Trip {n}'], 'trip.loose': ['Без рейса', 'No trip'], 'st.active': ['идёт', 'in progress'], 'st.done': ['завершён', 'finished'], 'st.future': ['впереди', 'upcoming'], 'st.auto': ['без цели', 'no goal'], 'st.live': ['идёт', 'in progress'],
+  'trip.prev': ['Предыдущий рейс', 'Previous trip'], 'trip.next': ['Следующий рейс', 'Next trip'], 'trip.open': ['по сегодня', 'to date'],
+  'trip.wk': ['{n} в архиве', '{n} saved'], 'trip.wkLive': ['+ текущая', '+ current'], 'trip.wkS': ['{n} нед.', '{n} wk'],
+  'h.net': ['Чистыми за рейс', 'Net for the trip'], 'h.netLoose': ['Чистыми за эти недели', 'Net for these weeks'], 'h.of': ['из {g}', 'of {g}'], 'h.left': ['до цели {a}', '{a} to go'], 'h.over': ['сверх цели {a}', '{a} over the goal'],
+  'h.ofGoal': ['цели', 'of the goal'], 'h.goal': ['Цель', 'Goal'], 'h.noGoalO': ['Цель на этот рейс ещё не задана. Задайте сумму чистыми — диспетчер увидит, сколько процентов уже сделано, и свой бонус.', 'No goal for this trip yet. Set a net amount — the dispatcher will see the percent done and the bonus.'],
+  'h.noGoalD': ['Владелец ещё не задал цель на этот рейс.', 'The owner has not set a goal for this trip yet.'], 'h.setGoal': ['Задать цель', 'Set a goal'],
+  'h.looseO': ['Эти недели не собраны в рейс, поэтому цель для них поставить нельзя. Соберите их в рейс в OwnerGladiator Hub: «Архив» → «🧩 Рейсы».', 'These weeks are not grouped into a trip, so a goal cannot be set for them. Group them in OwnerGladiator Hub: Archive → 🧩 Trips.'],
+  'h.looseD': ['Владелец не собрал эти недели в рейс — цели для них нет.', 'The owner has not grouped these weeks into a trip, so they have no goal.'],
+  'h.lgClosed': ['закрытые недели', 'saved weeks'], 'h.lgLive': ['текущая неделя — ещё идёт, сумма изменится', 'current week — still running, the amount will change'],
+  'h.bonusNow': ['Бонус диспетчера сейчас', 'Dispatcher bonus so far'], 'h.bonusNowD': ['Ваш бонус сейчас', 'Your bonus so far'], 'h.bonusNext': ['До бонуса {b} осталось', 'To the {b} bonus'], 'h.bonusMax': ['Максимальный бонус взят', 'Top bonus reached'],
+  'h.extras': ['Доп. расходы владельца за рейс: {a}', 'Owner’s extra costs for the trip: {a}'], 'h.extrasIn': ['вычтены из результата', 'subtracted from the result'], 'h.extrasOut': ['в цель не входят', 'not counted in the goal'],
+  'h.unpaid': ['Ждёт оплаты', 'Awaiting payment'], 'h.note': ['Заметка владельца', 'Owner’s note'],
+  'h.weeksNone': ['В этом рейсе пока нет недель', 'No weeks in this trip yet'],
+  'p.title': ['Темп', 'Pace'], 'p.time': ['Время', 'Time'], 'p.money': ['Деньги', 'Money'], 'p.day': ['день {d} из {n}', 'day {d} of {n}'],
+  'p.ahead': ['Идёте с опережением графика на {a}', 'Ahead of an even schedule by {a}'], 'p.behind': ['Отставание от ровного графика: {a}', 'Behind an even schedule by {a}'], 'p.even': ['Точно по графику', 'Right on schedule'],
+  'p.forecast': ['Прогноз к концу рейса', 'Forecast by the end'], 'p.fcNote': ['по темпу закрытых недель', 'at the pace of saved weeks'],
+  'p.needDay': ['Нужно в день до конца', 'Needed per day to the end'], 'p.needWk': ['это в неделю', 'that is per week'], 'p.left': ['До конца рейса', 'Until the end'],
+  'p.weekGoal': ['Цель на неделю', 'Weekly goal'], 'p.over': ['План закончился {d}, рейс продолжается: +{n}', 'The plan ended {d}, the trip goes on: +{n}'], 'p.done': ['Цель взята', 'Goal reached'], 'p.final': ['Итог рейса', 'Trip result'], 'p.missed': ['не хватило {a}', '{a} short'],
+  'k.gross': ['Gross', 'Gross'], 'k.cost': ['Расходы и вычеты', 'Costs and deductions'], 'k.grpm': ['Gross RPM', 'Gross RPM'], 'k.nrpm': ['Net RPM', 'Net RPM'], 'k.miles': ['Мили', 'Miles'],
+  'k.dh': ['Пустой пробег', 'Deadhead'], 'k.perday': ['Чистыми в день', 'Net per day'], 'k.perweek': ['В среднем за неделю', 'Average per week'], 'k.net': ['Чистыми', 'Net'],
+  'k.cpm': ['CPM', 'CPM'], 'k.lrpm': ['Loaded RPM', 'Loaded RPM'], 'k.margin': ['Маржа', 'Margin'], 'k.loads': ['Грузов', 'Loads'], 'k.dhp': ['Пустой %', 'Deadhead %'],
+  'k.fuelmi': ['Топливо/mi', 'Fuel/mi'], 'k.ppg': ['$/галлон', '$/gal'], 'k.mpg': ['MPG', 'MPG'], 'k.weeks': ['Недель', 'Weeks'], 'k.goalPct': ['% цели', '% of goal'], 'k.bonus': ['Бонус', 'Bonus'],
+  's.cpm': ['CPM {a}', 'CPM {a}'], 's.lrpm': ['гружёные {a}', 'loaded {a}'], 's.margin': ['маржа {p}%', 'margin {p}%'], 's.ld': ['груж. {a} · пуст. {b}', 'loaded {a} · empty {b}'], 's.dhShort': ['пустых {p}', 'deadhead {p}'],
+  's.dh': ['{a} из {b} mi', '{a} of {b} mi'], 's.days': ['{n} в рейсах', '{n} on the road'],
+  'w.title': ['Недели рейса', 'Weeks of the trip'], 'w.all': ['Все недели', 'All weeks'], 'w.goalLine': ['цель недели {a}', 'weekly goal {a}'], 'w.week': ['Неделя', 'Week'],
+  'w.live': ['Текущая неделя', 'Current week'], 'w.liveNote': ['Неделя ещё идёт: цифры взяты из черновика владельца и изменятся.', 'The week is still running: the numbers come from the owner’s draft and will change.'],
+  'w.liveAt': ['Черновик обновлён {t}', 'Draft updated {t}'], 'w.none': ['Сохранённых недель пока нет', 'No saved weeks yet'], 'w.metric': ['Показатель', 'Metric'],
+  'w.last': ['Последние {n}', 'Last {n}'], 'w.exp': ['Расходы и вычеты', 'Costs and deductions'], 'w.loads': ['Грузы недели', 'Loads of the week'], 'w.fuel': ['Топливо по чекам', 'Fuel from receipts'],
+  'w.fuelItem': ['Дизель и DEF', 'Diesel and DEF'], 'w.ownerItem': ['Доля владельца трака', 'Truck owner share'], 'w.ofGross': ['от gross', 'of gross'], 'w.fills': ['Заправок', 'Fill-ups'],
+  'w.inTrip': ['Рейс', 'Trip'], 'w.noTrip': ['вне рейсов', 'not in a trip'],
+  'm.title': ['Куда ушла выручка', 'Where the revenue went'], 'm.of100': ['Из каждых $100 gross чистыми остаётся {a}', 'Out of every $100 gross, {a} stays as net'], 'm.neg': ['Расходы больше gross на {a}', 'Costs exceed gross by {a}'],
+  'cat.net': ['Чистыми', 'Net'], 'cat.fuel': ['Топливо', 'Fuel'], 'cat.comm': ['Комиссия', 'Commission'], 'cat.truck': ['Трак: аренда и платежи', 'Truck: rent and payments'], 'cat.ins': ['Страховка', 'Insurance'],
+  'cat.eld': ['ELD и сервисы', 'ELD and services'], 'cat.road': ['Дороги и парковки', 'Tolls and parking'], 'cat.maint': ['Ремонт и ТО', 'Repairs and maintenance'], 'cat.owner': ['Доля владельца трака', 'Truck owner share'], 'cat.other': ['Прочее', 'Other'],
+  't.title': ['Рейсы', 'Trips'], 't.sub': ['Все рейсы рядом: что изменилось от рейса к рейсу', 'All trips side by side: what changed from trip to trip'],
+  't.cmp': ['Сравнить два рейса', 'Compare two trips'], 't.cmpNone': ['Сравнение появится, когда будет хотя бы два рейса.', 'The comparison appears once there are at least two trips.'],
+  't.metric': ['Показатель', 'Metric'], 't.diff': ['Разница', 'Change'], 't.table': ['Таблица рейсов', 'Trips table'], 't.trip': ['Рейс', 'Trip'],
+  't.heat': ['Зелёным — лучшие значения в столбце, красным — худшие.', 'Green marks the best values in a column, red the worst.'], 't.noGoal': ['цель не задана', 'no goal set'],
+  't.autoNote': ['Недели без рейса показаны группами: недели подряд — вместе. Цель ставится только на рейс, собранный в OwnerGladiator Hub.', 'Weeks without a trip are shown in groups: weeks in a row together. A goal can be set only for a trip grouped in OwnerGladiator Hub.'],
+  'l.title': ['Грузы', 'Loads'], 'l.scopeT': ['Этот рейс', 'This trip'], 'l.scopeA': ['Все рейсы', 'All trips'], 'l.sort.date': ['По дате', 'By date'], 'l.sort.rpm': ['По ставке', 'By rate'], 'l.sort.gross': ['По сумме', 'By amount'],
+  'l.none': ['Грузов пока нет', 'No loads yet'], 'l.best': ['Лучшая ставка', 'Best rate'], 'l.worst': ['Худшая ставка', 'Lowest rate'], 'l.avg': ['Средний груз', 'Average load'],
+  'l.rateNote': ['Ставка — gross ÷ все мили груза вместе с пустыми.', 'Rate = gross ÷ all miles of the load, deadhead included.'], 'l.mi': ['{a} mi + {b} пустых', '{a} mi + {b} empty'], 'l.miNo': ['{a} mi', '{a} mi'],
+  'l.unpaid': ['ждёт оплаты', 'awaiting payment'], 'l.partial': ['догруз', 'partial'], 'l.lanes': ['Направления', 'Lanes'], 'l.freq': ['Частые', 'Frequent'], 'l.bestR': ['Лучшая ставка', 'Best rate'],
+  'l.brokers': ['Брокеры', 'Brokers'], 'l.brokersNone': ['Брокеры в грузах не указаны.', 'No brokers were entered for the loads.'], 'l.haul': ['Ставка по длине груза', 'Rate by load length'], 'l.noHaul': ['нет грузов', 'no loads'],
+  'l.tonu': ['TONU: {n} · {a}, в ставки не входят', 'TONU: {n} · {a}, not counted in rates'], 'l.list': ['Список грузов', 'Load list'],
+  'o.title': ['Цели и доступ', 'Goals & access'], 'o.trips': ['Рейсы и цели', 'Trips and goals'], 'o.tripsHint': ['Рейсы берутся из OwnerGladiator Hub. Здесь каждому рейсу задаётся цель по чистому заработку, срок и уровни бонуса.', 'Trips come from OwnerGladiator Hub. Here each trip gets a net goal, an end date and bonus levels.'],
+  'o.newTripHow': ['Новый рейс начинается в OwnerGladiator Hub: вкладка «Неделя» → 🛣️ Рейс → «+ Новый рейс…». Он сразу появится здесь.', 'A new trip starts in OwnerGladiator Hub: Week tab → 🛣️ Trip → “+ New trip…”. It shows up here right away.'],
+  'o.lost': ['Цели без рейса', 'Goals without a trip'], 'o.lostHint': ['Рейс этой цели расформирован или переименован в Hub. Цель можно удалить.', 'The trip of this goal was ungrouped or renamed in the Hub. You can delete the goal.'], 'o.lostQ': ['Удалить цель «{n}»?', 'Delete the goal “{n}”?'],
+  'o.disp': ['Диспетчеры', 'Dispatchers'], 'o.dispHint': ['Диспетчер заходит под своим логином и видит ваши рейсы, недели, грузы и прогресс цели. Менять он ничего не может.', 'A dispatcher signs in with his own login and sees your trips, weeks, loads and goal progress. He cannot change anything.'],
+  'o.dispAdd': ['Пригласить диспетчера', 'Invite a dispatcher'], 'o.dispName': ['Имя диспетчера (для вас)', 'Dispatcher’s name (for you)'], 'o.mkInvite': ['Создать приглашение', 'Create an invitation'],
+  'o.invHow': ['Отправьте диспетчеру ссылку. По ней он создаст свой логин и сразу увидит ваши данные. Ссылка работает один раз.', 'Send the link to your dispatcher. With it he creates his own login and sees your data right away. The link works once.'],
+  'o.pending': ['ссылка ещё не открыта', 'link not opened yet'], 'o.pendingName': ['Приглашение', 'Invitation'], 'o.joined': ['подключился {d}', 'connected {d}'], 'o.send': ['Отправить', 'Send'],
+  'o.created': ['Приглашение создано. Отправьте ссылку диспетчеру', 'Invitation created. Send the link to your dispatcher'], 'o.rmInvQ': ['Удалить это приглашение? Ссылка перестанет работать.', 'Delete this invitation? The link will stop working.'],
+  'o.label': ['Как вас показывать диспетчеру', 'How the dispatcher sees you'], 'o.labelPh': ['Например: Михаил, трак 12', 'For example: Mikhail, truck 12'],
+  'o.seen': ['заходил {t}', 'last opened {t}'], 'o.never': ['ещё не заходил', 'has not opened it yet'], 'o.invite': ['Скопировать ссылку-приглашение', 'Copy the invitation link'],
+  'o.inviteTxt': ['Привет! Это мой Dispatch Gladiator — рейсы, статистика и цель с бонусом. Открой ссылку и создай свой логин: {u}', 'Hi! This is my Dispatch Gladiator — trips, stats and the goal with the bonus. Open the link and create your login: {u}'],
+  'o.rm': ['Закрыть доступ', 'Remove access'], 'o.rmQ': ['Закрыть доступ для «{e}»? Он больше не увидит ваши данные.', 'Remove access for “{e}”? He will no longer see your data.'],
+  'j.title': ['Подключиться по приглашению', 'Connect with an invitation'], 'j.ph': ['Ссылка-приглашение', 'Invitation link'], 'j.go': ['Подключиться', 'Connect'],
+  'j.ok': ['Доступ открыт: {n}', 'Access granted: {n}'], 'j.used': ['Это приглашение уже использовано. Попросите владельца прислать новое', 'This invitation was already used. Ask the owner for a new one'],
+  'j.unknown': ['Приглашение не найдено: возможно, владелец его удалил', 'Invitation not found: the owner may have removed it'],
+  'j.own': ['Это ваше собственное приглашение. Отправьте ссылку диспетчеру — у него будет свой логин', 'This is your own invitation. Send the link to your dispatcher — he will have his own login'],
+  'j.bad': ['Не похоже на ссылку-приглашение', 'That does not look like an invitation link'], 'j.how': ['Вставьте ссылку, которую прислал владелец трака. Она открывает доступ к его рейсам и статистике.', 'Paste the link the truck owner sent you. It gives access to his trips and stats.'], 'j.err': ['Не получилось подключиться: {e}', 'Could not connect: {e}'],
+  'o.preview': ['Посмотреть глазами диспетчера', 'See it as the dispatcher does'], 'o.previewOn': ['Так это видит диспетчер', 'This is the dispatcher’s view'], 'o.previewOff': ['Вернуться', 'Back to my view'],
+  'o.hub': ['Открыть OwnerGladiator Hub', 'Open OwnerGladiator Hub'], 'o.settings': ['Настройки', 'Settings'], 'o.lang': ['Язык', 'Language'], 'o.theme': ['Тема', 'Theme'], 'o.dark': ['Тёмная', 'Dark'], 'o.light': ['Светлая', 'Light'],
+  'o.pass': ['Сменить пароль', 'Change password'], 'o.out': ['Выйти', 'Sign out'], 'o.drivers': ['Водители', 'Drivers'], 'o.me': ['Мои данные', 'My own data'], 'o.switch': ['Чьи данные показывать', 'Whose data to show'],
+  'o.driver': ['Водитель', 'Driver'], 'o.you': ['это вы', 'you'], 'o.upTo': ['бонус до {a}', 'bonus up to {a}'],
+  'e.edit': ['Цель рейса', 'Trip goal'], 'e.start': ['Начало рейса', 'Trip start'], 'e.end': ['Конец по плану', 'Planned end'],
+  'e.len': ['Длина рейса', 'Trip length'], 'e.wk': ['{n} нед.', '{n} wk'], 'e.goal': ['Цель: чистыми за рейс, $', 'Goal: net for the trip, $'], 'e.goalHint': ['≈ {a} в неделю', '≈ {a} per week'],
+  'e.goalRef': ['Для ориентира: в среднем у вас {a} чистыми за неделю.', 'For reference: your average is {a} net per week.'],
+  'e.bonus': ['Бонус диспетчеру', 'Dispatcher bonus'], 'e.bonusHint': ['Платится один бонус — за самый высокий уровень, до которого дошёл рейс.', 'One bonus is paid — for the highest level the trip reaches.'],
+  'e.tPct': ['При % цели', 'At % of goal'], 'e.tAmt': ['Бонус, $', 'Bonus, $'], 'e.tAdd': ['Добавить уровень', 'Add a level'], 'e.tEq': ['= {a} чистыми', '= {a} net'],
+  'e.note': ['Заметка для диспетчера', 'Note for the dispatcher'], 'e.notePh': ['Например: бонус плачу после закрытия рейса', 'For example: the bonus is paid after the trip closes'],
+  'e.extras': ['Доп. расходы из «Итогов» в Hub (ремонт, платёж за трак) уменьшают результат рейса', 'Extra costs from the Hub’s Summary (repairs, truck payment) reduce the trip result'],
+  'e.badDates': ['Проверьте даты: конец раньше начала', 'Check the dates: the end is before the start'], 'e.needStart': ['Укажите дату начала рейса', 'Enter the trip start date'],
+  'e.inTrip': ['в рейсе сейчас {n}', '{n} in the trip now'],
+  'e.delQ': ['Удалить цель рейса «{n}»? Недели и статистика останутся.', 'Delete the goal of “{n}”? The weeks and stats stay.'], 'e.saveTrip': ['Сохранить цель', 'Save the goal'], 'e.del': ['Удалить цель', 'Delete the goal'],
+  'e.weeksIn': ['недель в этих датах: {n}', 'weeks in these dates: {n}'],
+  'x.welcome': ['Пока здесь пусто', 'Nothing here yet'],
+  'x.dispHelp': ['Вы диспетчер? Попросите владельца трака прислать ссылку-приглашение (у него в Dispatch Gladiator: «Цели и доступ» → «Пригласить диспетчера») и откройте её. Или вставьте ссылку сюда:', 'Are you a dispatcher? Ask the truck owner for an invitation link (in his Dispatch Gladiator: “Goals & access” → “Invite a dispatcher”) and open it. Or paste the link here:'],
+  'x.ownerHelp': ['Вы владелец? Статистика берётся из недель, которые вы сохраняете в OwnerGladiator Hub. Сохраните первую неделю — и здесь появится рейс.', 'Are you an owner? The stats come from the weeks you save in OwnerGladiator Hub. Save your first week and a trip will appear here.'],
+  'x.loadErr': ['Не удалось загрузить данные', 'Could not load the data'], 'x.retry': ['Повторить', 'Try again'],
+  'x.lost': ['Доступ к данным этого водителя закрыт.', 'Access to this driver’s data was removed.']
+};
+function t(k, v) {
+  var a = L[k], s = a ? a[LANG === 'en' ? 1 : 0] : k;
+  if (v) s = s.replace(/\{(\w+)\}/g, function (m, n) { return v[n] != null ? v[n] : m; });
+  return s;
+}
+function pl(n, k) {
+  var a = Math.abs(Math.round(num(n))), f;
+  if (LANG === 'ru') { var d = a % 10, h = a % 100; f = (d === 1 && h !== 11) ? '1' : (d >= 2 && d <= 4 && (h < 12 || h > 14)) ? '2' : '5'; } else f = a === 1 ? '1' : '5';
+  return int(n) + ' ' + t('pl.' + k + '.' + f);
+}
+
+/* ---------------- formats ---------------- */
+function int(v) { return Math.round(num(v)).toLocaleString('en-US'); }
+function money(v, d) { d = d || 0; var n = num(v), a = Math.abs(n); if (a < (d ? 0.005 : 0.5)) n = 0; return (n < 0 ? '−' : '') + '$' + a.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function kusd(v) { var n = num(v), a = Math.abs(n); return (n < 0 ? '−' : '') + '$' + (a >= 99950 ? Math.round(a / 1000) + 'k' : a >= 1000 ? (a / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(a)); }
+function rate(v) { return (v < 0 ? '−$' : '$') + Math.abs(v).toFixed(2); }
+function fmt(kind, v) {
+  if (v == null || !isFinite(v)) return '—';
+  if (kind === 'usd') return money(v);
+  if (kind === 'int') return int(v);
+  if (kind === 'rate') return rate(v);
+  if (kind === 'pct1') return v.toFixed(1) + '%';
+  if (kind === 'pct0') return (v < 0 ? '−' : '') + Math.round(Math.abs(v)) + '%';
+  return v.toFixed(1);
+}
+function fmtShort(kind, v) { return v == null || !isFinite(v) ? '—' : kind === 'usd' ? kusd(v) : kind === 'int' ? (Math.abs(v) >= 10000 ? (v / 1000).toFixed(1) + 'k' : int(v)) : fmt(kind, v); }
+function fmtDelta(kind, d) {
+  if (d == null || !isFinite(d)) return '—';
+  var s = d > 0 ? '+' : d < 0 ? '−' : '±', a = Math.abs(d);
+  if (kind === 'usd') return s + '$' + Math.round(a).toLocaleString('en-US');
+  if (kind === 'int') return s + int(a);
+  if (kind === 'rate') return s + '$' + a.toFixed(2);
+  if (kind === 'pct1' || kind === 'pct0') return s + a.toFixed(1) + (LANG === 'ru' ? ' пп' : ' pp');
+  return s + a.toFixed(1);
+}
+function good(hi, d) { if (hi == null || d == null || Math.abs(d) < 1e-9) return ''; return (hi ? d > 0 : d < 0) ? 'grn' : 'red'; }
+var MON = { ru: ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] };
+function dS(iso) { if (!C.isISO(iso)) return String(iso || ''); var p = iso.split('-'), m = MON[LANG][+p[1] - 1], d = +p[2]; return LANG === 'ru' ? d + ' ' + m : m + ' ' + d; }
+function dR(a, b) {
+  if (!C.isISO(a) || !C.isISO(b)) return dS(a || b);
+  if (a === b) return dS(a);
+  if (a.slice(0, 7) === b.slice(0, 7)) { var m = MON[LANG][+a.slice(5, 7) - 1], x = +a.slice(8), y = +b.slice(8); return LANG === 'ru' ? x + '–' + y + ' ' + m : m + ' ' + x + '–' + y; }
+  return dS(a) + ' – ' + dS(b);
+}
+function dT(ts) {
+  var d = new Date(ts); if (isNaN(d)) return '';
+  var isoD = C.iso(d), td = C.today(), hm = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+  if (Date.now() - d.getTime() < 90000 && Date.now() >= d.getTime()) return t('c.now');
+  if (isoD === td) return (LANG === 'ru' ? 'сегодня ' : 'today ') + hm;
+  if (isoD === C.addDays(td, -1)) return (LANG === 'ru' ? 'вчера ' : 'yesterday ') + hm;
+  return dS(isoD) + ' ' + hm;
+}
+
+/* ---------------- icons + emblem ---------------- */
+function ic(p, w) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>'; }
+var I = {
+  trip: ic('<path d="M4 21V4"/><path d="M4 5h11l-2 3.5L15 12H4"/>'),
+  trips: ic('<path d="M5 20V10M12 20V4M19 20v-7"/>'),
+  weeks: ic('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  loads: ic('<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/>'),
+  more: ic('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 2.6),
+  target: ic('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".6"/>'),
+  left: ic('<path d="M15 5l-7 7 7 7"/>'), right: ic('<path d="M9 5l7 7-7 7"/>'), chev: ic('<path d="M9 6l6 6-6 6"/>'),
+  x: ic('<path d="M6 6l12 12M18 6L6 18"/>'), plus: ic('<path d="M12 5v14M5 12h14"/>', 2.4), edit: ic('<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>'),
+  user: ic('<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'), users: ic('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.8c1.8.8 3 2.5 3.6 5.2"/>'),
+  eye: ic('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), copy: ic('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>'),
+  globe: ic('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>'), sun: ic('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>'),
+  key: ic('<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>'), out: ic('<path d="M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 16l-4-4 4-4M6 12h10"/>'), link: ic('<path d="M14 5h5v5M19 5l-8 8"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/>'),
+  info: ic('<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>'), trash: ic('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'), refresh: ic('<path d="M20 11a8 8 0 10-2.3 6.3"/><path d="M20 4v7h-7"/>'),
+  menu: ic('<path d="M4 7h16M4 12h16M4 17h16"/>')
+};
+var EMB = {
+  b: 'M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 302 458 L 265 330 L 256 330 L 247 330 L 210 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 211.6 170.9 L 163.9 73.2 Q 154.3 53.5 167.2 47.7 A 232 232 0 0 1 344.8 47.7 Q 357.7 53.5 348.1 73.2 L 300.4 170.9 L 295 169 L 289.5 167.4 L 284 166.1 L 278.4 165 L 272.8 164.1 L 267.2 163.5 L 261.6 163.1 L 256 163 L 250.4 163.1 L 244.8 163.5 L 239.2 164.1 L 233.6 165 L 228 166.1 L 222.5 167.4 L 217 169 L 211.6 170.9 Z',
+  v: 'M 256 320 L 264 306 L 266 299 L 346 277 Q 356 274 354 285 L 350 298 Q 348 303 342 304 L 271 327 Q 265 329 265 332 L 302 459 L 256 459 L 210 459 L 247 332 Q 247 329 241 327 L 170 304 Q 164 303 162 298 L 158 285 Q 156 274 166 277 L 246 299 L 248 306 L 256 320 Z M 217.2 144.2 L 191.7 55.8 L 220.9 143.1 Z M 235.4 139.7 L 223.4 48.5 L 239.2 139.1 Z M 272.8 139.1 L 288.6 48.5 L 276.6 139.7 Z M 291.1 143.1 L 320.4 55.8 L 294.8 144.2 Z',
+  d: 'M 253.7 338 L 258.3 338 L 258.7 345 L 253.3 345 Z M 252.7 356 L 259.3 356 L 260.1 369 L 251.9 369 Z M 251.1 384 L 260.9 384 L 262.2 406 L 249.8 406 Z M 248.7 426 L 263.4 426 L 265.3 459 L 246.7 459 Z',
+  h: 'M 124 290 C 124 196 182 150 256 150 C 330 150 388 196 388 290', m: 'M 120 360 C 118 408 150 424 196 420'
+};
+/* the family helmet (OwnerGladiator) wearing a dispatcher's headset */
+function emblem(id) {
+  var c = 'dgc' + id, ink = '#121418', b1 = '#5CC8FF', b2 = '#2E9FDB';
+  return '<svg viewBox="84 22 344 446" role="img" aria-label="Dispatch Gladiator"><defs><clipPath id="' + c + '"><rect x="256" y="0" width="256" height="512"/></clipPath></defs>' +
+    '<path fill="#FFC400" d="' + EMB.b + '"/><path fill="#E3A300" clip-path="url(#' + c + ')" d="' + EMB.b + '"/><path fill="' + ink + '" d="' + EMB.v + '"/><path fill="#FFC400" d="' + EMB.d + '"/>' +
+    '<path d="' + EMB.h + '" fill="none" stroke="' + ink + '" stroke-width="30" stroke-linecap="round"/><path d="' + EMB.h + '" fill="none" stroke="' + b1 + '" stroke-width="18" stroke-linecap="round"/>' +
+    '<path d="' + EMB.h + '" fill="none" stroke="' + b2 + '" stroke-width="18" stroke-linecap="round" clip-path="url(#' + c + ')"/>' +
+    '<rect x="94" y="272" width="56" height="96" rx="22" fill="' + b1 + '" stroke="' + ink + '" stroke-width="8"/><rect x="362" y="272" width="56" height="96" rx="22" fill="' + b2 + '" stroke="' + ink + '" stroke-width="8"/>' +
+    '<path d="' + EMB.m + '" fill="none" stroke="' + ink + '" stroke-width="22" stroke-linecap="round"/><path d="' + EMB.m + '" fill="none" stroke="' + b1 + '" stroke-width="11" stroke-linecap="round"/>' +
+    '<rect x="184" y="404" width="46" height="30" rx="15" fill="' + b1 + '" stroke="' + ink + '" stroke-width="7" transform="rotate(-6 207 419)"/></svg>';
+}
+var WORD = 'Dispatch<b>Gladiator</b>';
+
+/* ---------------- state ---------------- */
+var S = {
+  user: null, page: 'trip', owners: [], isOwner: false, viewId: null, preview: false, tripId: null,
+  wkMetric: Store.get('dg_wkm') || 'net', ldScope: 'trip', ldSort: 'date', lane: 'freq', lanesAll: false, ldAll: false, cmpA: null, cmpB: null,
+  authMode: 'in', authEmail: '', loading: false, err: '', offline: false, loadedAt: 0, fullAt: 0, ready: false, ownersErr: '', stale: false
+};
+var D = { weeks: [], draft: null, draftAt: null, trips: [], access: [] };   /* what is on screen (the chosen driver) */
+var MINE = null;                                                           /* the signed-in user's own data */
+var M = null;                                                              /* derived: normalised weeks + trips */
+var SHEET = null;
+
+/* ---------------- Supabase ---------------- */
+var sb = null;
+try {
+  if (window.supabase && window.supabase.createClient) {
+    sb = window.supabase.createClient(CFG.url, CFG.key);   /* default storage: one sign-in shared with OwnerGladiator Hub */
+  }
+} catch (e) { sb = null; }
+function siteUrl() { return location.href.split('#')[0].split('?')[0]; }
+
+/* ---------------- invitation links ---------------- */
+function inviteFromText(s) {
+  s = String(s || '').trim();
+  var m = s.match(/invite=([0-9a-fA-F]{32})(?![0-9a-fA-F])/) || s.match(/^([0-9a-fA-F]{32})$/);
+  return m ? m[1].toLowerCase() : '';
+}
+var PENDING = Store.get('dg_invite') || '';
+(function () {
+  var c = inviteFromText(location.hash) || inviteFromText(location.search);
+  if (!c) return;
+  PENDING = c; Store.set('dg_invite', c);
+  try { history.replaceState(null, '', location.pathname); } catch (e) { /* the address just keeps the code */ }
+})();
+function setPending(c) { PENDING = c || ''; if (PENDING) Store.set('dg_invite', PENDING); else Store.del('dg_invite'); }
+/* use the waiting invitation, if any: connects this account to the owner who sent the link */
+async function claimPending() {
+  if (!PENDING || !sb || !S.user) return null;
+  var r;
+  try { r = await sb.rpc('dg_claim', { p_code: PENDING }); } catch (e) { r = { error: e }; }
+  if (r.error) {
+    if (isNetErr(r.error)) return { ok: false, reason: 'net' };      /* keep it for the next try */
+    setPending('');
+    return { ok: false, reason: 'err', msg: String(r.error.message || r.error) };
+  }
+  setPending('');
+  return r.data && typeof r.data === 'object' ? r.data : { ok: false, reason: 'unknown' };
+}
+function isNetErr(e) { var m = String((e && (e.message || e.details)) || e || ''); return /fetch|network|load failed|timeout|abort/i.test(m); }
+function payloadOf(row) {
+  var p = row.full_payload && typeof row.full_payload === 'object' ? row.full_payload : {};
+  p.db_id = row.id; p.weekEndDate = row.week_end_date;
+  if (p.totalGross == null) p.totalGross = row.gross_revenue;
+  if (p.totalMiles == null) p.totalMiles = row.total_miles;
+  if (p.netProfit == null) p.netProfit = row.net_profit;
+  if (p.fuelCost == null) p.fuelCost = row.fuel_total;
+  if (p.totalExpenses == null) p.totalExpenses = row.expenses_total;
+  return p;
+}
+async function fetchView(id, own) {
+  var q = await Promise.all([
+    sb.from('weekly_reports').select('*').eq('user_id', id).order('week_end_date', { ascending: false }),
+    sb.from('user_drafts').select('draft_json,updated_at').eq('user_id', id).maybeSingle(),
+    sb.from('dg_trips').select('*').eq('owner_id', id).order('start_date', { ascending: true }),
+    own ? sb.from('dg_access').select('*').eq('owner_id', id).order('created_at', { ascending: true }) : Promise.resolve({ data: [] })
+  ]);
+  for (var i = 0; i < q.length; i++) if (q[i].error) throw q[i].error;
+  return {
+    sig: sigOf(q[0].data || [], q[1].data, q[2].data || []),
+    weeks: (q[0].data || []).map(payloadOf),
+    draft: q[1].data && q[1].data.draft_json && typeof q[1].data.draft_json === 'object' ? q[1].data.draft_json : null,
+    draftAt: q[1].data ? q[1].data.updated_at : null,
+    trips: q[2].data || [], access: q[3].data || []
+  };
+}
+/* a short fingerprint of a driver's data: saved weeks, the draft's time stamp, trips */
+function sigOf(weeks, draft, trips) {
+  var w = weeks.map(function (r) { return [r.id, r.week_end_date, num(r.gross_revenue), num(r.total_miles), num(r.net_profit)].join(':'); }).sort();
+  var tr = trips.map(function (r) { return r.id + ':' + (r.updated_at || ''); }).sort();
+  return w.join('|') + '#' + (draft && draft.updated_at ? draft.updated_at : '') + '#' + tr.join('|');
+}
+/* light check for the background refresh: has anything changed since the last full load? */
+async function changed() {
+  var id = S.viewId, q = await Promise.all([
+    sb.from('weekly_reports').select('id,week_end_date,gross_revenue,total_miles,net_profit').eq('user_id', id),
+    sb.from('user_drafts').select('updated_at').eq('user_id', id).maybeSingle(),
+    sb.from('dg_trips').select('id,updated_at').eq('owner_id', id)
+  ]);
+  for (var i = 0; i < q.length; i++) if (q[i].error) throw q[i].error;
+  return sigOf(q[0].data || [], q[1].data, q[2].data || []) !== D.sig;
+}
+function hasOwnData(v) { return !!v && (v.weeks.length > 0 || v.trips.length > 0 || v.access.length > 0 || (v.draft && C.calcDraft(v.draft).hasContent)); }
+function cacheKey() { return 'dg_cache_' + S.user.id; }
+function saveCache() {
+  try { Store.set(cacheKey(), JSON.stringify({ at: Date.now(), viewId: S.viewId, isOwner: S.isOwner, owners: S.owners, d: D })); } catch (e) { /* storage full: the cache is optional */ }
+}
+function loadCache() {
+  try {
+    var c = JSON.parse(Store.get(cacheKey()) || 'null');
+    if (!c || !c.d || !c.viewId) return false;
+    S.owners = c.owners || []; S.isOwner = !!c.isOwner; S.viewId = c.viewId; S.loadedAt = c.at || 0;
+    D = { sig: c.d.sig || '', weeks: c.d.weeks || [], draft: c.d.draft || null, draftAt: c.d.draftAt || null, trips: c.d.trips || [], access: c.d.access || [] };
+    if (S.viewId === S.user.id) MINE = D;
+    M = null; return true;
+  } catch (e) { return false; }
+}
+function isOwn() { return !!S.user && S.viewId === S.user.id; }
+function canEdit() { return isOwn() && !S.preview; }
+function profiles() {
+  var out = [];
+  if (S.isOwner || !S.owners.length) out.push({ id: S.user.id, me: true, label: t('o.me'), email: S.user.email || '' });
+  S.owners.forEach(function (o) { out.push({ id: o.id, me: false, label: o.label || o.email || t('o.driver'), email: o.email || '' }); });
+  return out;
+}
+function viewLabel() { var p = find(profiles(), S.viewId); return p ? p.label : ''; }
+
+var loadSeq = 0;
+/* full load: who shared with me, my own data, then the chosen driver */
+async function loadAll(quiet) {
+  if (!sb || !S.user) return false;
+  var seq = ++loadSeq;
+  S.loading = true; setSync();
+  try {
+    var claim = await claimPending();
+    if (seq !== loadSeq) return false;
+    var r = await Promise.all([sb.rpc('dg_my_owners'), fetchView(S.user.id, true)]);
+    if (seq !== loadSeq) return false;
+    var uid = S.user.id, owners = [];
+    if (!r[0].error) owners = (r[0].data || []).filter(function (o) { return o.owner_id !== uid; }).map(function (o) { return { id: o.owner_id, label: o.owner_label || '', email: o.owner_email || '' }; });
+    else if (isNetErr(r[0].error)) throw r[0].error;
+    S.ownersErr = r[0].error ? String(r[0].error.message || r[0].error) : '';
+    S.owners = owners; MINE = r[1]; S.isOwner = hasOwnData(MINE);
+    var had = S.viewId, want = had || Store.get('dg_view_' + uid), ps = profiles(), joined = !!(claim && claim.ok && find(ps, claim.owner_id));
+    if (joined) { want = claim.owner_id; Store.set('dg_view_' + uid, want); S.tripId = null; }
+    if (!want || !find(ps, want)) want = (MINE.weeks.length || MINE.trips.length || MINE.access.length || !owners.length) ? uid : owners[0].id;
+    var lost = !!had && had !== want && !joined;
+    S.viewId = want;
+    if (want === uid) D = MINE;
+    else { var v = await fetchView(want, false); if (seq !== loadSeq) return false; D = v; }
+    if (S.viewId !== uid) S.preview = false;
+    M = null; S.err = ''; S.offline = false; S.loadedAt = S.fullAt = Date.now(); S.ready = true;
+    saveCache();
+    if (claim && claim.reason !== 'net') {
+      var cp = find(profiles(), claim.owner_id);
+      toast(claim.ok ? t('j.ok', { n: (cp && cp.label) || claim.owner_label || t('o.driver') }) : claim.reason === 'err' ? t('j.err', { e: claim.msg || '' }) : t('j.' + (L['j.' + claim.reason] ? claim.reason : 'unknown')), 6000);
+    } else if (lost && !quiet) toast(t('x.lost'), 4000);
+    return true;
+  } catch (e) {
+    if (seq !== loadSeq) return false;
+    S.offline = isNetErr(e); S.err = S.offline ? '' : String((e && e.message) || e);
+    return false;
+  } finally { if (seq === loadSeq) { S.loading = false; setSync(); } }
+}
+function setSync() {
+  var cls = 'sync' + (S.loading ? ' pend' : (S.offline || S.err) ? ' off' : '');
+  ['sync', 'sync-d'].forEach(function (id) { var e = document.getElementById(id); if (e) { e.className = cls; e.setAttribute('aria-label', t('c.refresh')); e.title = S.loadedAt ? t('c.upd', { t: dT(S.loadedAt) }) : t('c.refresh'); } });
+}
+
+/* ---------------- derived model ---------------- */
+function derive() {
+  var ws = D.weeks.map(function (w) { return C.week(w); }), live = null;
+  if (D.draft) {
+    var lv = C.calcDraft(D.draft);
+    if (lv.hasContent && !C.isDupLive(lv, D.weeks)) live = C.week(lv, true);
+  }
+  var all = live ? ws.concat([live]) : ws;
+  var trips = C.buildTrips(all, D.trips, C.today(), D.draft && D.draft.extras, D.draft);
+  all.sort(function (a, b) { return a.end < b.end ? 1 : a.end > b.end ? -1 : (a.live ? -1 : 1); });
+  all.forEach(function (s) { s.trip = null; });
+  trips.forEach(function (tr) { tr.weeks.forEach(function (s) { s.trip = tr; }); });
+  M = { ws: all, saved: ws, live: live, trips: trips, lost: trips.lost || [] };
+  if (!S.tripId || !find(trips, S.tripId)) S.tripId = defaultTrip(trips);
+  if (trips.length >= 2) {
+    var cur = find(trips, S.tripId), i = trips.indexOf(cur);
+    if (!find(trips, S.cmpA)) S.cmpA = cur.id;
+    if (!find(trips, S.cmpB) || S.cmpB === S.cmpA) S.cmpB = (trips[i - 1] || trips[i + 1] || trips[0]).id;
+  }
+}
+function defaultTrip(trips) {
+  var i;
+  for (i = trips.length - 1; i >= 0; i--) if (trips[i].status === 'active') return trips[i].id;
+  for (i = trips.length - 1; i >= 0; i--) if (trips[i].status !== 'future') return trips[i].id;
+  return trips.length ? trips[trips.length - 1].id : null;
+}
+function model() { if (!M) derive(); return M; }
+function curTrip() { var m = model(); return find(m.trips, S.tripId) || null; }
+function tripName(tr) { return tr.auto ? t('trip.loose') : (tr.name || t('trip.n', { n: tr.no })); }
+function tripDates(tr) {
+  var a = tr.goal > 0 || tr.end ? tr.start : (tr.first || tr.start), b = tr.end || tr.last;
+  if (!b || b < a) return dS(a) + ' – …';
+  return dR(a, b) + (!tr.end && tr.status === 'active' ? ' …' : '');
+}
+function tripWeeksTxt(tr) { var n = tr.closed.length; return t('trip.wk', { n: pl(n, 'wk') }) + (tr.live ? ' ' + t('trip.wkLive') : ''); }
+function tripWeeksShort(tr) { return t('trip.wkS', { n: tr.closed.length }) + (tr.live ? ' ' + t('trip.wkLive') : ''); }
+function stPill(tr) { return '<span class="st ' + tr.status + '">' + t('st.' + tr.status) + '</span>'; }
+function weekTitle(s) { return dR(s.start, s.end); }
+
+/* ---------------- shared bits ---------------- */
+var CAT_C = { net: 'var(--acc)', fuel: '#ff8a3d', comm: '#b39cff', truck: '#5cc8ff', ins: '#2ec4b6', eld: '#ff6fae', road: '#a3d977', maint: '#e07a5f', owner: '#8d99ae', other: '#7d8794' };
+function sec(title, right) { return '<div class="sec"><h2>' + title + '</h2>' + (right || '') + '</div>'; }
+function topBits() {
+  var h = '', ps = profiles();
+  if (S.preview) h += '<div class="alert b">' + I.eye + '<div class="g"><b>' + t('o.previewOn') + '</b></div><button class="btn sm g" data-act="preview" data-v="0">' + t('o.previewOff') + '</button></div>';
+  if (S.err) h += '<div class="alert r">' + I.info + '<div class="g"><b>' + t('x.loadErr') + '</b><br>' + esc(S.err) + '</div><button class="btn sm g" data-act="refresh">' + t('x.retry') + '</button></div>';
+  else if (S.offline) h += '<div class="alert">' + I.info + '<div class="g">' + t('c.offline') + (S.loadedAt ? ' · ' + t('c.upd', { t: dT(S.loadedAt) }) : '') + '</div></div>';
+  if (!isOwn() || ps.length > 1) {
+    h += '<div class="who only-m">' + t('o.driver') + ': <b>' + esc(isOwn() ? (S.user.email || '') : viewLabel()) + '</b>' +
+      (ps.length > 1 ? '<button class="chip" data-act="profiles">' + I.users + (LANG === 'ru' ? 'Сменить' : 'Switch') + '</button>' : '') + '</div>';
+  }
+  return h;
+}
+function joinForm(id) {
+  return '<div style="display:flex;gap:8px;margin-top:12px"><input id="' + id + '" class="in" type="text" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="' + t('j.ph') + '" aria-label="' + t('j.ph') + '">' +
+    '<button class="btn sm" style="height:46px;flex:none;margin-top:0" data-act="joinGo" data-in="' + id + '">' + t('j.go') + '</button></div><div id="' + id + '-msg" class="msg err" role="status" style="margin-top:6px;text-align:left"></div>';
+}
+function emptyHtml() {
+  if (!isOwn()) return '<div class="empty"><b>' + t('w.none') + '</b>' + (LANG === 'ru' ? 'Как только водитель сохранит первую неделю, здесь появится рейс.' : 'As soon as the driver saves the first week, a trip will appear here.') + '</div>';
+  return '<div class="empty"><b>' + t('x.welcome') + '</b>' + t('x.dispHelp') + joinForm('jn-e') + '</div>' +
+    '<div class="empty">' + t('x.ownerHelp') + '<br><a class="btn o" style="margin-top:12px" href="' + CFG.hub + '">' + I.link + t('o.hub') + '</a></div>' +
+    (S.ownersErr ? '<div class="hint" style="text-align:center">' + esc(S.ownersErr) + '</div>' : '');
+}
+function switcherHtml(tr) {
+  var ts = model().trips, i = ts.indexOf(tr);
+  return '<div class="per"><button class="nv" data-act="tripNav" data-d="-1" aria-label="' + t('trip.prev') + '"' + (i <= 0 ? ' disabled' : '') + '>' + I.left + '</button>' +
+    '<button class="pm" data-act="go" data-p="trips"><b>' + esc(tripName(tr)) + stPill(tr) + '</b><span>' + tripDates(tr) + ' · ' + tripWeeksShort(tr) + '</span></button>' +
+    '<button class="nv" data-act="tripNav" data-d="1" aria-label="' + t('trip.next') + '"' + (i >= ts.length - 1 ? ' disabled' : '') + '>' + I.right + '</button></div>';
+}
+/* bars: items [{v, x, id, cls, sel, title}], o {fmt, act, target, targetTxt, minW} */
+function barsHtml(items, o) {
+  var vals = items.map(function (it) { return it.v == null ? 0 : it.v; });
+  var mx = Math.max.apply(null, vals.concat([o.target || 0, 0])), mn = Math.min.apply(null, vals.concat([0])), range = (mx - mn) || 1, zero = -mn / range;
+  var cols = items.map(function (it) {
+    var v = it.v, hh = v == null ? 0 : Math.abs(v) / range * 100, neg = v != null && v < 0;
+    var st = 'bottom:' + ((neg ? zero * 100 - hh : zero * 100)).toFixed(2) + '%;height:' + hh.toFixed(2) + '%';
+    return '<button class="col' + (it.sel ? ' sel' : '') + '"' + (it.id && o.act ? ' data-act="' + o.act + '" data-id="' + esc(it.id) + '"' : ' tabindex="-1"') + ' title="' + esc(it.title || '') + '">' +
+      '<span class="v' + (neg ? ' red' : '') + '">' + (v == null ? '—' : o.fmt(v)) + '</span><span class="plot">' + (v == null ? '' : '<i class="' + (neg ? 'neg ' : '') + (it.cls || '') + '" style="' + st + '"></i>') + '</span><span class="x">' + esc(it.x) + '</span></button>';
+  }).join('');
+  var over = '';
+  if (mn < 0) over += '<div class="zero" style="bottom:calc(var(--xh) + 3px + var(--ph) * ' + zero.toFixed(4) + ')"></div>';
+  if (o.target > 0) over += '<div class="tgt" style="bottom:calc(var(--xh) + 3px + var(--ph) * ' + (zero + o.target / range).toFixed(4) + ')"><span>' + esc(o.targetTxt || '') + '</span></div>';
+  var w = o.minW && items.length * o.minW > 0 ? ' style="min-width:' + (items.length * o.minW) + 'px"' : '';
+  return '<div class="scr"' + (o.end ? ' data-end="1"' : '') + '><div class="wkc"' + w + '>' + cols + over + '</div></div>';
+}
+function kpiHtml(list, cls) {
+  return '<div class="kpi' + (cls ? ' ' + cls : '') + '">' + list.map(function (k) {
+    return '<div class="k' + (k.hl ? ' hl' : '') + '"><div class="l">' + k.l + '</div><div class="v' + (k.c ? ' ' + k.c : '') + '">' + k.v + '</div><div class="s">' + (k.s || '&nbsp;') + '</div></div>';
+  }).join('') + '</div>';
+}
+function tilesOf(a, weeksN) {
+  var G = C.MET;
+  return [
+    { l: t('k.gross'), v: money(a.G), s: pl(a.nL, 'ld') },
+    { l: t('k.cost'), v: money(a.C), s: a.M > 0 ? t('s.cpm', { a: rate(a.C / a.M) }) : '' },
+    { l: t('k.grpm'), v: fmt('rate', G.grpm.v(a)), s: a.LD > 0 ? t('s.lrpm', { a: rate(a.G / a.LD) }) : '' },
+    { l: t('k.nrpm'), v: fmt('rate', G.nrpm.v(a)), s: a.G > 0 ? t('s.margin', { p: Math.round(a.N / a.G * 100) }) : '', c: a.N < 0 ? 'red' : '' },
+    { l: t('k.miles'), v: int(a.M), s: t('s.ld', { a: int(a.LD), b: int(a.DH) }) },
+    { l: t('k.dh'), v: fmt('pct1', G.dhp.v(a)), s: t('s.dh', { a: int(a.DH), b: int(a.M) }) },
+    { l: t('k.perday'), v: fmt('usd', G.perday.v(a)), s: t('s.days', { n: pl(a.D, 'dy') }) },
+    { l: t('k.perweek'), v: fmt('usd', weeksN > 0 ? a.N / weeksN : null), s: pl(weeksN, 'wk') }
+  ];
+}
+function moneyHtml(a) {
+  var cats = C.CATS.map(function (k) { return { k: k, v: a.cat[k] || 0 }; }).filter(function (x) { return Math.abs(x.v) >= 0.5; }).sort(function (x, y) { return y.v - x.v; });
+  if (!cats.length && !(a.G > 0)) return '';
+  var segs = (a.N > 0 && a.G > 0 ? [{ k: 'net', v: a.N }] : []).concat(cats.filter(function (x) { return x.v > 0; }));
+  var h = '<div class="stk" role="img" aria-label="' + t('m.title') + '">' + segs.map(function (x) { return '<i style="flex:' + x.v.toFixed(2) + ';background:' + CAT_C[x.k] + '" title="' + t('cat.' + x.k) + '"></i>'; }).join('') + '</div>';
+  if (a.G > 0 && a.N > 0) h += '<div class="sub" style="margin-top:7px">' + t('m.of100', { a: '<b class="acc">$' + Math.round(a.N / a.G * 100) + '</b>' }) + '</div>';
+  else if (a.N < 0) h += '<div class="sub red" style="margin-top:7px">' + t('m.neg', { a: money(-a.N) }) + '</div>';
+  var rows = (a.N > 0 ? [{ k: 'net', v: a.N }] : []).concat(cats);
+  h += '<div class="cats">' + rows.map(function (x) {
+    return '<div class="c"><span class="nm"><i style="background:' + CAT_C[x.k] + '"></i><span>' + t('cat.' + x.k) + '</span></span><b' + (x.k === 'net' ? ' class="acc"' : '') + '>' + money(x.v) + '</b><em>' + (a.G > 0 ? (x.v > 0 && x.v / a.G < 0.005 ? '<1%' : Math.round(Math.max(0, x.v) / a.G * 100) + '%') : '') + '</em></div>';
+  }).join('') + '</div>';
+  return h;
+}
+
+/* ---------------- page: the trip ---------------- */
+function roadHtml(tr) {
+  var pct = Math.max(0, tr.pct), tiers = tr.bonus.tiers, maxT = tiers.length ? tiers[tiers.length - 1].pct : 100;
+  var top = Math.max(100, maxT, Math.min(pct, 300));
+  function pos(p) { return clamp(p / top * 100, 0, 100); }
+  var signs = tiers.map(function (x) { return { p: x.pct, txt: (x.pct === 100 ? t('h.goal') + ' · ' : '') + money(x.amount), hit: x.hit, goal: x.pct === 100 }; });
+  if (!signs.some(function (s) { return s.p === 100; })) signs.push({ p: 100, txt: t('h.goal'), hit: pct >= 100, goal: true });
+  signs.sort(function (a, b) { return a.p - b.p; });
+  var two = false;
+  signs.forEach(function (s, i) { s.x = pos(s.p); s.up = i > 0 && !signs[i - 1].up && s.x - signs[i - 1].x < 22; if (s.up) two = true; });
+  var sg = signs.map(function (s) {
+    var side = s.x > 86 ? ' r' : s.x < 14 ? ' l' : '';
+    return '<div class="sign' + side + (s.up ? ' up' : '') + (s.hit ? ' hit' : s.goal ? ' goal' : '') + '" style="left:' + s.x.toFixed(2) + '%"><b>' + s.txt + '</b><i></i></div>';
+  }).join('');
+  var wk = tr.weeks.slice().reverse(), parts;
+  if (wk.some(function (s) { return s.N < 0; }) || (tr.includeExtras && tr.X > 0)) parts = [{ v: Math.max(0, tr.net), live: false }];
+  else parts = wk.map(function (s) { return { v: s.N, live: s.live }; }).filter(function (p) { return p.v > 0; });
+  var fill = '<div class="fill' + (pct >= 100 ? ' won' : '') + '" style="width:' + pos(pct).toFixed(2) + '%">' + parts.map(function (p) { return '<i' + (p.live ? ' class="live"' : '') + ' style="flex:' + p.v.toFixed(2) + '"></i>'; }).join('') + '</div>';
+  var gl = top > 100 ? '<div class="gl" style="left:' + pos(100).toFixed(2) + '%"></div>' : '';
+  var ticks = '<span class="l" style="left:0">$0</span><span style="left:' + pos(50).toFixed(2) + '%">' + kusd(tr.goal / 2) + '</span>' +
+    '<span class="' + (pos(100) > 92 ? 'r' : '') + '" style="left:' + pos(100).toFixed(2) + '%">' + kusd(tr.goal) + '</span>' + (100 - pos(100) > 24 ? '<span class="r" style="left:100%">' + kusd(tr.goal * top / 100) + '</span>' : '');
+  return '<div class="rw"><div class="signs' + (two ? ' two' : '') + '">' + sg + '</div><div class="road">' + fill + gl + '</div><div class="ticks">' + ticks + '</div></div>';
+}
+function heroHtml(tr) {
+  var hasGoal = tr.goal > 0, net = tr.net, h = '<section class="card hero" style="order:1">';
+  h += '<div class="hero-top"><div style="min-width:0"><div class="hl">' + t(tr.auto ? 'h.netLoose' : 'h.net') + '</div><div class="big' + (net < 0 ? ' neg' : '') + '">' + money(net) + '</div>';
+  if (hasGoal) h += '<div class="of">' + t('h.of', { g: '<b>' + money(tr.goal) + '</b>' }) + ' · ' + (net < tr.goal ? t('h.left', { a: '<b>' + money(tr.goal - net) + '</b>' }) : '<span class="grn">' + t('h.over', { a: money(net - tr.goal) }) + '</span>') + '</div>';
+  else h += '<div class="of">' + tripWeeksTxt(tr) + '</div>';
+  h += '</div>' + (hasGoal ? '<div class="pctb' + (tr.pct >= 100 ? ' hit' : '') + '"><b>' + Math.max(0, Math.floor(tr.pct + 1e-9)) + '%</b><span>' + t('h.ofGoal') + '</span></div>' : '') + '</div>';
+  if (hasGoal) {
+    h += roadHtml(tr);
+    if (tr.live) h += '<div class="lgd' + (tr.pct >= 100 ? ' won' : '') + '"><span><i></i>' + t('h.lgClosed') + '</span><span><i class="live"></i>' + t('h.lgLive') + '</span></div>';
+    var b = tr.bonus;
+    if (b.tiers.length) {
+      h += '<div class="bline"><span>' + t(isOwn() ? 'h.bonusNow' : 'h.bonusNowD') + ': <b class="' + (b.amount > 0 ? 'grn' : '') + '">' + money(b.amount) + '</b></span>' +
+        (b.next ? '<span>' + t('h.bonusNext', { b: money(b.next.amount) }) + ': <b>' + money(Math.max(0, b.toNext)) + '</b></span>' : '<span class="grn">' + t('h.bonusMax') + '</span>') + '</div>';
+    }
+  }
+  if (tr.X > 0) h += '<div class="sub" style="margin-top:10px">' + t('h.extras', { a: '−' + money(tr.X) }) + ' (' + t(tr.includeExtras ? 'h.extrasIn' : 'h.extrasOut') + ')</div>';
+  if (tr.A.unp > 0) h += '<div class="sub" style="margin-top:' + (tr.X > 0 ? 3 : 10) + 'px">' + t('h.unpaid') + ': <b class="acc">' + money(tr.A.unp) + '</b> · ' + pl(tr.A.unpN, 'ld') + '</div>';
+  h += '</section>';
+  if (!hasGoal) {
+    var hubBtn = '<br><a class="btn sm o" href="' + CFG.hub + '">' + I.link + t('o.hub') + '</a>';
+    if (tr.auto) h += canEdit() ? '<div class="alert" style="order:1">' + I.info + '<div class="g">' + t('h.looseO') + hubBtn + '</div></div>' : '<div class="alert b" style="order:1">' + I.info + '<div class="g">' + t('h.looseD') + '</div></div>';
+    else h += canEdit()
+      ? '<div class="alert" style="order:1">' + I.target + '<div class="g">' + t('h.noGoalO') + '<br><button class="btn sm" data-act="tripEdit" data-id="' + esc(tr.id) + '">' + t('h.setGoal') + '</button></div></div>'
+      : '<div class="alert b" style="order:1">' + I.info + '<div class="g">' + t('h.noGoalD') + '</div></div>';
+  }
+  return h;
+}
+function paceHtml(tr) {
+  var p = tr.pace; if (!p) return '';
+  var hasGoal = tr.goal > 0, h = '<section class="card pad pace" style="order:2">' + sec(t('p.title'), '<span class="sub">' + (tr.status === 'active' ? t('p.day', { d: p.dayNo, n: p.total }) : tripDates(tr)) + '</span>');
+  if (tr.status === 'done') {
+    h += '<div class="facts" style="margin-top:0"><div style="border-top:0;padding-top:0"><span>' + t('p.final') + '</span><b class="' + (hasGoal ? (tr.pct >= 100 ? 'grn' : 'red') : '') + '">' + money(tr.net) +
+      (hasGoal ? ' <small>' + (tr.pct >= 100 ? t('p.done') : t('p.missed', { a: money(tr.goal - tr.net) })) + '</small>' : '') + '</b></div>' +
+      (hasGoal ? '<div><span>' + t('k.bonus') + '</span><b class="' + (tr.bonus.amount > 0 ? 'grn' : '') + '">' + money(tr.bonus.amount) + '</b></div>' : '') +
+      (p.weekGoal ? '<div><span>' + t('p.weekGoal') + '</span><b>' + money(p.weekGoal) + '</b></div>' : '') + '</div></section>';
+    return h;
+  }
+  h += '<div class="pr"><span class="mut">' + t('p.time') + '</span><div class="bar t"><i style="width:' + clamp(p.timePct, 0, 100).toFixed(1) + '%"></i></div><span class="v">' + Math.round(p.timePct) + '%</span></div>';
+  if (hasGoal) {
+    h += '<div class="pr"><span class="mut">' + t('p.money') + '</span><div class="bar"><i style="width:' + clamp(tr.pct, 0, 100).toFixed(1) + '%' + (tr.pct >= 100 ? ';background:var(--grn)' : '') + '"></i></div><span class="v">' + Math.max(0, Math.floor(tr.pct + 1e-9)) + '%</span></div>';
+    if (tr.pct >= 100) h += '<div class="verd grn">' + t('p.done') + '</div>';
+    else if (p.gapUsd != null) h += '<div class="verd ' + (p.gapUsd >= 0 ? 'grn' : 'red') + '">' + (Math.abs(p.gapUsd) < 1 ? t('p.even') : t(p.gapUsd > 0 ? 'p.ahead' : 'p.behind', { a: money(Math.abs(p.gapUsd)) })) + '</div>';
+  }
+  h += '<div class="facts">';
+  if (p.forecast != null) h += '<div><span>' + t('p.forecast') + '<br><small class="dim">' + t('p.fcNote') + '</small></span><b>' + money(p.forecast) + (p.forecastPct != null ? ' <small>' + Math.round(p.forecastPct) + '% ' + t('h.ofGoal') + '</small>' : '') + '</b></div>';
+  if (hasGoal && p.need > 0 && tr.status === 'active') h += '<div><span>' + t('p.needDay') + '</span><b>' + money(p.needDay) + (p.left >= 7 ? ' <small>' + t('p.needWk') + ' ' + money(p.needDay * 7) + '</small>' : '') + '</b></div>';
+  if (p.over > 0) h += '<div><span>' + t('p.over', { d: dS(tr.end), n: pl(p.over, 'dy') }) + '</span><b></b></div>';
+  else h += '<div><span>' + t('p.left') + '</span><b>' + pl(p.left, 'dy') + ' <small>' + dS(tr.end) + '</small></b></div>';
+  if (p.weekGoal) h += '<div><span>' + t('p.weekGoal') + '</span><b>' + money(p.weekGoal) + '</b></div>';
+  return h + '</div></section>';
+}
+function weekRowsHtml(list, wg) {
+  var mob = '<div class="list only-m">' + list.map(function (s) {
+    return '<button class="row" data-act="week" data-id="' + esc(s.id) + '"><span class="g"><span class="n">' + weekTitle(s) + (s.live ? '<span class="st live">' + t('st.live') + '</span>' : '') + '</span>' +
+      '<span class="s">' + int(s.M) + ' mi · ' + fmt('rate', C.MET.grpm.v(s)) + '/mi · ' + t('s.dhShort', { p: fmt('pct0', C.MET.dhp.v(s)) }) + '</span></span>' +
+      '<span class="v' + (s.N < 0 ? ' red' : wg && !s.live && s.N >= wg ? ' grn' : '') + '">' + money(s.N) + '<small>gross ' + money(s.G) + '</small></span>' + I.chev.replace('<svg ', '<svg class="chev" ') + '</button>';
+  }).join('') + '</div>';
+  var cols = [['k.gross', 'gross'], ['k.net', 'net'], ['k.miles', 'miles'], ['k.grpm', 'grpm'], ['k.nrpm', 'nrpm'], ['k.dhp', 'dhp'], ['k.loads', 'loads']];
+  var xw = { nrpm: 1, loads: 1 };
+  var desk = '<div class="card tw only-d"><table class="t"><thead><tr><th>' + t('w.week') + '</th>' + cols.map(function (c) { return '<th' + (xw[c[1]] ? ' class="xw"' : '') + '>' + t(c[0]) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    list.map(function (s) {
+      return '<tr class="tap" data-act="week" data-id="' + esc(s.id) + '"><td>' + weekTitle(s) + (s.live ? '<span class="st live">' + t('st.live') + '</span>' : '') + (s.label ? '<small>' + esc(s.label) + '</small>' : '') + '</td>' +
+        cols.map(function (c) { var K = C.MET[c[1]], v = K.v(s); return '<td class="' + (xw[c[1]] ? 'xw ' : '') + (c[1] === 'net' ? (v < 0 ? 'red' : wg && !s.live && v >= wg ? 'grn' : '') : '') + '">' + fmt(K.f, v) + '</td>'; }).join('') + '</tr>';
+    }).join('') + '</tbody></table></div>';
+  return mob + desk;
+}
+function pgTrip() {
+  var m = model(), tr = curTrip(), h = topBits();
+  if (!tr) return '<div class="pg">' + h + emptyHtml() + '</div>';
+  h += switcherHtml(tr);
+  var a = tr.A, wk = tr.weeks.slice().reverse(), wg = tr.pace && tr.pace.weekGoal ? tr.pace.weekGoal : 0;
+  var left = heroHtml(tr), right = paceHtml(tr);
+  if (tr.weeks.length) {
+    left += '<section style="order:3">' + kpiHtml(tilesOf(a, tr.weeks.length)) + '</section>';
+    left += '<section style="order:4">' + sec(t('w.title')) +
+      '<div class="card pad" style="margin-bottom:10px">' + barsHtml(wk.map(function (s) { return { v: s.N, x: dS(s.end), id: s.id, cls: s.live ? 'live' : '', title: weekTitle(s) }; }),
+        { fmt: kusd, act: 'week', target: wg, targetTxt: wg ? t('w.goalLine', { a: kusd(wg) }) : '', minW: wk.length > 7 ? 50 : 0 }) + '</div>' + weekRowsHtml(tr.weeks, wg) + '</section>';
+    var mh = moneyHtml(a);
+    if (mh) right += '<section class="card pad" style="order:5">' + sec(t('m.title')) + mh + '</section>';
+  } else left += '<div class="empty" style="order:3"><b>' + t('h.weeksNone') + '</b>' + tripDates(tr) + '</div>';
+  if (tr.note) right += '<section style="order:6">' + sec(t('h.note')) + '<div class="note">' + esc(tr.note) + '</div></section>';
+  if (canEdit() && !tr.auto) right += '<button class="btn g" style="order:7" data-act="tripEdit" data-id="' + esc(tr.id) + '">' + I.edit + t('e.edit') + '</button>';
+  return '<div class="pg">' + h + '<div class="dgrid g-ms"><div class="dcol">' + left + '</div><div class="dcol">' + right + '</div></div></div>';
+}
+
+/* ---------------- page: all trips ---------------- */
+var TCOLS = [['k.net', 'net'], ['k.gross', 'gross'], ['k.miles', 'miles'], ['k.grpm', 'grpm'], ['k.nrpm', 'nrpm'], ['k.dhp', 'dhp'], ['k.perday', 'perday'], ['k.perweek', 'perweek']];
+function goalPct(tr) { return Math.max(0, Math.floor(tr.pct + 1e-9)) + '%'; }
+function tripVal(tr, k) { return k === 'net' ? tr.net : C.MET[k].v(tr.A); }
+function tripCard(tr, prev) {
+  var a = tr.A, d = prev && prev.A.n && a.n ? a.N / a.n - prev.A.N / prev.A.n : null;
+  var h = '<button class="tc' + (tr.id === S.tripId ? ' cur' : '') + '" data-act="tripOpen" data-id="' + esc(tr.id) + '"><div class="h"><div style="min-width:0"><div class="nm">' + esc(tripName(tr)) + stPill(tr) + '</div><div class="dt">' + tripDates(tr) + ' · ' + tripWeeksShort(tr) + '</div></div>' +
+    '<div class="nt' + (tr.net < 0 ? ' red' : '') + '">' + money(tr.net) + '<small>' + (tr.goal > 0 ? Math.max(0, Math.floor(tr.pct + 1e-9)) + '% ' + t('h.ofGoal') + (tr.bonus.amount > 0 ? ' · ' + t('k.bonus').toLowerCase() + ' ' + money(tr.bonus.amount) : '') : t('t.noGoal')) + '</small></div></div>';
+  if (tr.goal > 0) h += '<div class="bar"><i style="width:' + clamp(tr.pct, 0, 100).toFixed(1) + '%' + (tr.pct >= 100 ? ';background:var(--grn)' : '') + '"></i></div>';
+  h += '<div class="ms"><div><span>' + t('k.gross') + '</span><b>' + kusd(a.G) + '</b></div><div><span>' + t('k.grpm') + '</span><b>' + fmt('rate', C.MET.grpm.v(a)) + '</b></div><div><span>' + t('k.nrpm') + '</span><b>' + fmt('rate', C.MET.nrpm.v(a)) + '</b></div><div><span>' + t('k.dhp') + '</span><b>' + fmt('pct0', C.MET.dhp.v(a)) + '</b></div></div>';
+  if (d != null) h += '<div class="sub" style="margin-top:8px"><b class="' + (d >= 0 ? 'grn' : 'red') + '">' + (d >= 0 ? '▲ ' : '▼ ') + fmtDelta('usd', d) + '</b> ' + (LANG === 'ru' ? 'чистыми за неделю к прошлому рейсу' : 'net per week vs the previous trip') + '</div>';
+  return h + '</button>';
+}
+function tripsTable(ts) {
+  var cls = {};
+  if (ts.length >= 2) TCOLS.forEach(function (c) {
+    var K = C.MET[c[1]]; if (K.hi == null || (K.sum && c[1] !== 'net')) return;
+    var v = ts.filter(function (x) { return tripVal(x, c[1]) != null; }).sort(function (x, y) { return K.hi ? tripVal(y, c[1]) - tripVal(x, c[1]) : tripVal(x, c[1]) - tripVal(y, c[1]); }), n = v.length;
+    v.forEach(function (x, i) { var p = n > 1 ? i / (n - 1) : 0.5; cls[c[1] + '|' + x.id] = p <= 0.2 ? 'h2' : p <= 0.4 ? 'h1' : p < 0.6 ? '' : p < 0.8 ? 'l1' : 'l2'; });
+  });
+  return '<div class="card tw"><table class="t"><thead><tr><th>' + t('t.trip') + '</th><th>' + t('k.goalPct') + '</th>' + TCOLS.map(function (c) { return '<th>' + t(c[0]) + '</th>'; }).join('') + '<th>' + t('k.bonus') + '</th></tr></thead><tbody>' +
+    ts.slice().reverse().map(function (tr) {
+      return '<tr class="tap' + (tr.id === S.tripId ? ' cur' : '') + '" data-act="tripOpen" data-id="' + esc(tr.id) + '"><td>' + esc(tripName(tr)) + stPill(tr) + '<small>' + tripDates(tr) + ' · ' + pl(tr.weeks.length, 'wk') + '</small></td>' +
+        '<td class="' + (tr.goal > 0 ? (tr.pct >= 100 ? 'grn' : '') : 'dim') + '">' + (tr.goal > 0 ? Math.max(0, Math.floor(tr.pct + 1e-9)) + '%' : '—') + '</td>' +
+        TCOLS.map(function (c) { var K = C.MET[c[1]]; return '<td class="' + (cls[c[1] + '|' + tr.id] || '') + '">' + fmt(K.f, tripVal(tr, c[1])) + '</td>'; }).join('') +
+        '<td class="' + (tr.bonus.amount > 0 ? 'grn' : 'dim') + '">' + (tr.bonus.tiers.length && tr.goal > 0 ? money(tr.bonus.amount) : '—') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' + (ts.length >= 2 ? '<div class="hint" style="margin-top:6px">' + t('t.heat') + '</div>' : '');
+}
+var CMP = ['net', 'gross', 'cost', 'miles', 'loads', 'grpm', 'lrpm', 'nrpm', 'cpm', 'dhp', 'perday', 'perweek', 'margin', 'fuelmi', 'mpg'];
+function cmpHtml(ts) {
+  var A = find(ts, S.cmpA), B = find(ts, S.cmpB);
+  if (!A || !B) return '';
+  function sel(id, cur) { return '<select class="in" data-chg="' + id + '" aria-label="' + t('t.trip') + '">' + ts.slice().reverse().map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === cur ? ' selected' : '') + '>' + esc(tripName(x)) + ' · ' + tripDates(x) + '</option>'; }).join('') + '</select>'; }
+  var h = '<div class="grid2" style="margin-bottom:10px">' + sel('cmpA', A.id) + sel('cmpB', B.id) + '</div><div class="card" style="overflow:hidden"><div class="cmp"><span class="m hd">' + t('t.metric') + '</span><span class="hd">' + esc(tripName(A)) + '</span><span class="hd">' + esc(tripName(B)) + '</span><span class="hd d">' + t('t.diff') + '</span>';
+  if (A.goal > 0 || B.goal > 0) {
+    var pa = A.goal > 0 ? A.pct : null, pb = B.goal > 0 ? B.pct : null, dd = pa != null && pb != null ? pa - pb : null;
+    h += '<span class="m">' + t('k.goalPct') + '</span><span>' + (pa == null ? '—' : goalPct(A)) + '</span><span class="mut">' + (pb == null ? '—' : goalPct(B)) + '</span><span class="d ' + good(1, dd) + '">' + fmtDelta('pct0', dd) + '</span>';
+  }
+  CMP.forEach(function (k) {
+    var K = C.MET[k], a = tripVal(A, k), b = tripVal(B, k); if (a == null && b == null) return;
+    var d = a != null && b != null ? a - b : null;
+    h += '<span class="m">' + t('k.' + (k === 'net' ? 'net' : k === 'cost' ? 'cost' : k)) + '</span><span>' + fmtShort(K.f, a) + '</span><span class="mut">' + fmtShort(K.f, b) + '</span><span class="d ' + good(K.hi, d) + '">' + fmtDelta(K.f, d) + '</span>';
+  });
+  return h + '</div></div>';
+}
+function pgTrips() {
+  var m = model(), ts = m.trips, h = topBits();
+  h += '<div class="ttl"><h1>' + t('t.title') + '</h1></div>';
+  if (!ts.length) return '<div class="pg">' + h + emptyHtml() + '</div>';
+  var rev = ts.slice().reverse();
+  h += '<div class="tcs">' + rev.map(function (tr) { return tripCard(tr, ts[ts.indexOf(tr) - 1]); }).join('') + '</div>';
+  if (ts.length >= 2) {
+    h += '<section>' + sec(t('t.cmp')) + cmpHtml(ts) + '</section>';
+    h += '<section>' + sec(t('k.net') + ' · ' + t('t.title').toLowerCase()) + '<div class="card pad">' + barsHtml(ts.map(function (tr) { return { v: tr.net, x: tripName(tr), id: tr.id, cls: tr.status === 'active' ? 'live' : '', sel: tr.id === S.tripId, title: tripDates(tr) }; }), { fmt: kusd, act: 'tripOpen', minW: ts.length > 6 ? 64 : 0, end: true }) + '</div></section>';
+  } else h += '<div class="hint">' + t('t.cmpNone') + '</div>';
+  h += '<section>' + sec(t('t.table')) + tripsTable(ts) + '</section>';
+  if (ts.some(function (x) { return x.auto; })) h += '<div class="hint">' + t('t.autoNote', { n: C.GAP_DAYS }) + '</div>';
+  return '<div class="pg">' + h + '</div>';
+}
+
+/* ---------------- page: weeks ---------------- */
+var WMET = ['net', 'gross', 'grpm', 'nrpm', 'cpm', 'dhp', 'miles', 'perday', 'margin'];
+function pgWeeks() {
+  var m = model(), h = topBits() + '<div class="ttl"><h1>' + t('w.all') + '</h1></div>';
+  if (!m.ws.length) return '<div class="pg">' + h + emptyHtml() + '</div>';
+  var k = WMET.indexOf(S.wkMetric) >= 0 ? S.wkMetric : 'net', K = C.MET[k];
+  h += '<div class="chips sc" role="group" aria-label="' + t('w.metric') + '">' + WMET.map(function (x) { return '<button class="chip' + (x === k ? ' on' : '') + '" data-act="wkMetric" data-k="' + x + '" aria-pressed="' + (x === k) + '">' + t('k.' + x) + '</button>'; }).join('') + '</div>';
+  var show = m.ws.slice(0, 26).reverse();
+  h += '<div class="card pad">' + barsHtml(show.map(function (s) { return { v: K.v(s), x: dS(s.end), id: s.id, cls: s.live ? 'live' : (s.trip && s.trip.no % 2 === 0 ? 'alt' : ''), title: weekTitle(s) }; }),
+    { fmt: function (v) { return fmtShort(K.f, v); }, act: 'week', minW: show.length > 7 ? 50 : 0, end: true }) + '</div>';
+  var groups = [], cur = null;
+  m.ws.forEach(function (s) { var id = s.trip ? s.trip.id : ''; if (!cur || cur.id !== id) { cur = { id: id, trip: s.trip, list: [] }; groups.push(cur); } cur.list.push(s); });
+  groups.forEach(function (g) {
+    h += '<section>' + sec(g.trip ? esc(tripName(g.trip)) + stPill(g.trip) : t('w.noTrip'), g.trip ? '<span class="sub">' + tripDates(g.trip) + ' · <b class="' + (g.trip.net < 0 ? 'red' : '') + '">' + money(g.trip.net) + '</b></span>' : '') +
+      weekRowsHtml(g.list, g.trip && g.trip.pace ? g.trip.pace.weekGoal : 0) + '</section>';
+  });
+  return '<div class="pg">' + h + '</div>';
+}
+
+/* ---------------- page: loads ---------------- */
+function loadHtml(l) {
+  var h = '<div class="ld"><div class="rt">' + esc(l.from || l.route || '—') + (l.to ? '<span class="ar">→</span>' + esc(l.to) : '') + '</div>' +
+    '<div class="rp' + (l.rpm == null ? ' dim' : '') + '">' + (l.tonu ? 'TONU' : fmt('rate', l.rpm) + '<small>/mi</small>') + '</div>' +
+    '<div class="mt">' + (l.pickup ? dR(l.pickup, l.delivery || l.pickup) + ' · ' : '') + (l.dh > 0 ? t('l.mi', { a: int(l.lm), b: int(l.dh) }) : t('l.miNo', { a: int(l.lm) })) + (l.broker ? ' · ' + esc(l.broker) : '') + (l.unpaid ? ' · <span class="acc">' + t('l.unpaid') + '</span>' : '') + '</div>' +
+    '<div class="gr">' + money(l.g) + '</div>';
+  l.parts.forEach(function (q) { h += '<div class="pt">' + t('l.partial') + ': ' + esc([q.from, q.to].filter(Boolean).join(' → ') || '—') + ' · +' + money(q.pay) + ' · +' + int(q.mi) + ' mi' + (q.broker ? ' · ' + esc(q.broker) : '') + '</div>'; });
+  return h + '</div>';
+}
+function pgLoads() {
+  var m = model(), tr = curTrip(), h = topBits() + '<div class="ttl"><h1>' + t('l.title') + '</h1></div>';
+  if (!m.ws.length || !tr) return '<div class="pg">' + h + emptyHtml() + '</div>';
+  var all = S.ldScope === 'all', a = all ? C.agg(m.ws) : tr.A;
+  h += '<div class="seg" style="grid-template-columns:1fr 1fr;max-width:460px"><button class="' + (!all ? 'on' : '') + '" data-act="ldScope" data-v="trip">' + t('l.scopeT') + '</button><button class="' + (all ? 'on' : '') + '" data-act="ldScope" data-v="all">' + t('l.scopeA') + '</button></div>';
+  if (!all) h += switcherHtml(tr);
+  var loads = a.loads.slice(), rated = loads.filter(function (l) { return !l.tonu && l.rpm != null; });
+  if (!loads.length) return '<div class="pg">' + h + '<div class="empty"><b>' + t('l.none') + '</b></div></div>';
+  var best = rated.length ? rated.reduce(function (x, y) { return y.rpm > x.rpm ? y : x; }) : null, worst = rated.length > 1 ? rated.reduce(function (x, y) { return y.rpm < x.rpm ? y : x; }) : null;
+  function rt(l) { return esc((l.from || '').split(',')[0] + ' → ' + (l.to || '').split(',')[0]); }
+  h += kpiHtml([
+    { l: t('k.loads'), v: int(a.nL), s: money(a.G) },
+    { l: t('k.grpm'), v: fmt('rate', C.MET.grpm.v(a)), s: a.LD > 0 ? t('s.lrpm', { a: rate(a.G / a.LD) }) : '' },
+    { l: t('l.avg'), v: money(a.nL ? a.G / a.nL : 0), s: a.nL ? int(a.M / a.nL) + ' mi' : '' },
+    { l: t('k.dh'), v: fmt('pct1', C.MET.dhp.v(a)), s: t('s.dh', { a: int(a.DH), b: int(a.M) }) },
+    { l: t('l.best'), v: best ? rate(best.rpm) : '—', s: best ? rt(best) : '', c: 'grn' },
+    { l: t('l.worst'), v: worst ? rate(worst.rpm) : '—', s: worst ? rt(worst) : '', c: worst ? 'red' : '' }
+  ], 'k6');
+  var srt = S.ldSort;
+  loads.sort(function (x, y) {
+    if (srt === 'rpm') return (y.rpm == null ? -1 : y.rpm) - (x.rpm == null ? -1 : x.rpm);
+    if (srt === 'gross') return y.g - x.g;
+    return x.pickup < y.pickup ? 1 : x.pickup > y.pickup ? -1 : 0;
+  });
+  var lim = !S.ldAll && loads.length > 25, show = lim ? loads.slice(0, 25) : loads;
+  var lst = '<section>' + sec(t('l.list'), '<span class="sub">' + pl(loads.length, 'ld') + '</span>') +
+    '<div class="chips" style="margin-bottom:8px">' + ['date', 'rpm', 'gross'].map(function (x) { return '<button class="chip' + (srt === x ? ' on' : '') + '" data-act="ldSort" data-v="' + x + '" aria-pressed="' + (srt === x) + '">' + t('l.sort.' + x) + '</button>'; }).join('') + '</div>' +
+    '<div class="list">' + show.map(loadHtml).join('') + '</div>' +
+    (loads.length > 25 ? '<button class="btn g" style="margin-top:8px" data-act="ldAll">' + (S.ldAll ? t('c.less') : t('c.all', { n: loads.length })) + '</button>' : '') +
+    '<div class="hint" style="margin-top:6px">' + t('l.rateNote') + (a.tonuN ? ' ' + t('l.tonu', { n: a.tonuN, a: money(a.tonuG) }) : '') + '</div></section>';
+  var L1 = C.lanesOf(a);
+  if (S.lane === 'best') L1.sort(function (x, y) { return y.r - x.r; }); else L1.sort(function (x, y) { return (y.c - x.c) || (y.g - x.g); });
+  var ls = S.lanesAll ? L1 : L1.slice(0, 5);
+  var lanes = '<section>' + sec(t('l.lanes'), '<div class="seg in"><button class="' + (S.lane === 'freq' ? 'on' : '') + '" data-act="lane" data-v="freq">' + t('l.freq') + '</button><button class="' + (S.lane === 'best' ? 'on' : '') + '" data-act="lane" data-v="best">' + t('l.bestR') + '</button></div>') +
+    '<div class="list">' + ls.map(function (o, i) { return '<div class="lane"><span class="i">' + (i + 1) + '</span><span class="k"><b>' + esc(o.k) + '</b><span>' + pl(o.c, 'ld') + ' · ' + money(o.g) + '</span></span><span class="r">' + rate(o.r) + '</span></div>'; }).join('') + '</div>' +
+    (L1.length > 5 ? '<button class="btn g" style="margin-top:8px" data-act="lanesAll">' + (S.lanesAll ? t('c.less') : t('c.all', { n: L1.length })) + '</button>' : '') + '</section>';
+  var B = C.brokersOf(a);
+  var brk = '<section>' + sec(t('l.brokers')) + (B.length ? '<div class="list">' + B.slice(0, 12).map(function (o, i) { return '<div class="lane"><span class="i">' + (i + 1) + '</span><span class="k"><b>' + esc(o.name) + '</b><span>' + pl(o.c, 'ld') + ' · ' + money(o.g) + '</span></span><span class="r">' + (o.mi > 0 ? rate(o.r) : '<small class="mut" style="font-family:var(--fb);font-size:12px;font-weight:600">' + t('l.partial') + '</small>') + '</span></div>'; }).join('') + '</div>' : '<div class="hint">' + t('l.brokersNone') + '</div>') + '</section>';
+  var H = C.haulsOf(a), mr = H.reduce(function (x, o) { return Math.max(x, o.r); }, 0) || 1;
+  var haul = '<section>' + sec(t('l.haul')) + '<div class="card pad">' + H.map(function (o) { return '<div class="hb"><span>' + o.l + ' mi</span><span class="tr"><i style="width:' + (o.r / mr * 100).toFixed(0) + '%"></i></span><span class="v">' + (o.c ? pl(o.c, 'ld') + ' · <b>' + rate(o.r) + '</b>' : t('l.noHaul')) + '</span></div>'; }).join('') + '</div></section>';
+  return '<div class="pg">' + h + '<div class="dgrid g-ms"><div class="dcol">' + lst + '</div><div class="dcol">' + lanes + brk + haul + '</div></div></div>';
+}
+
+/* ---------------- page: goals, access, settings ---------------- */
+function pgMore() {
+  var own = canEdit(), m = model(), ps = profiles(), h = topBits() + '<div class="ttl"><h1>' + (own ? t('o.title') : t('nav.more')) + '</h1></div>', c1 = '', c2 = '';
+  if (own) {
+    c1 += '<section>' + sec(t('o.trips')) + '<div class="hint" style="margin-bottom:8px">' + t('o.tripsHint') + '</div>' +
+      (m.trips.length ? '<div class="list">' + m.trips.slice().reverse().map(function (tr) {
+        var body = '<span class="g"><span class="n">' + esc(tripName(tr)) + stPill(tr) + '</span><span class="s">' + tripDates(tr) + ' · ' + pl(tr.weeks.length, 'wk') + '</span></span>';
+        if (tr.auto) return '<div class="row">' + body + '<span class="v"><small>' + t('t.noGoal') + '</small></span></div>';
+        return '<button class="row" data-act="tripEdit" data-id="' + esc(tr.id) + '">' + body +
+          '<span class="v">' + (tr.goal > 0 ? money(tr.goal) + '<small>' + goalPct(tr) + (tr.bonus.max ? ' · ' + t('o.upTo', { a: money(tr.bonus.max.amount) }) : '') + '</small>' : '<small class="acc" style="font-size:13px;font-weight:700">' + t('h.setGoal') + '</small>') + '</span>' + I.chev.replace('<svg ', '<svg class="chev" ') + '</button>';
+      }).join('') + '</div>' : '<div class="empty">' + t('x.ownerHelp') + '</div>') +
+      '<div class="hint" style="margin-top:8px">' + t('o.newTripHow') + (m.trips.some(function (x) { return x.auto; }) ? ' ' + t('h.looseO') : '') + '</div>' +
+      '<a class="btn g" style="margin-top:8px" href="' + CFG.hub + '">' + I.link + t('o.hub') + '</a></section>';
+    if (m.lost.length) c1 += '<section>' + sec(t('o.lost')) + '<div class="hint" style="margin-bottom:8px">' + t('o.lostHint') + '</div><div class="list">' + m.lost.map(function (r) {
+      return '<div class="row"><span class="g"><span class="n">' + esc(r.name || r.trip_key) + '</span><span class="s">' + dR(r.start_date, r.end_date || r.start_date) + (r.goal_net ? ' · ' + money(r.goal_net) : '') + '</span></span>' +
+        '<button class="ib" style="color:var(--red)" data-act="goalDel" data-id="' + esc(r.id) + '" aria-label="' + t('e.del') + '" title="' + t('e.del') + '">' + I.trash + '</button></div>';
+    }).join('') + '</div></section>';
+    var lab = ownerLabelNow();
+    c2 += '<section>' + sec(t('o.disp')) + '<div class="hint" style="margin-bottom:8px">' + t('o.dispHint') + '</div>';
+    if (D.access.length) c2 += '<div class="list" style="margin-bottom:10px">' + D.access.map(function (x) {
+      var on = !!x.dispatcher_id, nm = x.dispatcher_name || (on ? x.dispatcher_email : '') || t('o.pendingName');
+      var sub = on ? [x.dispatcher_name && x.dispatcher_email ? esc(x.dispatcher_email) : '', x.last_seen_at ? t('o.seen', { t: dT(x.last_seen_at) }) : t('o.never')].filter(Boolean).join(' · ') : t('o.pending');
+      return '<div class="row"><span class="g"><span class="n">' + esc(nm) + '</span><span class="s">' + sub + '</span></span>' +
+        (on ? '' : '<button class="btn sm" data-act="invite" data-id="' + esc(x.id) + '" title="' + t('o.invite') + '">' + I.copy + t('o.send') + '</button>') +
+        '<button class="ib" style="color:var(--red)" data-act="accDel" data-id="' + esc(x.id) + '" aria-label="' + t('o.rm') + '" title="' + t('o.rm') + '">' + I.trash + '</button></div>';
+    }).join('') + '</div>';
+    c2 += '<div class="card pad" style="display:flex;flex-direction:column;gap:9px"><b>' + t('o.dispAdd') + '</b><div class="hint">' + t('o.invHow') + '</div>' +
+      '<div class="grid2"><label class="fld"><span>' + t('o.dispName') + '</span><input id="ac-name" class="in" type="text" maxlength="60" autocomplete="off"></label>' +
+      '<label class="fld"><span>' + t('o.label') + '</span><input id="ac-label" class="in" type="text" maxlength="60" autocomplete="off" value="' + esc(lab) + '" placeholder="' + t('o.labelPh') + '" data-chg="ownerLabel"></label></div>' +
+      '<div id="ac-msg" class="msg" role="status"></div><button class="btn sm" style="align-self:flex-start" data-act="inviteNew">' + I.plus + t('o.mkInvite') + '</button></div>' +
+      '<button class="btn g" style="margin-top:10px" data-act="preview" data-v="1">' + I.eye + t('o.preview') + '</button></section>';
+  }
+  if (ps.length > 1) {
+    c1 += '<section>' + sec(t('o.switch')) + '<div class="list">' + ps.map(function (p) {
+      return '<button class="row" data-act="setView" data-id="' + esc(p.id) + '"><span class="g"><span class="n">' + esc(p.label) + (p.id === S.viewId ? ' ✓' : '') + '</span><span class="s">' + esc(p.email) + (p.me ? ' · ' + t('o.you') : '') + '</span></span></button>';
+    }).join('') + '</div></section>';
+  }
+  var set = '<section>' + sec(t('o.settings')) + '<div class="card menu-list">' +
+    '<button data-act="lang">' + I.globe + t('o.lang') + '<span class="r">' + (LANG === 'ru' ? 'Русский' : 'English') + '</span></button>' +
+    '<button data-act="theme">' + I.sun + t('o.theme') + '<span class="r">' + t(THEME === 'light' ? 'o.light' : 'o.dark') + '</span></button>' +
+    '<button data-act="refresh">' + I.refresh + t('c.refresh') + '<span class="r">' + (S.loadedAt ? dT(S.loadedAt) : '') + '</span></button>' +
+    '<button data-act="joinOpen">' + I.users + t('j.title') + '</button>' +
+    (S.isOwner ? '<a href="' + CFG.hub + '">' + I.link + t('o.hub') + '</a>' : '') +
+    '<button data-act="pass">' + I.key + t('o.pass') + '</button>' +
+    '<button data-act="signOut">' + I.out + t('o.out') + '<span class="r">' + esc(S.user.email || '') + '</span></button></div>' +
+    '<div class="ver" style="margin-top:10px">Dispatch Gladiator ' + VER + '</div></section>';
+  if (own) c2 += set; else c1 += set;
+  return '<div class="pg">' + h + '<div class="mcols"><div class="dcol">' + c1 + '</div>' + (c2 ? '<div class="dcol">' + c2 + '</div>' : '') + '</div></div>';
+}
+
+/* ---------------- frame: header, side menu, tabs ---------------- */
+var NAV = [['trip', 'trip', 'nav.trip'], ['trips', 'trips', 'nav.trips'], ['weeks', 'weeks', 'nav.weeks'], ['loads', 'loads', 'nav.loads'], ['more', 'more', 'nav.more']];
+function renderChrome() {
+  var own = canEdit(), ps = S.user ? profiles() : [];
+  $('#nav-in').innerHTML = NAV.map(function (n) { return '<button data-act="go" data-p="' + n[0] + '"' + (S.page === n[0] ? ' class="on" aria-current="page"' : '') + '>' + I[n[0] === 'more' && own ? 'target' : n[1]] + '<span>' + t(n[0] === 'more' && own ? 'nav.manageS' : n[2]) + '</span></button>'; }).join('');
+  var who = '';
+  if (S.user && (!isOwn() || ps.length > 1)) {
+    var inner = t('o.driver') + '<b>' + esc(isOwn() ? (S.user.email || '') : viewLabel()) + '</b>';
+    who = ps.length > 1 ? '<button class="side-who" data-act="profiles">' + inner + '</button>' : '<div class="side-who">' + inner + '</div>';
+  }
+  $('#side').innerHTML = '<div class="side-brand">' + emblem('s') + '<div class="bn">' + WORD + '</div></div>' + who +
+    '<nav class="side-nav" aria-label="Dispatch Gladiator">' + NAV.map(function (n) { return '<button data-act="go" data-p="' + n[0] + '"' + (S.page === n[0] ? ' class="on" aria-current="page"' : '') + '>' + I[n[0] === 'more' && own ? 'target' : n[1]] + '<span>' + t(n[0] === 'more' && own ? 'nav.manage' : n[2]) + '</span></button>'; }).join('') + '</nav>' +
+    '<div class="side-foot"><button data-act="refresh"><span class="sync" id="sync-d"></span>' + t('c.refresh') + '</button>' +
+    '<button data-act="theme">' + I.sun + t(THEME === 'light' ? 'o.dark' : 'o.light') + '</button><button data-act="lang">' + I.globe + (LANG === 'ru' ? 'English' : 'Русский') + '</button>' +
+    '<button data-act="signOut">' + I.out + t('o.out') + '</button><div class="side-user">' + esc(S.user ? S.user.email || '' : '') + '</div></div>';
+  setSync();
+}
+var PAGES = { trip: pgTrip, trips: pgTrips, weeks: pgWeeks, loads: pgLoads, more: pgMore };
+function render() {
+  if (!S.user) return;
+  S.day = C.today();
+  model();
+  renderChrome();
+  var v = $('#view');
+  if (S.ready && !S.viewId) {     /* nothing loaded yet and nothing saved from last time */
+    v.innerHTML = '<div class="pg"><div class="alert r">' + I.info + '<div class="g"><b>' + t('x.loadErr') + '</b><br>' + esc(S.err || t('auth.net')) + '</div></div><button class="btn g" data-act="refresh">' + I.refresh + t('x.retry') + '</button></div>';
+    return;
+  }
+  v.innerHTML = !S.ready ? '<div class="pg"><div class="empty">' + t('auth.wait') + '</div></div>' : (PAGES[S.page] || pgTrip)();
+  Array.prototype.forEach.call(v.querySelectorAll('.scr[data-end]'), function (e) { e.scrollLeft = e.scrollWidth; });
+}
+function go(p, noHist) {
+  if (!PAGES[p]) p = 'trip';
+  var same = S.page === p; S.page = p;
+  if (!same && !noHist) { try { history.pushState({ p: p }, ''); } catch (e) { /* ignore */ } }
+  render();
+  if (!same) window.scrollTo(0, 0);
+}
+var toastT = null;
+function toast(msg, ms) { var e = $('#toast'); e.textContent = msg; e.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { e.hidden = true; }, ms || 2600); }
+function applyTheme() { document.documentElement.setAttribute('data-theme', THEME); var m = $('#meta-theme'); if (m) m.setAttribute('content', THEME === 'light' ? '#e9ecf0' : '#0d0f12'); }
+function applyLang() { document.documentElement.lang = LANG; }
+
+/* ---------------- sheets ---------------- */
+function openSheet(html, kind, wide) {
+  var was = !!SHEET, s = $('#sheet'), keep = was && SHEET.kind === kind ? s.scrollTop : 0;
+  SHEET = { kind: kind };
+  s.className = 'sheet' + (wide ? ' wide' : ''); s.innerHTML = '<div class="grab"></div>' + html;
+  $('#sheet-bg').hidden = false; document.body.style.overflow = 'hidden';
+  s.scrollTop = keep;      /* after it is visible: a hidden box keeps its old scroll position */
+  if (!was) { try { history.pushState({ p: S.page, sheet: 1 }, ''); } catch (e) { /* ignore */ } }
+}
+function closeSheet(fromPop) {
+  if (!SHEET) return;
+  SHEET = null; TE = null; $('#sheet-bg').hidden = true; $('#sheet').innerHTML = ''; document.body.style.overflow = '';
+  if (!fromPop) { try { if (history.state && history.state.sheet) history.back(); } catch (e) { /* ignore */ } }
+  if (S.stale) { S.stale = false; render(); }
+}
+function sheetHd(title, sub) { return '<div class="hd"><h3>' + title + (sub ? '<small>' + sub + '</small>' : '') + '</h3><button class="ib" data-act="close" aria-label="' + t('c.close') + '">' + I.x + '</button></div>'; }
+
+/* one week in detail */
+function openWeek(id) {
+  var m = model(), s = find(m.ws, id); if (!s) return;
+  var G = C.MET, h = sheetHd(weekTitle(s) + (s.live ? '<span class="st live">' + t('st.live') + '</span>' : ''), [s.label ? esc(s.label) : '', s.trip ? esc(tripName(s.trip)) : t('w.noTrip')].filter(Boolean).join(' · '));
+  if (s.live) h += '<div class="alert b">' + I.info + '<div class="g">' + t('w.liveNote') + (D.draftAt ? ' ' + t('w.liveAt', { t: dT(D.draftAt) }) : '') + '</div></div>';
+  h += kpiHtml([
+    { l: t('k.gross'), v: money(s.G), s: pl(s.nL, 'ld') },
+    { l: t('k.net'), v: money(s.N), s: s.G > 0 ? t('s.margin', { p: Math.round(s.N / s.G * 100) }) : '', c: s.N < 0 ? 'red' : 'acc', hl: true },
+    { l: t('k.miles'), v: int(s.M), s: t('s.ld', { a: int(s.LD), b: int(s.DH) }) },
+    { l: t('k.grpm'), v: fmt('rate', G.grpm.v(s)), s: s.LD > 0 ? t('s.lrpm', { a: rate(s.G / s.LD) }) : '' },
+    { l: t('k.nrpm'), v: fmt('rate', G.nrpm.v(s)), s: t('k.cpm') + ' ' + fmt('rate', G.cpm.v(s)) },
+    { l: t('k.dh'), v: fmt('pct1', G.dhp.v(s)), s: pl(s.D, 'dy') }
+  ], 'k3');
+  var items = s.items.slice().sort(function (a, b) { return b.sum - a.sum; });
+  if (items.length) {
+    h += '<h4>' + t('w.exp') + ' · ' + money(s.C) + '</h4><div class="list">' + items.map(function (x) {
+      var nm = x.k === 'fuel' ? t('w.fuelItem') : x.k === 'owner' ? t('w.ownerItem') : x.name || '—';
+      var tp = x.type === 'cpm' ? x.val + ' ¢/mi' : x.type === 'dlr_mile' ? '$' + x.val + '/mi' : '';
+      return '<div class="row"><span class="g"><span class="n">' + esc(nm) + '</span><span class="s">' + (tp ? tp + ' · ' : '') + (s.G > 0 ? (x.sum / s.G * 100).toFixed(1) + '% ' + t('w.ofGross') : '') + (s.M > 0 ? ' · ' + rate(x.sum / s.M) + '/mi' : '') + '</span></span><span class="v">' + money(x.sum, 2) + '</span></div>';
+    }).join('') + '</div>';
+  }
+  if (s.loads.length) h += '<h4>' + t('w.loads') + '</h4><div class="list">' + s.loads.map(loadHtml).join('') + '</div>';
+  if (s.unp > 0) h += '<div class="sub">' + t('h.unpaid') + ': <b class="acc">' + money(s.unp) + '</b> · ' + pl(s.unpN, 'ld') + '</div>';
+  if (s.gal > 0) h += '<h4>' + t('w.fuel') + '</h4>' + kpiHtml([
+    { l: t('k.mpg'), v: (s.galMi / s.gal).toFixed(1), s: int(s.gal) + ' gal' }, { l: t('k.ppg'), v: rate(s.dz / s.gal), s: '' },
+    { l: t('k.fuelmi'), v: fmt('rate', G.fuelmi.v(s)), s: '' }, { l: t('w.fills'), v: int(s.fills), s: '' }]);
+  openSheet(h, 'week', true);
+}
+function openProfiles() {
+  var h = sheetHd(t('o.switch'));
+  h += '<div class="list">' + profiles().map(function (p) {
+    return '<button class="row" data-act="setView" data-id="' + esc(p.id) + '"><span class="g"><span class="n">' + esc(p.label) + (p.id === S.viewId ? ' ✓' : '') + '</span><span class="s">' + esc(p.email) + (p.me ? ' · ' + t('o.you') : '') + '</span></span></button>';
+  }).join('') + '</div>';
+  openSheet(h, 'profiles');
+}
+function openPass() {
+  openSheet(sheetHd(t('auth.newPass')) + '<label class="fld"><span>' + t('auth.passNew') + '</span><input id="np" class="in" type="password" autocomplete="new-password"></label><div id="np-msg" class="msg" role="status"></div><button class="btn" data-act="passSave">' + t('auth.setPass') + '</button>', 'pass');
+  setTimeout(function () { var e = $('#np'); if (e) e.focus(); }, 60);
+}
+
+/* trip + goal editor (owner only) */
+var TE = null;
+function avgWeekNet() { var w = model().saved.slice().sort(function (a, b) { return a.end < b.end ? 1 : -1; }).slice(0, 12); return w.length ? w.reduce(function (s, x) { return s + x.N; }, 0) / w.length : 0; }
+/* the goal of a trip: planned dates, net goal, bonus levels (the trip itself lives in OwnerGladiator Hub) */
+function openTripEdit(tr) {
+  if (!canEdit() || !tr || tr.auto) return;
+  var r = tr.row, st = (r && C.isISO(r.start_date) ? r.start_date : '') || tr.first || tr.start, plan = C.addDays(st, 34);
+  var end = tr.end || (tr.status === 'done' ? (tr.last || plan) : (tr.last && tr.last > plan ? tr.last : plan));
+  TE = { id: r ? r.id : null, key: tr.key, tripId: tr.id, title: tripName(tr), start: st, end: end, goal: tr.goal > 0 ? String(tr.goal) : '', tiers: tr.bonus.tiers.map(function (x) { return { pct: String(x.pct), amount: String(x.amount) }; }), note: tr.note, extras: tr.includeExtras, weeks: tr.weeks.length };
+  if (!TE.tiers.length) TE.tiers = [{ pct: '100', amount: '' }];
+  renderTripEdit();
+}
+function renderTripEdit() {
+  var hasX = !!(D.draft && Array.isArray(D.draft.extras) && D.draft.extras.length), ref = avgWeekNet();
+  var h = sheetHd(t('e.edit'), esc(TE.title));
+  h += '<div class="grid2"><label class="fld"><span>' + t('e.start') + '</span><input id="te-start" class="in" type="date" value="' + esc(TE.start) + '" data-inp="te"></label>' +
+    '<label class="fld"><span>' + t('e.end') + '</span><input id="te-end" class="in" type="date" value="' + esc(TE.end) + '" data-inp="te"></label></div>';
+  h += '<div class="chips">' + [4, 5, 6].map(function (n) { return '<button class="chip" data-act="teLen" data-n="' + n + '">' + t('e.wk', { n: n }) + '</button>'; }).join('') + '<span class="hint" id="te-len" style="align-self:center"></span></div>';
+  h += '<label class="fld"><span>' + t('e.goal') + '</span><input id="te-goal" class="in money" type="text" inputmode="decimal" autocomplete="off" value="' + esc(TE.goal) + '" placeholder="25000" data-inp="te"></label>';
+  h += '<div class="hint" id="te-goal-h"></div>' + (ref > 0 ? '<div class="hint">' + t('e.goalRef', { a: '<b>' + money(ref) + '</b>' }) + '</div>' : '');
+  h += '<h4>' + t('e.bonus') + '</h4><div class="hint">' + t('e.bonusHint') + '</div><div id="te-tiers" style="display:flex;flex-direction:column;gap:8px">' + TE.tiers.map(function (x, i) {
+    return '<div class="tier"><label class="fld"><span>' + t('e.tPct') + '</span><input class="in money" type="text" inputmode="decimal" data-tp="' + i + '" value="' + esc(x.pct) + '" data-inp="te"></label>' +
+      '<label class="fld"><span>' + t('e.tAmt') + '</span><input class="in money" type="text" inputmode="decimal" data-ta="' + i + '" value="' + esc(x.amount) + '" placeholder="300" data-inp="te"></label>' +
+      '<button class="ib" data-act="teTierDel" data-i="' + i + '" aria-label="' + t('c.delete') + '">' + I.x + '</button><div class="eq" data-te="' + i + '"></div></div>';
+  }).join('') + '</div>';
+  if (TE.tiers.length < 8) h += '<button class="btn g sm" style="align-self:flex-start" data-act="teTierAdd">' + I.plus + t('e.tAdd') + '</button>';
+  h += '<label class="fld"><span>' + t('e.note') + '</span><textarea id="te-note" class="in" maxlength="500" placeholder="' + t('e.notePh') + '">' + esc(TE.note) + '</textarea></label>';
+  if (hasX || !TE.extras) h += '<label class="sw"><input id="te-x" type="checkbox"' + (TE.extras ? ' checked' : '') + '><span>' + t('e.extras') + '</span></label>';
+  h += '<div id="te-msg" class="msg" role="status"></div><button class="btn" id="te-save" data-act="teSave">' + t('e.saveTrip') + '</button>';
+  if (TE.id) h += '<button class="btn d" data-act="teDel">' + I.trash + t('e.del') + '</button>';
+  openSheet(h, 'trip');
+  teHints();
+}
+function pnum(s) { var v = parseFloat(String(s == null ? '' : s).replace(/[\s$%]/g, '').replace(',', '.')); return isFinite(v) ? v : NaN; }
+function teSync() {
+  if (!TE) return;
+  var g = function (id) { var e = document.getElementById(id); return e ? e.value : ''; };
+  TE.start = g('te-start'); TE.end = g('te-end'); TE.goal = g('te-goal').trim(); TE.note = g('te-note').trim();
+  var x = document.getElementById('te-x'); if (x) TE.extras = x.checked;
+  TE.tiers.forEach(function (tt, i) { var p = $('[data-tp="' + i + '"]'), a = $('[data-ta="' + i + '"]'); if (p) tt.pct = p.value.trim(); if (a) tt.amount = a.value.trim(); });
+}
+function teHints() {
+  if (!TE) return;
+  teSync();
+  var goal = pnum(TE.goal), ok = C.isISO(TE.start) && C.isISO(TE.end) && TE.end >= TE.start, days = ok ? C.daysBetween(TE.start, TE.end) + 1 : 0, msg = '';
+  var gh = $('#te-goal-h'); if (gh) gh.textContent = goal > 0 && days >= 7 ? t('e.goalHint', { a: money(goal / (days / 7)) }) : '';
+  var ln = $('#te-len'); if (ln) ln.textContent = (days ? pl(days, 'dy') + ' · ' : '') + t('e.inTrip', { n: pl(TE.weeks, 'wk') });
+  TE.tiers.forEach(function (tt, i) { var e = $('[data-te="' + i + '"]'), p = pnum(tt.pct); if (e) e.textContent = goal > 0 && p > 0 ? t('e.tEq', { a: money(goal * p / 100) }) : ''; });
+  if (C.isISO(TE.start) && C.isISO(TE.end) && TE.end < TE.start) msg = t('e.badDates');
+  var mm = $('#te-msg'); if (mm) { mm.textContent = msg; mm.className = 'msg' + (msg ? ' err' : ''); }
+}
+async function teSave() {
+  teSync();
+  var mm = $('#te-msg'), btn = $('#te-save');
+  function bad(m) { mm.textContent = m; mm.className = 'msg err'; }
+  if (!C.isISO(TE.start)) return bad(t('e.needStart'));
+  if (TE.end && (!C.isISO(TE.end) || TE.end < TE.start)) return bad(t('e.badDates'));
+  var goal = pnum(TE.goal), tiers = C.normTiers(TE.tiers.map(function (x) { return { pct: pnum(x.pct), amount: isNaN(pnum(x.amount)) ? -1 : pnum(x.amount) }; })).map(function (x) { return { pct: x.pct, amount: x.amount }; });
+  var row = { trip_key: TE.key, name: String(TE.title).slice(0, 80), start_date: TE.start, end_date: TE.end || null, goal_net: goal > 0 ? Math.round(goal * 100) / 100 : null, bonus: tiers, include_extras: !!TE.extras, note: TE.note.slice(0, 500), updated_at: new Date().toISOString() };
+  btn.disabled = true;
+  try {
+    var r = TE.id ? await sb.from('dg_trips').update(row).eq('id', TE.id).select().single() : await sb.from('dg_trips').insert(row).select().single();
+    if (r.error) throw r.error;
+    var saved = r.data, i = -1; D.trips.forEach(function (x, k) { if (String(x.id) === String(saved.id)) i = k; });
+    if (i >= 0) D.trips[i] = saved; else D.trips.push(saved);
+    M = null; D.sig = ''; S.tripId = TE.tripId; S.isOwner = true; saveCache(); closeSheet(); render(); toast(t('c.saved'));
+  } catch (e) { bad(t('c.err', { e: isNetErr(e) ? t('auth.net') : String((e && e.message) || e) })); }
+  finally { var b = $('#te-save'); if (b) b.disabled = false; }
+}
+async function goalDelete(id, question) {
+  if (!id || !confirm(question)) return false;
+  var r = await sb.from('dg_trips').delete().eq('id', id);
+  if (r.error) { toast(t('c.err', { e: isNetErr(r.error) ? t('auth.net') : r.error.message }), 4000); return false; }
+  D.trips = D.trips.filter(function (x) { return String(x.id) !== String(id); });
+  M = null; D.sig = ''; saveCache();
+  return true;
+}
+async function teDel() {
+  if (!TE || !TE.id) return;
+  if (await goalDelete(TE.id, t('e.delQ', { n: TE.title }))) { closeSheet(); render(); }
+}
+
+/* dispatcher access (owner only): one-time invitation links */
+function acMsg(m, kind) { var e = $('#ac-msg'); if (e) { e.textContent = m; e.className = 'msg' + (kind ? ' ' + kind : ''); } }
+function ownerLabelNow() {
+  var v = D.access.length ? (D.access[0].owner_label || '') : (Store.get('dg_label_' + S.user.id) || '');
+  return v || String(S.user.email || '').split('@')[0];
+}
+function inviteLink(x) { return siteUrl() + '#invite=' + x.invite_code; }
+async function inviteNew() {
+  var nm = $('#ac-name').value.trim().slice(0, 80), lab = ($('#ac-label').value.trim() || ownerLabelNow()).slice(0, 80);
+  acMsg(t('auth.wait'));
+  var r = await sb.from('dg_access').insert({ dispatcher_name: nm, owner_label: lab }).select().single();
+  if (r.error) return acMsg(t('c.err', { e: isNetErr(r.error) ? t('auth.net') : r.error.message }), 'err');
+  D.access.push(r.data); S.isOwner = true; Store.set('dg_label_' + S.user.id, lab); saveCache(); render();
+  inviteShare(r.data, t('o.created'));
+}
+async function accDel(id) {
+  var x = find(D.access, id); if (!x) return;
+  if (!confirm(x.dispatcher_id ? t('o.rmQ', { e: x.dispatcher_name || x.dispatcher_email || '' }) : t('o.rmInvQ'))) return;
+  var r = await sb.from('dg_access').delete().eq('id', id);
+  if (r.error) { toast(t('c.err', { e: r.error.message }), 4000); return; }
+  D.access = D.access.filter(function (a) { return String(a.id) !== String(id); }); saveCache(); render();
+}
+async function ownerLabel(v) {
+  v = String(v || '').trim().slice(0, 80); Store.set('dg_label_' + S.user.id, v);
+  if (!D.access.length) return;
+  var r = await sb.from('dg_access').update({ owner_label: v }).eq('owner_id', S.user.id);
+  if (r.error) { toast(t('c.err', { e: r.error.message }), 4000); return; }
+  D.access.forEach(function (a) { a.owner_label = v; }); saveCache(); toast(t('c.saved'));
+}
+/* hand the link over: the phone's share sheet when there is one, otherwise the clipboard */
+function inviteShare(x, okMsg) {
+  var txt = t('o.inviteTxt', { u: inviteLink(x) });
+  function manual() { window.prompt(t('o.invite'), txt); }
+  function copy() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { toast(okMsg ? okMsg + ' · ' + t('c.copied').toLowerCase() : t('c.copied'), 4000); }, okMsg ? function () { toast(okMsg, 4000); } : manual);
+      else if (okMsg) toast(okMsg, 4000); else manual();
+    } catch (e) { if (okMsg) toast(okMsg, 4000); else manual(); }
+  }
+  var touch = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+  if (!okMsg && touch && navigator.share) { navigator.share({ text: txt }).catch(function (e) { if (!e || e.name !== 'AbortError') copy(); }); return; }
+  copy();
+}
+/* a dispatcher pastes an invitation link by hand */
+function openJoin() {
+  openSheet(sheetHd(t('j.title')) + '<div class="hint">' + t('j.how') + '</div>' + joinForm('jn-s'), 'join');
+  setTimeout(function () { var e = $('#jn-s'); if (e) e.focus(); }, 60);
+}
+async function joinGo(id) {
+  var inp = document.getElementById(id), msg = document.getElementById(id + '-msg'), code = inviteFromText(inp ? inp.value : '');
+  if (!code) { if (msg) msg.textContent = t('j.bad'); return; }
+  if (msg) msg.textContent = '';
+  setPending(code);
+  if (SHEET) closeSheet();
+  await loadAll(true);
+  S.ready = true; S.page = 'trip'; render();
+}
+
+/* ---------------- sign-in ---------------- */
+function renderAuth(msg, kind) {
+  var up = S.authMode === 'up';
+  $('#auth').innerHTML = '<div class="box"><div class="logo">' + emblem('a') + '<div class="bn">' + WORD + '</div><div class="tagline">' + t('app.tag') + '</div></div><div class="rdash"></div>' +
+    (PENDING ? '<div class="alert b">' + I.users + '<div class="g">' + t('auth.invited') + '</div></div>' : '') +
+    '<div class="seg" style="grid-template-columns:1fr 1fr"><button class="' + (!up ? 'on' : '') + '" data-act="authMode" data-m="in">' + t('auth.in') + '</button><button class="' + (up ? 'on' : '') + '" data-act="authMode" data-m="up">' + t('auth.up') + '</button></div>' +
+    '<label class="fld"><span>' + t('auth.email') + '</span><input id="au-email" class="in" type="email" autocomplete="email" inputmode="email" autocapitalize="off" value="' + esc(S.authEmail || '') + '"></label>' +
+    '<label class="fld"><span>' + (up ? t('auth.passNew') : t('auth.pass')) + '</span><input id="au-pass" class="in" type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '"></label>' +
+    '<div id="au-msg" class="msg' + (kind ? ' ' + kind : '') + '" role="status">' + esc(msg || '') + '</div>' +
+    '<button class="btn" id="au-go" data-act="authGo">' + (up ? t('auth.goUp') : t('auth.goIn')) + '</button>' +
+    (!up ? '<button class="btn g" data-act="authForgot">' + t('auth.forgot') + '</button>' : '') +
+    '<div class="hint" style="text-align:center">' + t('auth.ownerHint') + '</div>' +
+    '<div class="seg" style="grid-template-columns:1fr 1fr;margin-top:4px"><button class="' + (LANG === 'ru' ? 'on' : '') + '" data-act="lang" data-v="ru">Русский</button><button class="' + (LANG === 'en' ? 'on' : '') + '" data-act="lang" data-v="en">English</button></div></div>';
+}
+function authMsg(msg, kind) { var e = $('#au-msg'); if (e) { e.textContent = msg; e.className = 'msg' + (kind ? ' ' + kind : ''); } }
+function authErr(e) {
+  var m = String((e && (e.message || e.error_description || e.error)) || e || '');
+  if (/not confirmed/i.test(m)) return t('auth.unconf');
+  if (/invalid login|invalid_grant|credentials/i.test(m)) return t('auth.bad');
+  if (/already registered|already been registered|user_already_exists/i.test(m)) return t('auth.exists');
+  if (/fetch|network|load failed|timeout|abort/i.test(m)) return t('auth.net');
+  return m;
+}
+async function authGo() {
+  if (!sb) return authMsg(t('auth.nosdk'), 'err');
+  var em = $('#au-email').value.trim(), pw = $('#au-pass').value; S.authEmail = em;
+  if (!em || !pw) return authMsg(t('auth.need'), 'err');
+  var btn = $('#au-go'); btn.disabled = true; authMsg(t('auth.wait'));
+  try {
+    if (S.authMode === 'up') {
+      if (pw.length < 6) { authMsg(t('auth.short'), 'err'); return; }
+      var u = await sb.auth.signUp({ email: em, password: pw, options: { emailRedirectTo: siteUrl() } });
+      if (u.error) { authMsg(authErr(u.error), 'err'); if (/already/i.test(String(u.error.message))) { S.authMode = 'in'; renderAuth(t('auth.exists'), 'err'); } return; }
+      if (u.data && u.data.session) { handleSession(u.data.session); return; }
+      if (u.data && u.data.user && Array.isArray(u.data.user.identities) && !u.data.user.identities.length) { S.authMode = 'in'; renderAuth(t('auth.exists'), 'err'); return; }
+      S.authMode = 'in'; renderAuth(t('auth.sent', { e: em }), 'ok'); return;
+    }
+    var r = await sb.auth.signInWithPassword({ email: em, password: pw });
+    if (r.error) authMsg(authErr(r.error), 'err');
+    else if (r.data && r.data.session) handleSession(r.data.session);
+  } catch (e) { authMsg(authErr(e), 'err'); }
+  finally { var b = $('#au-go'); if (b) b.disabled = false; }
+}
+async function authForgot() {
+  if (!sb) return authMsg(t('auth.nosdk'), 'err');
+  var em = $('#au-email').value.trim(); if (!em) return authMsg(t('auth.needEmail'), 'err');
+  var r = await sb.auth.resetPasswordForEmail(em, { redirectTo: siteUrl() });
+  authMsg(r.error ? authErr(r.error) : t('auth.reset'), r.error ? 'err' : 'ok');
+}
+var starting = false;
+async function handleSession(session) {
+  var boot = $('#boot');
+  if (session && session.user) {
+    if (S.user && S.user.id === session.user.id) { S.user = session.user; return; }
+    S.user = session.user; S.viewId = null; S.tripId = null; S.preview = false; S.ready = false; S.page = 'trip'; M = null; MINE = null;
+    D = { weeks: [], draft: null, draftAt: null, trips: [], access: [] };
+    $('#auth').hidden = true; $('#app').hidden = false;
+    if (starting) return; starting = true;
+    if (loadCache()) { S.ready = true; render(); if (boot) boot.hidden = true; } else renderChrome();
+    await loadAll(true);
+    S.ready = true; starting = false;
+    render(); if (boot) boot.hidden = true;
+    try { history.replaceState({ p: S.page }, ''); } catch (e) { /* ignore */ }
+  } else {
+    S.user = null; S.owners = []; S.isOwner = false; S.viewId = null; S.ready = false; M = null; MINE = null; starting = false; loadSeq++;
+    D = { weeks: [], draft: null, draftAt: null, trips: [], access: [] };
+    if (SHEET) closeSheet(true);
+    S.authMode = PENDING ? 'up' : 'in';      /* a new dispatcher creates a login; everybody else signs in */
+    $('#app').hidden = true; $('#auth').hidden = false; renderAuth(); if (boot) boot.hidden = true;
+  }
+}
+var checking = false;
+/* manual: reload everything. Background: a light check first, the full reload only if something changed */
+async function refresh(manual) {
+  if (!S.user || starting) return;
+  if (!manual && S.viewId && S.ready && D.sig && Date.now() - S.fullAt < 15 * 60000) {
+    if (checking || S.loading) return;
+    checking = true;
+    try {
+      var ch = await changed();
+      S.loadedAt = Date.now();
+      if (S.offline || S.day !== C.today()) { S.offline = false; M = null; if (SHEET) S.stale = true; else render(); }
+      setSync();
+      if (!ch) return;
+    } catch (e) {
+      if (isNetErr(e)) { if (!S.offline) { S.offline = true; if (!SHEET) render(); } setSync(); return; }
+    } finally { checking = false; }
+  }
+  var ok = await loadAll(!manual);
+  if (SHEET) { S.stale = true; if (manual && !ok) toast(S.offline ? t('c.offline') : t('x.loadErr'), 3500); return; }
+  render();
+  if (manual) toast(ok ? t('c.upd', { t: t('c.now') }) : (S.offline ? t('c.offline') : t('x.loadErr')), 2200);
+}
+async function setView(id) {
+  if (!find(profiles(), id)) return;
+  S.viewId = id; S.tripId = null; S.cmpA = S.cmpB = null; S.preview = false; S.ldAll = S.lanesAll = false; Store.set('dg_view_' + S.user.id, id);
+  if (SHEET) closeSheet();
+  if (id === S.user.id && MINE) { D = MINE; M = null; saveCache(); go('trip'); return; }
+  S.ready = false; D = { sig: '', weeks: [], draft: null, draftAt: null, trips: [], access: [] }; M = null; render();
+  await loadAll(true); S.ready = true; S.page = 'trip'; render();
+}
+
+/* ---------------- events ---------------- */
+var ACT = {
+  go: function (el) { go(el.dataset.p); },
+  close: function () { closeSheet(); },
+  refresh: function () { refresh(true); },
+  tripNav: function (el) { var ts = model().trips, i = ts.indexOf(curTrip()) + (+el.dataset.d); if (ts[i]) { S.tripId = ts[i].id; S.ldAll = S.lanesAll = false; render(); } },
+  tripOpen: function (el) { S.tripId = el.dataset.id; go('trip'); window.scrollTo(0, 0); },
+  tripEdit: function (el) { var tr = find(model().trips, el.dataset.id); if (tr) openTripEdit(tr); },
+  teLen: function (el) { teSync(); if (C.isISO(TE.start)) { TE.end = C.addDays(TE.start, (+el.dataset.n) * 7 - 1); $('#te-end').value = TE.end; teHints(); } },
+  teTierAdd: function () { teSync(); var last = TE.tiers.length ? pnum(TE.tiers[TE.tiers.length - 1].pct) : 90; TE.tiers.push({ pct: String(isNaN(last) ? 100 : Math.round(last + 10)), amount: '' }); renderTripEdit(); },
+  teTierDel: function (el) { teSync(); TE.tiers.splice(+el.dataset.i, 1); renderTripEdit(); },
+  teSave: function () { teSave(); }, teDel: function () { teDel(); },
+  goalDel: async function (el) { var r = find(D.trips, el.dataset.id); if (r && await goalDelete(r.id, t('o.lostQ', { n: r.name || r.trip_key }))) render(); },
+  week: function (el) { openWeek(el.dataset.id); },
+  wkMetric: function (el) { S.wkMetric = el.dataset.k; Store.set('dg_wkm', S.wkMetric); render(); },
+  ldScope: function (el) { S.ldScope = el.dataset.v; S.ldAll = S.lanesAll = false; render(); },
+  ldSort: function (el) { S.ldSort = el.dataset.v; render(); },
+  ldAll: function () { S.ldAll = !S.ldAll; render(); }, lanesAll: function () { S.lanesAll = !S.lanesAll; render(); },
+  lane: function (el) { S.lane = el.dataset.v; render(); },
+  profiles: function () { openProfiles(); },
+  setView: function (el) { setView(el.dataset.id); },
+  preview: function (el) { S.preview = el.dataset.v === '1'; if (S.preview) go('trip'); else render(); window.scrollTo(0, 0); },
+  inviteNew: function () { inviteNew(); }, accDel: function (el) { accDel(el.dataset.id); },
+  joinOpen: function () { openJoin(); }, joinGo: function (el) { joinGo(el.dataset.in); },
+  invite: function (el) { var x = find(D.access, el.dataset.id); if (x) inviteShare(x); },
+  lang: function (el) { LANG = el.dataset.v || (LANG === 'ru' ? 'en' : 'ru'); Store.set('dg_lang', LANG); applyLang(); if (S.user) render(); else renderAuth(); },
+  theme: function () { THEME = THEME === 'light' ? 'dark' : 'light'; Store.set('dg_theme', THEME); applyTheme(); if (S.user) render(); },
+  pass: function () { openPass(); },
+  passSave: async function () {
+    var v = $('#np').value, m = $('#np-msg');
+    if (v.length < 6) { m.textContent = t('auth.short'); m.className = 'msg err'; return; }
+    var r = await sb.auth.updateUser({ password: v });
+    if (r.error) { m.textContent = authErr(r.error); m.className = 'msg err'; return; }
+    closeSheet(); toast(t('auth.passOk'), 3500);
+  },
+  signOut: async function () { try { Store.del(cacheKey()); } catch (e) { /* ignore */ } try { await sb.auth.signOut(); } catch (e2) { /* ignore */ } handleSession(null); },
+  authMode: function (el) { S.authMode = el.dataset.m; var em = $('#au-email'); if (em) S.authEmail = em.value; renderAuth(); },
+  authGo: function () { authGo(); }, authForgot: function () { authForgot(); }
+};
+var CHG = {
+  cmpA: function (el) { S.cmpA = el.value; render(); }, cmpB: function (el) { S.cmpB = el.value; render(); },
+  ownerLabel: function (el) { ownerLabel(el.value); }
+};
+var INP = { te: function () { teHints(); } };
+document.addEventListener('touchstart', function () {}, { passive: true });
+document.addEventListener('click', function (e) {
+  if (e.target === $('#sheet-bg')) { closeSheet(); return; }
+  var el = e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!el || el.disabled) return;
+  var f = ACT[el.dataset.act];
+  if (f) { e.preventDefault(); f(el, e); }
+});
+document.addEventListener('change', function (e) { var el = e.target; if (el.dataset && el.dataset.chg && CHG[el.dataset.chg]) CHG[el.dataset.chg](el, e); });
+document.addEventListener('input', function (e) { var el = e.target; if (el.dataset && el.dataset.inp && INP[el.dataset.inp]) INP[el.dataset.inp](el, e); });
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && SHEET) { closeSheet(); return; }
+  if (e.key === 'Enter' && e.target && e.target.id === 'au-pass') { authGo(); return; }
+  if (e.key === 'Enter' && e.target && e.target.id === 'np') { ACT.passSave(); return; }
+  if (e.key === 'Enter' && e.target && e.target.id === 'ac-name') { inviteNew(); return; }
+  if (e.key === 'Enter' && e.target && (e.target.id === 'jn-e' || e.target.id === 'jn-s')) { joinGo(e.target.id); }
+});
+window.addEventListener('popstate', function (e) {
+  if (SHEET) { closeSheet(true); return; }
+  if (S.user) go((e.state && e.state.p) || 'trip', true);
+});
+window.addEventListener('online', function () { refresh(false); });
+document.addEventListener('visibilitychange', function () { if (!document.hidden && S.user && Date.now() - S.loadedAt > 30000) refresh(false); });
+setInterval(function () { if (S.user && !document.hidden && navigator.onLine !== false && Date.now() - S.loadedAt > 80000) refresh(false); }, 90000);
+
+/* ---------------- start ---------------- */
+function init() {
+  applyTheme(); applyLang();
+  $('#hdr-emb').innerHTML = emblem('h'); $('#boot-emb').innerHTML = emblem('b');
+  if (!sb) { $('#app').hidden = true; $('#auth').hidden = false; renderAuth(t('auth.nosdk'), 'err'); $('#boot').hidden = true; return; }
+  sb.auth.getSession().then(function (r) { handleSession(r && r.data && r.data.session); }).catch(function () { handleSession(null); });
+  sb.auth.onAuthStateChange(function (ev, s) {
+    /* answer right away and do the work a moment later: the sign-in library must not wait for our own requests */
+    setTimeout(function () {
+      if (ev === 'PASSWORD_RECOVERY') setTimeout(openPass, 600);
+      if (!s && S.user) handleSession(null);
+      else if (s && s.user && (!S.user || S.user.id !== s.user.id)) handleSession(s);
+    }, 0);
+  });
+}
+window.__dg = { S: S, get D() { return D; }, get M() { return M; }, C: C, render: render, go: go, t: t, refresh: refresh };
+init();
+
+})();
+</script>
+</body>
+</html>
