@@ -168,12 +168,14 @@ nav#nav button.on .ic{transform:translateY(-1px)}
  .shell{display:block}
  main{margin-left:244px;max-width:none;width:auto;padding:24px 32px 48px}
  main>.page,main>.ro-banner{max-width:1360px;margin-left:auto;margin-right:auto;width:100%}
- #toast{bottom:30px;left:calc(50% + 122px)}
- .ed-bar{left:auto;right:24px;bottom:24px;width:min(560px,calc(100vw - 300px))}
- body.editing main{padding-bottom:110px}body.editing #toast{bottom:96px}
+ /* the base toast / edit-bar rules come later in the file, so these carry an extra "body" to win */
+ body #toast{bottom:30px;left:calc(50% + 122px)}
+ body .ed-bar{left:auto;right:24px;bottom:24px;width:min(560px,calc(100vw - 300px))}
+ html body.editing main{padding-bottom:110px}html body.editing #toast{bottom:96px}
  /* week: settings as one toolbar, inputs on the left, results on the right */
  #card-wk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 16px;align-items:center}
- #card-wk>.fgrid{grid-column:1/-1;grid-template-columns:minmax(0,1fr) 190px 190px}
+ #card-wk>.fgrid{grid-column:1/-1;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px 170px}
+ #card-wk>.fgrid>#wk-trip{grid-column:auto}
  #card-wk>.fgrid>.s2:first-child{grid-column:auto}
  #card-wk>.fgrid>.wdates-row{grid-column:1/-1}
  #card-wk>.row{margin-top:0!important;grid-row:2;grid-column:1}
@@ -201,6 +203,10 @@ nav#nav button.on .ic{transform:translateY(-1px)}
  .arl small{font-size:11.5px;color:var(--mut);white-space:nowrap}
  .arl-v{align-items:flex-end;flex:none}
  .arl-v b{font-family:var(--fd);font-size:18px;font-variant-numeric:tabular-nums}
+ .arl-g{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:8px;padding:9px 10px;border:0;border-radius:12px;background:color-mix(in srgb,var(--acc) 9%,transparent);color:var(--tx);text-align:left;cursor:pointer;font:inherit}
+ .arl-g:hover{background:color-mix(in srgb,var(--acc) 16%,transparent)}.arl-g .arl-t b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.arl-g .arl-v b{font-size:16px}
+ .arl-g small{font-size:11.5px;color:var(--mut);white-space:nowrap}.arl.in{margin-left:8px;width:calc(100% - 8px)}
+ #ar-trip-row{grid-column:1/-1;margin-top:4px}
  /* loads tools: the two calculators side by side, each only as tall as it needs */
  #tl-grid{align-items:start}
  /* reports: compact filter bar, the report itself gets the full width */
@@ -218,8 +224,8 @@ nav#nav button.on .ic{transform:translateY(-1px)}
  .side{width:220px}
  .side-brand .brand{font-size:18px}.side-brand .brand .og-em{height:30px}.side-brand .tag{margin-left:36px}
  main{margin-left:220px;padding:20px 22px 40px}
- #toast{left:calc(50% + 110px)}
- .ed-bar{width:min(560px,calc(100vw - 270px))}
+ body #toast{left:calc(50% + 110px)}
+ body .ed-bar{width:min(560px,calc(100vw - 270px))}
  #ar-cols{grid-template-columns:250px minmax(0,1fr)}
 }
 @media(min-width:1000px) and (max-width:1199px){
@@ -416,11 +422,20 @@ body.ro .need-write{display:none!important}
 #xt-range{margin-bottom:2px}
 .xt-big{font-family:var(--fd);font-size:34px;font-weight:800;line-height:1.05;white-space:nowrap}
 /* summary tab */
-.seg.sm-seg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%}
+.seg.sm-seg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:100%}
 .sm-seg button{padding:0 6px}
-@media(max-width:479px){.seg.sm-seg{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:699px){.seg.sm-seg{grid-template-columns:repeat(4,minmax(0,1fr))}.seg.sm-seg button:last-child{grid-column:span 2}}
 .sm-mon{margin-top:10px;gap:8px}.sm-mon select{flex:1;min-height:42px;font-weight:700}.sm-mon .icon-btn:disabled{opacity:.35;cursor:default}
 .sm-cmpl{margin-top:8px}.sm-cmpl:empty{display:none}
+/* trips (рейсы): several weeks of one run away from home */
+.ar-trip{display:flex;gap:8px;align-items:center;margin-top:10px}.ar-trip>span{flex:none;font-weight:700;font-size:13px;color:var(--mut)}.ar-trip select{flex:1;min-width:0;font-weight:700}
+.tp-list{display:flex;flex-direction:column;gap:6px;max-height:min(44dvh,420px);overflow:auto;margin-top:8px}
+.tp-w{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);cursor:pointer;margin:0;color:var(--tx)}
+.tp-w input{width:20px;height:20px;flex:none;accent-color:var(--acc);margin:0}
+.tp-w .t1{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.tp-w .t1 b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tp-w .t1 small{font-size:12px;color:var(--mut);white-space:normal}
+.tp-w .tp-in{color:var(--vio);font-weight:700}.tp-w .t2{flex:none;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}
+.sm-hm.sm-tt{table-layout:auto}.sm-hm.sm-tt th:first-child,.sm-hm.sm-tt td:first-child{width:auto;min-width:118px;white-space:normal}.sm-hm.sm-tt td:first-child .cs{white-space:nowrap;overflow:visible}
+#wk-trip-n{font-weight:700;color:var(--acc)}
 .sm-wcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .sm-wc{position:relative;display:inline-flex;margin:0;cursor:pointer}
 .sm-wc input{position:absolute;opacity:0;width:1px;height:1px;min-height:0;pointer-events:none}
@@ -677,6 +692,7 @@ body.map-full{overflow:hidden}
         <div class="card" id="card-wk">
           <div class="fgrid">
             <div class="s2"><label data-i18n="wk.label"></label><input type="text" id="in-label" data-set="label" style="font-weight:700"></div>
+            <div class="s2" id="wk-trip"><label><span data-i18n="tp.label"></span> <span id="wk-trip-n"></span></label><select id="in-trip" style="font-weight:700"></select></div>
             <div><label data-i18n="wk.from"></label><input type="date" id="in-wFrom"></div>
             <div><label data-i18n="wk.to"></label><input type="date" id="in-wTo"></div>
             <div class="s2 wdates-row"><span class="cs" id="wk-dhint"></span><span class="row" style="gap:6px;flex:none"><button class="btn sm need-write" data-act="wkThis" data-i18n="wk.dThis"></button><button class="btn sm need-write" data-act="wkLoads" data-i18n="wk.dLoads"></button></span></div>
@@ -907,6 +923,7 @@ body.map-full{overflow:hidden}
         <div class="card" id="ar-head">
           <div class="ch"><span class="ct" data-i18n="ar.title"></span><span class="row" style="gap:6px"><button class="btn sm pri need-write" id="btn-edit-arch" data-act="arEdit" hidden data-i18n="ar.edit"></button><button class="btn dng sm need-write" id="btn-del-arch" data-act="delArchive">🗑️ <span data-i18n="ar.delete"></span></button></span></div>
           <select id="archive-select"></select>
+          <div class="ar-trip" id="ar-trip-row" hidden><span data-i18n="tp.label"></span><select id="ar-trip"></select><button type="button" class="btn sm need-write" data-act="tpOpen" data-i18n="tp.manage"></button></div>
           <div class="cs ar-cur" id="ar-cur"></div>
           <div class="cs" id="ar-edited" hidden style="margin-top:6px"></div>
         </div>
@@ -957,6 +974,7 @@ body.map-full{overflow:hidden}
         <div class="card">
           <div class="ch" style="margin-bottom:10px"><span class="ct" data-i18n="sm.title"></span><span class="cs" id="sm-span"></span></div>
           <div class="seg sm-seg" id="sm-seg"></div>
+          <div class="row sm-mon" id="sm-trip" hidden><button type="button" class="icon-btn" data-act="smTrip" data-d="1" aria-label="‹">‹</button><select id="trip-select" aria-label="trip"></select><button type="button" class="icon-btn" data-act="smTrip" data-d="-1" aria-label="›">›</button></div>
           <div class="row sm-mon" id="sm-mon" hidden><button type="button" class="icon-btn" data-act="smMon" data-d="1" aria-label="‹">‹</button><select id="month-select" aria-label="month"></select><button type="button" class="icon-btn" data-act="smMon" data-d="-1" aria-label="›">›</button></div>
           <div id="custom-panel" hidden>
             <div class="row between wrap" style="margin-top:10px"><span class="cs" id="custom-count"></span>
@@ -988,6 +1006,7 @@ body.map-full{overflow:hidden}
             <div class="tlist" id="xt-list"></div>
           </div>
         </div>
+        <div class="card" id="sm-trips" hidden></div>
         <div class="card" id="sm-spot"></div>
         <div class="card" id="sm-dyn">
           <div class="ch"><span class="ct" data-i18n="sm.dyn2"></span></div>
@@ -1020,7 +1039,8 @@ body.map-full{overflow:hidden}
           <div class="ch"><span class="ct" data-i18n="rp.title"></span>
             <div class="row wrap"><button class="btn" data-act="csv" data-i18n="rp.csv"></button><button class="btn pri" data-act="print" data-i18n="rp.print"></button></div></div>
           <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
-            <div><label data-i18n="rp.mode"></label><select id="rp-mode"><option value="all" data-i18n="rp.all"></option><option value="month" data-i18n="rp.month"></option><option value="week" data-i18n="rp.week"></option><option value="custom" data-i18n="rp.custom"></option><option value="range" data-i18n="rp.range"></option></select></div>
+            <div><label data-i18n="rp.mode"></label><select id="rp-mode"><option value="all" data-i18n="rp.all"></option><option value="trip" data-i18n="rp.trip"></option><option value="month" data-i18n="rp.month"></option><option value="week" data-i18n="rp.week"></option><option value="custom" data-i18n="rp.custom"></option><option value="range" data-i18n="rp.range"></option></select></div>
+            <div id="rp-w-trip" hidden><label data-i18n="rp.trip"></label><select id="rp-trip"></select></div>
             <div id="rp-w-month" hidden><label data-i18n="rp.month"></label><select id="rp-month"></select></div>
             <div id="rp-w-week" hidden><label data-i18n="rp.week"></label><select id="rp-week"></select></div>
             <div id="rp-w-from" hidden><label data-i18n="rp.from"></label><input type="date" id="rp-from"></div>
@@ -1080,6 +1100,17 @@ body.map-full{overflow:hidden}
     <div class="cs" style="text-align:center" id="app-ver">OwnerGladiator Hub 7.1</div>
   </div>
 </div>
+<!-- trips: name a trip, pick its weeks, rename or ungroup -->
+<div id="trip-bg" class="sheet-bg" hidden data-act="tpClose">
+  <div class="sheet" id="trip-sheet" role="dialog" aria-modal="true" aria-labelledby="tp-title">
+    <div class="row between"><b style="font-size:16px" id="tp-title"></b><button class="icon-btn" data-act="tpClose">✕</button></div>
+    <div id="tp-pick-w"><label data-i18n="tp.pick"></label><select id="tp-pick" style="font-weight:700"></select></div>
+    <div><label data-i18n="tp.name"></label><input type="text" id="tp-name" maxlength="60" autocomplete="off" style="font-weight:700"></div>
+    <div id="tp-weeks-w"><div class="row between"><label data-i18n="tp.weeks" style="margin:0"></label><span class="cs" id="tp-cnt"></span></div><div class="tp-list" id="tp-weeks"></div></div>
+    <div class="cs" id="tp-note"></div>
+    <div class="row wrap" style="gap:8px"><button class="btn pri" data-act="tpSave" data-i18n="tp.save"></button><button class="btn dng" data-act="tpDisband" id="tp-dis" data-i18n="tp.disband"></button></div>
+  </div>
+</div>
 <!-- import weeks from the old site (another Supabase project) -->
 <div id="imp-bg" class="sheet-bg" hidden data-act="closeImp">
   <div class="sheet" id="imp-sheet">
@@ -1109,7 +1140,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.4';
+var APP_VER='7.5';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1168,36 +1199,36 @@ var DICT=[
 ['sm.fu','⛽ Топливо по чекам','⛽ Fuel from receipts'],['sm.fu.ppg','Дизель, средняя','Diesel, average'],['sm.fu.gal','за галлон','per gallon'],['sm.fu.mi','Топливо на милю','Fuel per mile'],['sm.fu.incDef','вместе с DEF','incl. DEF'],
 ['sm.fu.n','Заправок','Fill-ups'],['sm.fu.cheap','Дешевле всего','Cheapest'],['sm.fu.dear','Дороже всего','Most expensive'],
 ['sm.fu.note','MPG считается по галлонам из чеков: за несколько недель он точнее, чем за одну.','MPG uses gallons from receipts: it is more accurate over several weeks than over one.'],
-['sm.lanes2','🧭 Направления','🧭 Lanes'],['sm.ln.freq','Частые','Frequent'],['sm.ln.best','Лучшая ставка','Best rate'],['sm.ln.all','Показать все {n}','Show all {n}'],['sm.ln.less','Свернуть','Show less'],['sm.ln.none','Рейсов нет.','No trips.'],
+['sm.lanes2','🧭 Направления','🧭 Lanes'],['sm.ln.freq','Частые','Frequent'],['sm.ln.best','Лучшая ставка','Best rate'],['sm.ln.all','Показать все {n}','Show all {n}'],['sm.ln.less','Свернуть','Show less'],['sm.ln.none','Грузов нет.','No loads.'],
 ['sm.ln.tonu','TONU: {n} · {a}, в ставки не входят','TONU: {n} · {a}, not counted in rates'],['sm.ln.note','Ставка — gross ÷ мили вместе с пустыми.','Rate = gross ÷ miles including deadhead.'],
-['sm.haul','📏 Ставка по длине рейса','📏 Rate by trip length'],['sm.hl.none','нет рейсов','no trips'],
+['sm.haul','📏 Ставка по дальности груза','📏 Rate by haul length'],['sm.hl.none','нет грузов','no loads'],
 ['nav.week','Неделя','Week'],['nav.tools','Грузы','Loads'],['nav.archive','Архив','Archive'],['nav.summary','Итоги','Summary'],['nav.reports','Отчёты','Reports'],
 ['auth.sub','Вход для водителей и владельцев траков','Sign in for drivers and truck owners'],['auth.email','Email','Email'],['auth.pass','Пароль','Password'],['auth.login','Войти','Sign in'],['auth.signup','Создать аккаунт','Create account'],['auth.forgot','Забыли пароль?','Forgot password?'],
 ['auth.need','Введите email и пароль','Enter email and password'],['auth.needEmail','Введите email','Enter your email'],['auth.signed','Готово! Если включено подтверждение почты, проверьте входящие.','Done! If email confirmation is on, check your inbox.'],['auth.reset','Письмо для сброса пароля отправлено.','Password reset email sent.'],['auth.nosdk','Не загрузился Supabase SDK. Проверьте интернет.','Supabase SDK did not load. Check your connection.'],
 ['auth.cfg','Сайт не подключён к базе: в начале index.html, в блоке «НАСТРОЙКА ПОДКЛЮЧЕНИЯ», должны стоять Project URL и Publishable key из Supabase.','The site is not connected to a database: the CONNECTION SETTINGS block at the top of index.html must contain the Supabase Project URL and Publishable key.'],
 ['auth.newPass','Введите новый пароль (не короче 6 символов):','Enter a new password (at least 6 characters):'],['auth.short','Пароль слишком короткий','Password is too short'],['auth.passOk','✅ Пароль изменён','✅ Password updated'],['auth.db','база: {r}','database: {r}'],
-['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.import','📥 Перенести недели со старого сайта','📥 Import weeks from the old site'],['imp.title','Перенос со старого сайта','Import from the old site'],['imp.desc','Войдите почтой и паролем от СТАРОГО сайта. Недели скопируются сюда, на старом сайте ничего не изменится.','Sign in with your OLD site email and password. Your weeks are copied here; nothing changes on the old site.'],['imp.email','Почта на старом сайте','Old site email'],['imp.pass','Пароль от старого сайта','Old site password'],['imp.adv','Адрес старой базы (менять не нужно)','Old database address (no need to change)'],['imp.find','🔎 Найти мои недели','🔎 Find my weeks'],['imp.busy','⏳ Подключаюсь к старой базе…','⏳ Connecting to the old database…'],['imp.found','Найдено недель в архиве: {n}','Archived weeks found: {n}'],['imp.loads','рейсов: {n}','loads: {n}'],['imp.empty','У этого аккаунта на старом сайте нет сохранённых недель.','This account has no saved weeks on the old site.'],['imp.dup','уже есть здесь','already here'],['imp.draftT','Незакрытая неделя','Open week'],['imp.draft','«{l}», рейсов: {n}. Станет текущей неделей здесь.','“{l}”, loads: {n}. Becomes the current week here.'],['imp.draftWarn','Здесь уже есть данные текущей недели — они заменятся.','This site already has current-week data — it will be replaced.'],['imp.run','📥 Перенести выбранное','📥 Import selected'],['imp.none','Ничего не выбрано','Nothing selected'],['imp.done','✅ Перенесено недель: {n}','✅ Weeks imported: {n}'],['imp.doneDraft','✅ Незакрытая неделя перенесена','✅ Open week imported'],['imp.badLogin','Неверная почта или пароль от старого сайта.','Wrong email or password for the old site.'],['imp.unconf','Почта на старом сайте не подтверждена.','This email is not confirmed on the old site.'],['imp.net','Не удалось связаться со старой базой. Проверьте интернет. Если старым сайтом давно не пользовались, его проект Supabase мог уснуть — включите его в панели Supabase и попробуйте снова.','Could not reach the old database. Check your connection. If the old site has not been used for a while, its Supabase project may be paused — resume it in the Supabase dashboard and try again.'],['imp.same','Это адрес новой базы. Укажите адрес старой.','That is the new database. Enter the old one.'],['imp.badCfg','Проверьте адрес и ключ старой базы.','Check the old database address and key.'],['menu.logout','Выйти','Sign out'],
+['menu.admin','Админ: открыть профиль','Admin: open profile'],['menu.backup','Скачать бэкап (JSON)','Download backup (JSON)'],['menu.import','📥 Перенести недели со старого сайта','📥 Import weeks from the old site'],['imp.title','Перенос со старого сайта','Import from the old site'],['imp.desc','Войдите почтой и паролем от СТАРОГО сайта. Недели скопируются сюда, на старом сайте ничего не изменится.','Sign in with your OLD site email and password. Your weeks are copied here; nothing changes on the old site.'],['imp.email','Почта на старом сайте','Old site email'],['imp.pass','Пароль от старого сайта','Old site password'],['imp.adv','Адрес старой базы (менять не нужно)','Old database address (no need to change)'],['imp.find','🔎 Найти мои недели','🔎 Find my weeks'],['imp.busy','⏳ Подключаюсь к старой базе…','⏳ Connecting to the old database…'],['imp.found','Найдено недель в архиве: {n}','Archived weeks found: {n}'],['imp.loads','грузов: {n}','loads: {n}'],['imp.empty','У этого аккаунта на старом сайте нет сохранённых недель.','This account has no saved weeks on the old site.'],['imp.dup','уже есть здесь','already here'],['imp.draftT','Незакрытая неделя','Open week'],['imp.draft','«{l}», грузов: {n}. Станет текущей неделей здесь.','“{l}”, loads: {n}. Becomes the current week here.'],['imp.draftWarn','Здесь уже есть данные текущей недели — они заменятся.','This site already has current-week data — it will be replaced.'],['imp.run','📥 Перенести выбранное','📥 Import selected'],['imp.none','Ничего не выбрано','Nothing selected'],['imp.done','✅ Перенесено недель: {n}','✅ Weeks imported: {n}'],['imp.doneDraft','✅ Незакрытая неделя перенесена','✅ Open week imported'],['imp.badLogin','Неверная почта или пароль от старого сайта.','Wrong email or password for the old site.'],['imp.unconf','Почта на старом сайте не подтверждена.','This email is not confirmed on the old site.'],['imp.net','Не удалось связаться со старой базой. Проверьте интернет. Если старым сайтом давно не пользовались, его проект Supabase мог уснуть — включите его в панели Supabase и попробуйте снова.','Could not reach the old database. Check your connection. If the old site has not been used for a while, its Supabase project may be paused — resume it in the Supabase dashboard and try again.'],['imp.same','Это адрес новой базы. Укажите адрес старой.','That is the new database. Enter the old one.'],['imp.badCfg','Проверьте адрес и ключ старой базы.','Check the old database address and key.'],['menu.logout','Выйти','Sign out'],
 ['ro.banner','Вы смотрите чужой профиль: только чтение, изменения не сохраняются.','You are viewing another profile: read-only, changes are not saved.'],
 ['wk.label','Название недели / период','Week name / period'],['wk.archive','Завершить и в архив','Finish and archive'],['wk.new','Новая неделя','New week'],['wk.evalBtn','Проверить груз','Check a load'],
-['wk.defLabel','Неделя от {d}','Week of {d}'],['wk.rangeLabel','Неделя {a}–{b}','Week {a}–{b}'],['wk.from','Неделя с','Week from'],['wk.to','по','to'],['wk.dSet','📅 {n} дн.: {a} – {b}. По этим датам неделя попадёт в нужный месяц, «Итоги» и «Отчёты».','📅 {n} days: {a} – {b}. These dates put the week into the right month, Summary and Reports.'],['wk.dOut','⚠️ грузов вне этих дат: {n}','⚠️ loads outside these dates: {n}'],['wk.dLoadsHint','Даты не выбраны — неделя возьмёт даты грузов: {a} – {b}.','No dates picked — the week uses its load dates: {a} – {b}.'],['wk.dNone','Даты не выбраны — неделя возьмёт их из дат грузов.','No dates picked — the week will use its load dates.'],['wk.dThis','Эта неделя','This week'],['wk.dLoads','По грузам','From loads'],['wk.dNoLoads','В грузах пока нет дат','Loads have no dates yet'],['ar.dates','Даты недели','Week dates'],['ar.datesSave','Сохранить даты','Save dates'],['ar.datesOk','Даты недели обновлены','Week dates updated'],['ar.datesBad','Выберите обе даты','Pick both dates'],['ar.dManual','заданы вручную','set by hand'],['ar.dLoads','взяты из дат грузов','taken from load dates'],['wk.confirmNew','Начать новую неделю? Рейсы и чеки очистятся, настройки по умолчанию сохранятся.','Start a new week? Loads and receipts will be cleared; your defaults stay.'],['wk.confirmArch','Сохранить неделю «{n}» в архив?','Save week «{n}» to the archive?'],
+['wk.defLabel','Неделя от {d}','Week of {d}'],['wk.rangeLabel','Неделя {a}–{b}','Week {a}–{b}'],['wk.from','Неделя с','Week from'],['wk.to','по','to'],['wk.dSet','📅 {n} дн.: {a} – {b}. По этим датам неделя попадёт в нужный месяц, «Итоги» и «Отчёты».','📅 {n} days: {a} – {b}. These dates put the week into the right month, Summary and Reports.'],['wk.dOut','⚠️ грузов вне этих дат: {n}','⚠️ loads outside these dates: {n}'],['wk.dLoadsHint','Даты не выбраны — неделя возьмёт даты грузов: {a} – {b}.','No dates picked — the week uses its load dates: {a} – {b}.'],['wk.dNone','Даты не выбраны — неделя возьмёт их из дат грузов.','No dates picked — the week will use its load dates.'],['wk.dThis','Эта неделя','This week'],['wk.dLoads','По грузам','From loads'],['wk.dNoLoads','В грузах пока нет дат','Loads have no dates yet'],['ar.dates','Даты недели','Week dates'],['ar.datesSave','Сохранить даты','Save dates'],['ar.datesOk','Даты недели обновлены','Week dates updated'],['ar.datesBad','Выберите обе даты','Pick both dates'],['ar.dManual','заданы вручную','set by hand'],['ar.dLoads','взяты из дат грузов','taken from load dates'],['wk.confirmNew','Начать новую неделю? Грузы и чеки очистятся, рейс и настройки по умолчанию сохранятся.','Start a new week? Loads and receipts will be cleared; the trip and your defaults stay.'],['wk.confirmArch','Сохранить неделю «{n}» в архив?','Save week «{n}» to the archive?'],
 ['role.owner','Овнер-оператор','Owner-operator'],['role.driver','Водитель на %','Driver on %'],['tag.owner','Owner-Op','Owner-Op'],['tag.driver','Driver %','Driver %'],
 ['h.net.o','Чистая прибыль','Net profit'],['h.net.d','Чистыми на руки','Take-home pay'],['h.vs','к прошлой неделе','vs last week'],['h.m.o','маржа','margin'],['h.m.d','доля от Gross','of gross'],['h.per','в день','per day'],
 ['k.gross','Gross','Gross'],['k.exp','Расходы','Expenses'],['k.earned','Начислено по %','Earned by %'],['k.deduct','Вычеты: {a}','Deductions: {a}'],['k.netrpm','Net / миля','Net / mile'],['k.rpm','Gross RPM','Gross RPM'],['k.loaded','Loaded: {v}','Loaded: {v}'],
 ['k.miles','Мили','Miles'],['k.days','Дни в рейсе','Days on road'],['k.cpm','Себестоимость мили','Cost per mile'],['k.fuel','Топливо','Fuel'],['k.unpaid','Ждёт оплаты','Awaiting payment'],['k.nUnpaid','{n} груз(ов)','{n} load(s)'],['k.dh','Пустые мили','Deadhead'],
-['i.title','Подсказки недели','Week insights'],['i.empty','Добавьте рейсы, и здесь появятся подсказки.','Add loads and insights will show up here.'],
+['i.title','Подсказки недели','Week insights'],['i.empty','Добавьте грузы, и здесь появятся подсказки.','Add loads and insights will show up here.'],
 ['i.dh','Пустой пробег {p}%. Старайтесь держать ниже 15%.','Deadhead is {p}%. Try to keep it under 15%.'],
 ['i.below','Gross RPM {r} ниже вашей себестоимости мили {c}: на каждой миле вы в минусе.','Gross RPM {r} is below your cost per mile {c}: you lose money on every mile.'],
 ['i.lane','Лучшее направление недели: {l}, {r}/mi.','Best lane this week: {l}, {r}/mi.'],['i.unpaid','Не оплачено брокерами: {a} ({n} гр.).','Unpaid by brokers: {a} ({n} load(s)).'],
 ['i.maint','До ТО осталось {m} mi.','{m} mi left until service.'],['i.maintDue','Пора на ТО!','Service is due!'],['i.tax','Отложите {a} на налоги ({p}% от чистой).','Set aside {a} for taxes ({p}% of net).'],['i.good','Сильная неделя: Net {r}/mi.','Strong week: Net {r}/mi.'],
-['ld.title','Журнал рейсов','Load log'],['ld.add','+ Рейс','+ Load'],['ld.mode.simple','Всего миль','Total miles'],['ld.mode.split','Loaded + Deadhead','Loaded + Deadhead'],
+['ld.title','Журнал грузов','Load log'],['ld.add','+ Груз','+ Load'],['ld.mode.simple','Всего миль','Total miles'],['ld.mode.split','Loaded + Deadhead','Loaded + Deadhead'],
 ['ld.from','Откуда','From'],['ld.to','Куда','To'],['ld.ph','Dallas, TX или 75201','Dallas, TX or 75201'],
 ['ld.pick','Pick up','Pick up'],['ld.del','Delivery','Delivery'],['ld.mi.s','Мили всего','Total miles'],['ld.mi.l','Loaded, mi','Loaded, mi'],['ld.dh','DH, mi','DH, mi'],['ld.gross','Gross, $','Gross, $'],
-['ld.broker','Брокер / Load #','Broker / Load #'],['ld.unpaid','Ждёт оплаты','Awaiting payment'],['ld.calc','Рассчитать мили','Calculate miles'],['ld.d','{n} дн.','{n} d'],['ld.empty','Рейсов пока нет','No loads yet'],['ld.new','Новый рейс — нажмите, чтобы заполнить','New load — tap to fill in'],
-['ld.sumL','Loaded','Loaded'],['pt.head','📦 Partials — догруз в этом рейсе','📦 Partials on this trip'],['pt.add','📦 + Partial','📦 + Partial'],['pt.hint','Догруз в этом же рейсе: откуда, куда, сколько миль он добавил к маршруту и сколько платят.','A partial on this same trip: from, to, the miles it adds to the route and its pay.'],['pt.from','Забрать в','Pick up in'],['pt.to','Доставить в','Deliver to'],['pt.mi','+ мили к рейсу','+ miles to trip'],['pt.pay','Оплата, $','Pay, $'],['pt.broker','Брокер / Load #','Broker / Load #'],['pt.unpaid','Ждёт оплаты','Awaiting payment'],['pt.auto','≈ объезд по карте','≈ map detour'],['pt.perMi','{r} за доп. милю','{r} per added mile'],['pt.free','без доп. миль','no extra miles'],['pt.netW','чистыми','net'],['pt.noPay','Впиши оплату и + мили','Enter the pay and extra miles'],['pt.trip','весь рейс {g} · {r}/mi','whole trip {g} · {r}/mi'],['pt.sumBar','Partials ({n})','Partials ({n})'],['i.pt','📦 Партиалы: +{a} за +{m} mi — {r} за каждую доп. милю.','📦 Partials: +{a} for +{m} mi — {r} per added mile.'],['i.pt0','📦 Партиалы: +{a} без доп. миль.','📦 Partials: +{a} with no extra miles.'],['ld.sumD','Deadhead','Deadhead'],['ld.sumR','Loaded RPM','Loaded RPM'],['ld.auto','≈ авто','≈ auto'],
+['ld.broker','Брокер / Load #','Broker / Load #'],['ld.unpaid','Ждёт оплаты','Awaiting payment'],['ld.calc','Рассчитать мили','Calculate miles'],['ld.d','{n} дн.','{n} d'],['ld.empty','Грузов пока нет','No loads yet'],['ld.new','Новый груз — нажмите, чтобы заполнить','New load — tap to fill in'],
+['ld.sumL','Loaded','Loaded'],['pt.head','📦 Partials — догрузы по пути','📦 Partials on this load'],['pt.add','📦 + Partial','📦 + Partial'],['pt.hint','Догруз по пути этого груза: откуда, куда, сколько миль он добавил к маршруту и сколько платят.','A partial carried along with this load: from, to, the miles it adds to the route and its pay.'],['pt.from','Забрать в','Pick up in'],['pt.to','Доставить в','Deliver to'],['pt.mi','+ мили к маршруту','+ miles to route'],['pt.pay','Оплата, $','Pay, $'],['pt.broker','Брокер / Load #','Broker / Load #'],['pt.unpaid','Ждёт оплаты','Awaiting payment'],['pt.auto','≈ объезд по карте','≈ map detour'],['pt.perMi','{r} за доп. милю','{r} per added mile'],['pt.free','без доп. миль','no extra miles'],['pt.netW','чистыми','net'],['pt.noPay','Впиши оплату и + мили','Enter the pay and extra miles'],['pt.trip','вместе с догрузами {g} · {r}/mi','with partials {g} · {r}/mi'],['pt.sumBar','Partials ({n})','Partials ({n})'],['i.pt','📦 Партиалы: +{a} за +{m} mi — {r} за каждую доп. милю.','📦 Partials: +{a} for +{m} mi — {r} per added mile.'],['i.pt0','📦 Партиалы: +{a} без доп. миль.','📦 Partials: +{a} with no extra miles.'],['ld.sumD','Deadhead','Deadhead'],['ld.sumR','Loaded RPM','Loaded RPM'],['ld.auto','≈ авто','≈ auto'],
 ['mc.what','Учёт миль','Miles tracked'],['mc.how','Ввод миль','Miles entry'],['mc.auto','🤖 Авто','🤖 Auto'],['mc.manual','✍️ Вручную','✍️ Manual'],['mc.tag','авто','auto'],
 ['mc.hAuto','🤖 Считаем по адресам: груженые — «Откуда» → «Куда», пустые — от прошлой выгрузки. Поля АВТО заблокированы.','🤖 Calculated from addresses: loaded = From → To, deadhead = from the previous drop. AUTO fields are locked.'],
 ['mc.hAutoS','🤖 Считаем по адресам: путь груза + пустой перегон от прошлой выгрузки. Поля АВТО заблокированы.','🤖 Calculated from addresses: load route + deadhead from the previous drop. AUTO fields are locked.'],
-['mc.hManual','✍️ Мили вписываете сами — сайт их не меняет. «📏 Рассчитать мили» в рейсе считает по адресам только по нажатию.','✍️ You type the miles and the site never changes them. 📏 Calculate miles on a load fills them from addresses only when tapped.'],
+['mc.hManual','✍️ Мили вписываете сами — сайт их не меняет. «📏 Рассчитать мили» в грузе считает по адресам только по нажатию.','✍️ You type the miles and the site never changes them. 📏 Calculate miles on a load fills them from addresses only when tapped.'],
 ['mc.start','🏁 Старт недели','🏁 Week start'],['mc.startSub','для пустых миль к 1-му грузу','for deadhead to the 1st load'],
 ['mc.confirm','Пересчитать мили по адресам? Мили, которые можно посчитать, заменятся автоматическими, остальные останутся как есть.','Recalculate miles from addresses? Miles that can be calculated will be replaced; the rest stay as they are.'],
 ['mc.done','🤖 Мили посчитаны по адресам','🤖 Miles calculated from addresses'],['mc.manualOn','✍️ Ручной ввод миль включён','✍️ Manual miles entry is on'],['mc.recalc','Пересчитать','Recalculate'],
@@ -1216,8 +1247,8 @@ var DICT=[
 ['d.truck','Аренда трака','Truck payment'],['d.trailer','Аренда прицепа','Trailer payment'],['d.ins','Страховка','Insurance'],['d.comm','Комиссия компании (%)','Company fee (%)'],['d.eld','ELD / Logbook','ELD / Logbook'],['d.adv','Аванс / личные расходы','Advance / personal costs'],
 ['tl.eval','Брать груз или нет?','Take the load?'],['tl.evalDesc','Реальный заработок за 10 секунд, с учётом пустого перегона.','Real earnings in 10 seconds, deadhead included.'],['tl.pos','Где вы сейчас (необязательно)','Where you are now (optional)'],['tl.pick','Pick up','Pick up'],['tl.drop','Delivery','Delivery'],
 ['tl.autoHint','🤖 Введите город или ZIP — мили по дорогам посчитаются сами. Поля АВТО заблокированы; свои цифры — в режиме «Вручную».','🤖 Enter a city or ZIP and road miles are calculated for you. AUTO fields are locked; for your own numbers switch to Manual.'],
-['tl.manualHint','✍️ Впишите груженые и пустые мили сами. Адреса нужны только чтобы записать груз в неделю.','✍️ Type loaded and deadhead miles yourself. Addresses are only used when you book the load into the week.'],['tl.loaded','Loaded mi','Loaded mi'],['tl.dh','Deadhead mi','Deadhead mi'],['tl.gross','Ставка брокера, $','Broker rate, $'],['tl.days','Дней в пути','Days'],['tl.target','Цель Net RPM, $/mi','Target Net RPM, $/mi'],['tl.costSrc','Расходы рейса','Trip costs'],['tl.cost.stats','📊 Моя статистика','📊 My stats'],['tl.cost.manual','✍️ Вручную','✍️ Manual'],['tl.st.title','Ваша средняя себестоимость мили','Your average cost per mile'],['tl.st.titleD','Ваши средние вычеты на милю','Your average deductions per mile'],['tl.st.weeks','по {n} нед. архива','from {n} archived wk'],['tl.st.pct','Комиссия {p}% берётся от ставки этого груза, остальное — {c} на милю (топливо, платежи, страховка и т. д.).','The {p}% fee is taken from this load\'s rate; the rest is {c} per mile (fuel, payments, insurance, etc.).'],['tl.st.extras','Включая доп. расходы из «Итогов»: {c} на милю.','Including extra expenses from Summary: {c} per mile.'],['tl.st.none','В архиве пока нет недель для этой роли — считаем по ручным расходам ниже. После первой закрытой недели включится ваша статистика.','No archived weeks for this role yet — using the manual costs below. Your stats switch on after your first closed week.'],['tl.st.avg','Ваш средний Net RPM по архиву: {r}. Пока вы не поменяли цель, она равна ему.','Your average Net RPM: {r}. Until you change the target, it equals this.'],['tl.st.avgOnly','Ваш средний Net RPM по архиву: {r}.','Your average Net RPM: {r}.'],['tl.costOut','Расходы: {a}','Costs: {a}'],['tl.dedOut','вычеты: {a}','deductions: {a}'],
-['tl.pct','Комиссия, %','Fee, %'],['tl.other','Прочее, $/mi','Other, $/mi'],['tl.mpg','MPG','MPG'],['tl.fuel','Дизель, $/gal','Diesel, $/gal'],['tl.drvPct','Ваш %','Your %'],['tl.drvExp','Расходы на рейс, $','Trip expenses, $'],
+['tl.manualHint','✍️ Впишите груженые и пустые мили сами. Адреса нужны только чтобы записать груз в неделю.','✍️ Type loaded and deadhead miles yourself. Addresses are only used when you book the load into the week.'],['tl.loaded','Loaded mi','Loaded mi'],['tl.dh','Deadhead mi','Deadhead mi'],['tl.gross','Ставка брокера, $','Broker rate, $'],['tl.days','Дней в пути','Days'],['tl.target','Цель Net RPM, $/mi','Target Net RPM, $/mi'],['tl.costSrc','Расходы на груз','Load costs'],['tl.cost.stats','📊 Моя статистика','📊 My stats'],['tl.cost.manual','✍️ Вручную','✍️ Manual'],['tl.st.title','Ваша средняя себестоимость мили','Your average cost per mile'],['tl.st.titleD','Ваши средние вычеты на милю','Your average deductions per mile'],['tl.st.weeks','по {n} нед. архива','from {n} archived wk'],['tl.st.pct','Комиссия {p}% берётся от ставки этого груза, остальное — {c} на милю (топливо, платежи, страховка и т. д.).','The {p}% fee is taken from this load\'s rate; the rest is {c} per mile (fuel, payments, insurance, etc.).'],['tl.st.extras','Включая доп. расходы из «Итогов»: {c} на милю.','Including extra expenses from Summary: {c} per mile.'],['tl.st.none','В архиве пока нет недель для этой роли — считаем по ручным расходам ниже. После первой закрытой недели включится ваша статистика.','No archived weeks for this role yet — using the manual costs below. Your stats switch on after your first closed week.'],['tl.st.avg','Ваш средний Net RPM по архиву: {r}. Пока вы не поменяли цель, она равна ему.','Your average Net RPM: {r}. Until you change the target, it equals this.'],['tl.st.avgOnly','Ваш средний Net RPM по архиву: {r}.','Your average Net RPM: {r}.'],['tl.costOut','Расходы: {a}','Costs: {a}'],['tl.dedOut','вычеты: {a}','deductions: {a}'],
+['tl.pct','Комиссия, %','Fee, %'],['tl.other','Прочее, $/mi','Other, $/mi'],['tl.mpg','MPG','MPG'],['tl.fuel','Дизель, $/gal','Diesel, $/gal'],['tl.drvPct','Ваш %','Your %'],['tl.drvExp','Расходы на груз, $','Load expenses, $'],
 ['tl.net','Чистыми','Net'],['tl.allrpm','All-miles RPM','All-miles RPM'],['tl.netrpm','Net RPM','Net RPM'],['tl.book','+ Добавить в журнал недели','+ Add to this week'],['tl.good','🟢 ОТЛИЧНЫЙ ГРУЗ','🟢 GREAT LOAD'],['tl.ok','🟡 ПРОХОДНОЙ ГРУЗ','🟡 DECENT LOAD'],['tl.bad','🔴 СЛАБЫЙ ГРУЗ','🔴 WEAK LOAD'],
 ['tl.minRate','Просите минимум','Ask for at least'],['tl.minSub','чтобы выйти на цель Net RPM, это {r}/mi по Loaded','to hit your Net RPM target, that is {r}/mi loaded'],['tl.booked','Груз добавлен в журнал недели','Load added to this week'],['tl.day','{a} / день','{a} / day'],['tl.rate','Ставка {p}%: {a}','Rate {p}%: {a}'],['tl.fuelOut','Топливо: {a}','Fuel: {a}'],
 ['wt.title','Вес сцепки и ось','Weight and axle'],['wt.desc','Запас до лимита и нагрузка на заднюю ось пикапа.','Margin to the limit and load on the pickup drive axle.'],['wt.limit','Лимит GCWR','GCWR limit'],['wt.cargo','Вес груза, lbs','Cargo weight, lbs'],['wt.truck','Трак с топливом, lbs','Truck with fuel, lbs'],['wt.trailer','Пустой прицеп, lbs','Empty trailer, lbs'],['wt.pin','Доля веса на шар, %','Pin weight, %'],['wt.rawr','Лимит задней оси (RAWR), lbs','Rear axle limit (RAWR), lbs'],
@@ -1225,16 +1256,16 @@ var DICT=[
 ['wt.gcw','Общий вес','Gross weight'],['wt.maxpay','Макс. груз','Max payload'],['wt.drive','Задняя ось','Drive axle'],['wt.pinw','На шар: ~{a} lbs','On pin: ~{a} lbs'],['wt.empty','Пустая сцепка','Empty combo'],['wt.spare','Запас: +{a}','Spare: +{a}'],['wt.overS','Перегруз: {a}','Over: {a}'],
 ['ar.title','Архив недель','Weeks archive'],['ar.edit','✏️ Изменить','✏️ Edit'],['ar.edited','✏️ Неделя изменена {d}','✏️ Week edited {d}'],
 ['ed.title','Правка из архива','Editing from archive'],['ed.save','Сохранить','Save'],['ed.cancel','Отмена','Cancel'],
-['ed.hint','✏️ Это неделя из архива. Меняй рейсы, чеки и расходы как обычно, потом нажми «Сохранить» на панели внизу. Твоя текущая неделя никуда не делась — она вернётся после «Сохранить» или «Отмена».','✏️ This is a week from the archive. Change loads, receipts and expenses as usual, then tap Save on the bar below. Your current week is safe and comes back after Save or Cancel.'],
+['ed.hint','✏️ Это неделя из архива. Меняй грузы, чеки и расходы как обычно, потом нажми «Сохранить» на панели внизу. Твоя текущая неделя никуда не делась — она вернётся после «Сохранить» или «Отмена».','✏️ This is a week from the archive. Change loads, receipts and expenses as usual, then tap Save on the bar below. Your current week is safe and comes back after Save or Cancel.'],
 ['ed.on','Неделя открыта для правки','The week is open for editing'],['ed.saved','✅ Изменения сохранены в архив','✅ Changes saved to the archive'],['ed.cancelled','Правка отменена, текущая неделя на месте','Edit cancelled, your current week is back'],
 ['ed.confirmCancel','Выйти без сохранения? Изменения в архивной неделе пропадут.','Leave without saving? Changes to the archived week will be lost.'],['ed.busy','Сначала сохрани или отмени правку недели «{n}»','First save or cancel the edit of «{n}»'],['ar.pick','— выберите неделю —','— choose a week —'],['ar.empty','В архиве пока нет недель','No archived weeks yet'],['ar.delete','Удалить','Delete'],['ar.confirmDel','Удалить неделю «{n}» навсегда?','Delete week «{n}» forever?'],
-['ar.map','Маршрут недели','Week route'],['ar.mapSub','Груженые и пустые перегоны по дорогам. Масштаб: + − или двумя пальцами','Loaded and deadhead legs along the roads. Zoom: + − or two fingers'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет.','The map did not load. Check your connection.'],['map.retry','Повторить','Retry'],['sm.map','🗺️ Карта маршрутов за период','🗺️ Routes map for the period'],['sm.mapSub','Все рейсы выбранных недель. Толще линия — чаще направление, ярче штат — больше остановок.','All loads of the selected weeks. Thicker line = more frequent lane, brighter state = more stops.'],['map.noneSum','За этот период недель нет.','No weeks in this period.'],['map.progress','Ищем места на карте: {i} из {n}…','Locating places: {i} of {n}…'],['map.weeks','Недель','Weeks'],['map.loads','Грузов','Loads'],['map.places','Городов','Places'],['map.top','Частые направления','Top lanes'],['map.legend','толще линия = чаще','thicker = more often'],['xt.title','💸 Доп. расходы за период','💸 Extra expenses for the period'],['xt.sub','Траты, которых нет в неделях: плата за трак, сервис, ремонт. Меняют только итог ниже.','Costs you do not enter in weeks: truck payment, service, repairs. They only change the result below.'],['xt.truck','Плата за трак','Truck payment'],['xt.service','Сервис / ремонт','Service / repair'],['xt.other','Другое','Other'],['xt.ph','Например: шины','e.g. tires'],['xt.date','Дата','Date'],['xt.range','Расходы с датой с {a} по {b}','Expenses dated {a} – {b}'],['xt.rAll','Учитываются все доп. расходы','All extra expenses are counted'],['xt.rNone','Выберите недели, чтобы добавить расходы','Select weeks to add expenses'],['xt.hidden','ещё {n} вне периода','{n} more outside this period'],['xt.none','Добавьте траты кнопками выше — итог пересчитается с ними.','Add costs with the buttons above and the result is recalculated with them.'],['xt.result','Итог с доп. расходами (чистыми)','Result with extra expenses (net)'],['xt.diff','к чистой по неделям','vs weeks-only net'],['xt.weeks','По неделям','Weeks only'],['xt.with','С доп. расходами','With extras'],['xt.extra','Доп. расходы','Extra expenses'],['xt.exp','Все расходы','All expenses'],['xt.net','Чистыми','Net'],['xt.margin','Маржа','Margin'],['sm.cpm','Расход на милю (CPM)','Cost per mile (CPM)'],['sm.cpmSub','расходы ÷ мили, без доп. расходов','expenses ÷ miles, without extras'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в рейсах.','No route data. Fill in From and To on the loads.'],
+['ar.map','Маршрут недели','Week route'],['ar.mapSub','Груженые и пустые перегоны по дорогам. Масштаб: + − или двумя пальцами','Loaded and deadhead legs along the roads. Zoom: + − or two fingers'],['map.loading','Рисуем карту…','Drawing the map…'],['map.fail','Карта не загрузилась. Проверьте интернет.','The map did not load. Check your connection.'],['map.retry','Повторить','Retry'],['sm.map','🗺️ Карта маршрутов за период','🗺️ Routes map for the period'],['sm.mapSub','Все грузы выбранного периода. Толще линия — чаще направление, ярче штат — больше остановок.','All loads of the selected weeks. Thicker line = more frequent lane, brighter state = more stops.'],['map.noneSum','За этот период недель нет.','No weeks in this period.'],['map.progress','Ищем места на карте: {i} из {n}…','Locating places: {i} of {n}…'],['map.weeks','Недель','Weeks'],['map.loads','Грузов','Loads'],['map.places','Городов','Places'],['map.top','Частые направления','Top lanes'],['map.legend','толще линия = чаще','thicker = more often'],['xt.title','💸 Доп. расходы за период','💸 Extra expenses for the period'],['xt.sub','Траты, которых нет в неделях: плата за трак, сервис, ремонт. Меняют только итог ниже.','Costs you do not enter in weeks: truck payment, service, repairs. They only change the result below.'],['xt.truck','Плата за трак','Truck payment'],['xt.service','Сервис / ремонт','Service / repair'],['xt.other','Другое','Other'],['xt.ph','Например: шины','e.g. tires'],['xt.date','Дата','Date'],['xt.range','Расходы с датой с {a} по {b}','Expenses dated {a} – {b}'],['xt.rAll','Учитываются все доп. расходы','All extra expenses are counted'],['xt.rNone','Выберите недели, чтобы добавить расходы','Select weeks to add expenses'],['xt.hidden','ещё {n} вне периода','{n} more outside this period'],['xt.none','Добавьте траты кнопками выше — итог пересчитается с ними.','Add costs with the buttons above and the result is recalculated with them.'],['xt.result','Итог с доп. расходами (чистыми)','Result with extra expenses (net)'],['xt.diff','к чистой по неделям','vs weeks-only net'],['xt.weeks','По неделям','Weeks only'],['xt.with','С доп. расходами','With extras'],['xt.extra','Доп. расходы','Extra expenses'],['xt.exp','Все расходы','All expenses'],['xt.net','Чистыми','Net'],['xt.margin','Маржа','Margin'],['sm.cpm','Расход на милю (CPM)','Cost per mile (CPM)'],['sm.cpmSub','расходы ÷ мили, без доп. расходов','expenses ÷ miles, without extras'],['map.none','Нет данных о маршрутах. Заполните «Откуда» и «Куда» в грузах.','No route data. Fill in From and To on the loads.'],
 ['map.replay','Повтор','Replay'],['map.loaded','Груженый','Loaded'],['map.dh','Пустой','Deadhead'],['map.stops','Остановок','Stops'],['map.states','Штатов на пути','States crossed'],['map.crossed','Штаты на пути','States on the way'],['map.crossedApx','Штаты на пути (примерно)','States on the way (approx.)'],['map.roads','Прокладываю дороги {i}/{n}','Tracing roads {i}/{n}'],['map.fit','Весь маршрут','Whole route'],['map.wheel','Масштаб: Ctrl + колёсико (или кнопки + −)','Zoom: Ctrl + scroll (or the + − buttons)'],['map.twoFingers','Двигать карту — двумя пальцами (или ⛶ на весь экран)','Move the map with two fingers (or ⛶ full screen)'],['map.apxNote','≈ Часть линий пока проложена по интерстейтам: сервер дорог не ответил. Откройте карту позже — линии уточнятся.','≈ Some lines follow the interstates for now: the road server did not answer. Open the map later and they will be refined.'],['map.missing','Не удалось найти мест: {n}','Places not found: {n}'],
-['ar.anat','Анатомия одной мили','Anatomy of one mile'],['ar.be','Себестоимость мили (CPM): {c}/mi','Cost per mile (CPM): {c}/mi'],['ar.be.d','Чистыми водителю: {c}/mi','Driver net: {c}/mi'],['ar.dhpie','Loaded и Deadhead мили','Loaded vs deadhead miles'],['ar.dhrpm','Ставка: Loaded, All-miles, Net','Rate: Loaded, All-miles, Net'],['ar.cpm','CPM по статьям, $/mi','CPM by item, $/mi'],['ar.loadsrpm','RPM рейсов и CPM','Load RPM vs CPM'],['ar.split','Куда ушла выручка','Where revenue went'],['ar.expDetail','Расходы и удержания','Expenses and deductions'],['ar.loads','Рейсы недели','Loads of the week'],
-['ar.fuelItem','⛽ Дизель и DEF','⛽ Diesel and DEF'],['ar.ownerShare','🏢 Доля овнера / компании','🏢 Owner / company share'],['ar.netItem','💰 Чистая прибыль','💰 Net profit'],['ar.sumLoad','Сводный рейс недели','Week summary load'],['ar.fixed','Фиксированные','Fixed'],['ar.percent','Процентные','Percent-based'],['ar.permile','Помильные','Per-mile'],
-['th.item','Статья','Item'],['th.type','Тип','Type'],['th.sum','Сумма','Amount'],['th.pct','% от Gross','% of gross'],['th.dates','Даты','Dates'],['th.route','Маршрут','Route'],['th.miles','Мили','Miles'],['th.net','Чистыми','Net'],['th.broker','Брокер','Broker'],['th.lane','Направление','Lane'],['th.trips','Рейсов','Trips'],
+['ar.anat','Анатомия одной мили','Anatomy of one mile'],['ar.be','Себестоимость мили (CPM): {c}/mi','Cost per mile (CPM): {c}/mi'],['ar.be.d','Чистыми водителю: {c}/mi','Driver net: {c}/mi'],['ar.dhpie','Loaded и Deadhead мили','Loaded vs deadhead miles'],['ar.dhrpm','Ставка: Loaded, All-miles, Net','Rate: Loaded, All-miles, Net'],['ar.cpm','CPM по статьям, $/mi','CPM by item, $/mi'],['ar.loadsrpm','RPM грузов и CPM','Load RPM vs CPM'],['ar.split','Куда ушла выручка','Where revenue went'],['ar.expDetail','Расходы и удержания','Expenses and deductions'],['ar.loads','Грузы недели','Loads of the week'],
+['ar.fuelItem','⛽ Дизель и DEF','⛽ Diesel and DEF'],['ar.ownerShare','🏢 Доля овнера / компании','🏢 Owner / company share'],['ar.netItem','💰 Чистая прибыль','💰 Net profit'],['ar.sumLoad','Вся неделя сводно','Week summary load'],['ar.fixed','Фиксированные','Fixed'],['ar.percent','Процентные','Percent-based'],['ar.permile','Помильные','Per-mile'],
+['th.item','Статья','Item'],['th.type','Тип','Type'],['th.sum','Сумма','Amount'],['th.pct','% от Gross','% of gross'],['th.dates','Даты','Dates'],['th.route','Маршрут','Route'],['th.miles','Мили','Miles'],['th.net','Чистыми','Net'],['th.broker','Брокер','Broker'],['th.lane','Направление','Lane'],['th.trips','Грузов','Loads'],
 ['sm.title','Итоги периода','Period summary'],['sm.all','📊 Всё время','📊 All time'],['sm.custom','☑️ Выбрать недели вручную','☑️ Pick weeks manually'],['sm.month','📅 Месяц {m}','📅 Month {m}'],['sm.sel','Выбрано: {a} из {b}','Selected: {a} of {b}'],['sm.all.btn','Все','All'],['sm.none','Снять','None'],
-['sm.goal','Цель чистой прибыли, $','Net profit goal, $'],['sm.util','Загрузка и Per Diem','Utilization and Per Diem'],['sm.days','{n} дн. в рейсах','{n} days on road'],['sm.weeksN','Недель: {n}','Weeks: {n}'],['sm.load','{p}% загрузка','{p}% utilization'],['sm.perday','Чистыми / день: {a}','Net / day: {a}'],['sm.pd','Per Diem (${r}/д): {a}','Per Diem (${r}/d): {a}'],
+['sm.goal','Цель чистой прибыли, $','Net profit goal, $'],['sm.util','Загрузка и Per Diem','Utilization and Per Diem'],['sm.days','{n} дн. в пути','{n} days on road'],['sm.weeksN','Недель: {n}','Weeks: {n}'],['sm.load','{p}% загрузка','{p}% utilization'],['sm.perday','Чистыми / день: {a}','Net / day: {a}'],['sm.pd','Per Diem (${r}/д): {a}','Per Diem (${r}/d): {a}'],
 ['sm.dyn','Динамика: Gross, расходы, чистыми','Trend: gross, expenses, net'],['sm.struct','Структура затрат','Cost structure'],['sm.corr','Gross RPM, Net RPM, CPM','Gross RPM, Net RPM, CPM'],['sm.hauls','Эффективность по длине рейса','Efficiency by haul length'],['sm.lanes','Лучшие направления','Best lanes'],['sm.lanesChart','Топ направлений по RPM','Top lanes by RPM'],['sm.weeks','Недели в отчёте','Weeks included'],['sm.dhdyn','Пустой пробег по неделям','Deadhead by week'],['sm.hint','Указывайте штаты в маршрутах, напр. Dallas, TX','Include states in routes, e.g. Dallas, TX'],
 ['sm.gAll','Gross за всё время','Gross, all time'],['sm.gSel','Gross (выбранные)','Gross (selected)'],['sm.gMonth','Gross за месяц','Gross, month'],['sm.expD','Расходы / вычеты','Expenses / deductions'],['sm.net','Чистый доход','Net income'],['sm.nrpm','Net RPM периода','Period Net RPM'],['sm.margin','Маржа','Margin'],['sm.miles','Пробег','Mileage'],['sm.avgRpm','Ср. Gross RPM','Avg Gross RPM'],
 ['rp.title','Отчёт: финансы, налоги, IFTA','Report: finance, tax, IFTA'],['rp.print','📄 PDF / печать','📄 PDF / Print'],['rp.csv','⬇️ CSV','⬇️ CSV'],['rp.mode','Тип периода','Period type'],['rp.all','Все сохранённые недели','All saved weeks'],['rp.month','Месяц','Month'],['rp.week','Неделя','Week'],['rp.range','Диапазон дат','Date range'],['rp.from','С даты','From'],['rp.to','По дату','To'],['rp.rate','Per Diem, $/день','Per Diem, $/day'],
@@ -1243,7 +1274,22 @@ var DICT=[
 ['rp.ifta','Дизель по штатам за период (IFTA)','Diesel by state for the period (IFTA)'],['rp.noIfta','В периоде нет чеков с заправками по штатам.','No fuel receipts with states in this period.'],['rp.weeks','Недели периода','Weeks in period'],['rp.loads','Реестр рейсов','Load registry'],['rp.gP','Gross за период','Gross, period'],['rp.net','Чистая прибыль','Net profit'],['rp.allMiles','Всего миль','Total miles'],
 ['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.del','Удалить','Delete'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
 ['sync.saving','☁️ Сохранение…','☁️ Saving…'],['sync.ok','☁️ Синхронизировано','☁️ Synced'],['sync.local','⚠️ Только локально','⚠️ Local only'],
-['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export']
+['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export'],
+['sm.m.trip','Рейс','Trip'],['sm.cmpT','прошлый рейс «{n}», {a} – {b}','the previous trip “{n}”, {a} – {b}'],['sm.cmpTNone','Сравнения нет: это первый рейс','No comparison: this is the first trip'],
+['sm.pd','/день','/day'],['sm.wasD','было {a} в день','was {a} per day'],
+['sm.noTrips','Рейсов пока нет. Выбери рейс у недели во вкладке «Неделя» или собери недели в рейс в «Архиве» — кнопка «🧩 Рейсы».','No trips yet. Set the trip on the Week tab or group weeks into a trip in the Archive with the 🧩 Trips button.'],
+['sm.trips','🛣️ Сравнение рейсов','🛣️ Trips compared'],['sm.tt.trip','Рейс','Trip'],['sm.tt.wk','Нед.','Wks'],['sm.tt.net','Чистыми','Net'],['sm.tt.day','В день','Per day'],['sm.tt.mi','Мили','Miles'],
+['sm.tt.note','Нажми на рейс — откроются его итоги. Зелёный — лучший среди рейсов, красный — худший. «В день» — чистыми за день в пути.','Tap a trip to open it. Green is the best of your trips, red the worst. Per day = net per day on the road.'],
+['tp.label','🛣️ Рейс','🛣️ Trip'],['tp.none','— без рейса —','— no trip —'],['tp.new','+ Новый рейс…','+ New trip…'],['tp.n','Рейс {n}','Trip {n}'],['tp.wkN','· неделя {n}','· week {n}'],
+['tp.manage','🧩 Рейсы','🧩 Trips'],['tp.tNew','🛣️ Новый рейс','🛣️ New trip'],['tp.pick','Рейс','Trip'],['tp.name','Название рейса','Trip name'],['tp.weeks','Недели рейса','Weeks of the trip'],
+['tp.cnt','выбрано: {n}','selected: {n}'],['tp.in','сейчас в «{n}»','now in “{n}”'],['tp.save','Сохранить','Save'],['tp.disband','Расформировать','Ungroup'],['tp.cancel','Отмена','Cancel'],
+['tp.noName','Впиши название рейса','Enter a trip name'],['tp.noWeeks','Отметь недели этого рейса','Tick the weeks of this trip'],['tp.saved','🛣️ Рейс сохранён','🛣️ Trip saved'],
+['tp.disOk','Рейс расформирован, недели остались в архиве','Trip ungrouped; the weeks stay in the archive'],
+['tp.confirmDis','Расформировать рейс «{n}»? Недели останутся в архиве, просто без рейса.','Ungroup the trip “{n}”? The weeks stay in the archive, just without a trip.'],
+['tp.note','Неделя бывает только в одном рейсе: если отметить неделю из другого рейса, она перейдёт в этот.','A week belongs to one trip: ticking a week from another trip moves it here.'],
+['tp.newDraft','Рейс начнётся с текущей недели. Следующие недели продолжат его сами — менять ничего не нужно до следующего выезда.','The trip starts with the current week. The next weeks continue it on their own until your next trip.'],
+['tp.set','🛣️ Неделя теперь в рейсе «{n}»','🛣️ Week moved to “{n}”'],['tp.unset','Неделя теперь без рейса','The week has no trip now'],['tp.loose','Без рейса','No trip'],['tp.sum','📊 Итоги рейса','📊 Trip summary'],
+['rp.trip','Рейс','Trip'],['rp.pTrip','рейс «{n}»','trip “{n}”']
 ];
 var TR={ru:{},en:{}};DICT.forEach(function(r){TR.ru[r[0]]=r[1];TR.en[r[0]]=r[2];});
 var LANG=SafeStorage.get('hs_lang')||(((navigator.language||'en').toLowerCase().indexOf('ru')===0)?'ru':'en');
@@ -1282,7 +1328,7 @@ function hav(a,b){var R=3958.8,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lo
 /* =========================================================
    State
    ========================================================= */
-var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,goal:10000,
+var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',trip:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,goal:10000,
  extras:[],maintOn:false,maintStart:0,maintInterval:10000,maintBase:0,template:null,loads:[],fuel:[],exps:[],archive:[],archSel:null};
 var LAST={};var CH={};var saveT=null;var mapToken=0;var curPage='week';
 
@@ -1436,7 +1482,7 @@ function calc(){
  var net=isD?(drvPay-own):(gross-totalExp);
  /* the week's own dates (picked in the Week tab) win; otherwise the first pickup / last delivery */
  var wa=isISO(S.wFrom)?S.wFrom:'',wb=isISO(S.wTo)?S.wTo:'',sd=wa||first||(wb?addDaysISO(wb,-6):''),ed=wb||last||(wa?addDaysISO(wa,6):'');
- return{weekLabel:S.label||'Week',startDate:sd,endDate:ed,datesManual:!!(wa||wb),loadsFrom:first,loadsTo:last,partialPay:pPay,partialMiles:pMi,partialCount:pN,monthYear:monthOf({endDate:ed,startDate:sd}),userRole:S.role,driverPct:drvPct,driverGrossPay:drvPay,
+ return{weekLabel:S.label||'Week',tripName:tripNorm(S.trip),startDate:sd,endDate:ed,datesManual:!!(wa||wb),loadsFrom:first,loadsTo:last,partialPay:pPay,partialMiles:pMi,partialCount:pN,monthYear:monthOf({endDate:ed,startDate:sd}),userRole:S.role,driverPct:drvPct,driverGrossPay:drvPay,
   milesMode:S.milesMode,milesCalc:S.milesCalc,fuelMode:S.fuelMode,loadedMiles:loaded,deadheadMiles:dh,totalMiles:miles,totalGross:gross,totalExpenses:totalExp,netProfit:net,totalDays:days,
   netRpm:miles>0?net/miles:0,margin:gross>0?net/gross*100:0,cpm:miles>0?totalExp/miles:0,avgRpm:miles>0?gross/miles:0,loadedRpm:loaded>0?gross/loaded:0,fuelCost:fuelCost,
   fuelLogs:S.fuel.map(fuelOut),
@@ -1448,7 +1494,7 @@ function calc(){
    Persistence (draft)
    ========================================================= */
 function draftObj(){
- return{weekLabel:S.label,weekFrom:S.wFrom||'',weekTo:S.wTo||'',userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
+ return{weekLabel:S.label,tripName:tripNorm(S.trip),weekFrom:S.wFrom||'',weekTo:S.wTo||'',userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
   defaultTemplate:S.template||null,mpg:S.mpg,dieselPrice:S.diesel,taxPct:S.taxPct,perDiem:S.perDiem,goal:num(S.goal)||10000,
   loads:S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:num(l.deadhead),gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid,partials:ptList(l).map(ptOut)};}),
   fuelLogs:S.fuel.map(fuelOut),
@@ -1473,6 +1519,7 @@ function applyDraft(d){
  if(!d)return;
  if(d.defaultTemplate){S.template=d.defaultTemplate;SafeStorage.set(tplKey(),JSON.stringify(d.defaultTemplate));}
  if(d.weekLabel!=null)S.label=d.weekLabel;
+ S.trip=tripNorm(d.tripName);
  S.wFrom=isISO(d.weekFrom)?d.weekFrom:'';S.wTo=isISO(d.weekTo)?d.weekTo:'';
  S.role=d.userRole==='driver'?'driver':'owner';
  if(d.driverPct!=null)S.driverPct=num(d.driverPct)||30;
@@ -1525,7 +1572,7 @@ function kpi(l,v,cls,s,hl){return'<div class="kpi'+(hl?' hl':'')+'"><div class="
 
 function renderStatic(){
  var isD=S.role==='driver';
- $('#in-label').value=S.label;renderWeekDates(true);$('#in-driverPct').value=S.driverPct;$('#in-mpg').value=S.mpg;$('#in-diesel').value=S.diesel;$('#in-taxPct').value=S.taxPct;
+ $('#in-label').value=S.label;renderWeekDates(true);fillTripSel();$('#in-driverPct').value=S.driverPct;$('#in-mpg').value=S.mpg;$('#in-diesel').value=S.diesel;$('#in-taxPct').value=S.taxPct;
  $('#in-maintStart').value=S.maintStart;$('#in-maintInterval').value=S.maintInterval;$('#in-perDiem').value=S.perDiem;
  $$('#seg-role button').forEach(function(b){b.className=(b.dataset.v===S.role?'on':'');});
  $('#seg-role').classList.toggle('blu',isD);
@@ -2091,14 +2138,14 @@ async function archiveWeek(){
    lost. The edit itself is kept on this device (hs6_edit_*) and comes back
    after a reload. Save updates the same archive row; Cancel drops the edit.
    ========================================================= */
-var ED_KEYS=['weekLabel','weekFrom','weekTo','userRole','driverPct','fuelMode','milesMode','milesCalc','startText','startGeo','mpg','dieselPrice','loads','fuelLogs','expenses'];
+var ED_KEYS=['weekLabel','tripName','weekFrom','weekTo','userRole','driverPct','fuelMode','milesMode','milesCalc','startText','startGeo','mpg','dieselPrice','loads','fuelLogs','expenses'];
 function pickWeek(d){var o={};ED_KEYS.forEach(function(k){if(d&&d[k]!==undefined)o[k]=d[k];});return o;}
 function edKey(){return'hs6_edit_'+activeId();}
 function edPersist(d){if(!S.ed)return;SafeStorage.set(edKey(),JSON.stringify({id:S.ed.id,name:S.ed.name,cur:pickWeek(d||draftObj()),dirty:!!S.ed.dirty,at:Date.now()}));}
 /* week fields only: settings, template, maintenance and Summary extras are left alone */
 function applyWeek(d){
  d=d||{};
- S.label=d.weekLabel!=null?String(d.weekLabel):'';
+ S.label=d.weekLabel!=null?String(d.weekLabel):'';S.trip=tripNorm(d.tripName);
  S.wFrom=isISO(d.weekFrom)?d.weekFrom:'';S.wTo=isISO(d.weekTo)?d.weekTo:'';
  S.role=d.userRole==='driver'?'driver':'owner';S.driverPct=num(d.driverPct)||30;
  S.fuelMode=d.fuelMode==='log'?'log':'mpg';S.milesMode=d.milesMode==='split'?'split':'simple';S.milesCalc=d.milesCalc==='auto'?'auto':'manual';
@@ -2111,7 +2158,7 @@ function applyWeek(d){
 /* an archived payload -> the editor's week fields (older weeks did not keep every input) */
 function weekFromPayload(w){
  var loads=Array.isArray(w.loads)?w.loads:[],fl=Array.isArray(w.fuelLogs)?w.fuelLogs:[];
- var d={weekLabel:w.weekLabel||'',userRole:w.userRole==='driver'?'driver':'owner',driverPct:num(w.driverPct)||30,
+ var d={weekLabel:w.weekLabel||'',tripName:tripNorm(w.tripName),userRole:w.userRole==='driver'?'driver':'owner',driverPct:num(w.driverPct)||30,
   fuelMode:w.fuelMode==='log'||w.fuelMode==='mpg'?w.fuelMode:(fl.length?'log':'mpg'),
   milesMode:w.milesMode==='split'||w.milesMode==='simple'?w.milesMode:(num(w.deadheadMiles)>0?'split':'simple'),
   milesCalc:w.milesCalc==='auto'?'auto':'manual',startText:w.startText||'',startGeo:w.startGeo||null,
@@ -2287,17 +2334,23 @@ function legendOpts(pos){return{position:pos||'top',labels:{boxWidth:10,font:{si
    ========================================================= */
 function fillArchiveControls(){
  var sel=$('#archive-select');
- if(!S.archive.length){sel.innerHTML='<option value="">'+t('ar.empty')+'</option>';$('#arch-body').style.display='none';$('#btn-del-arch').hidden=true;$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;renderSummary();fillReportFilters();renderArList();return;}
- sel.innerHTML='<option value="">'+t('ar.pick')+'</option>'+S.archive.map(function(w,i){return'<option value="'+i+'">'+(w.userRole==='driver'?'👨‍✈️ ':'🚚 ')+esc(w.weekLabel||t('c.week.n',{n:i+1}))+' ('+money(w.totalGross,0)+' / '+money(w.netProfit,0)+')</option>';}).join('');
- buildCustomList();fillReportFilters();
+ if(!S.archive.length){sel.innerHTML='<option value="">'+t('ar.empty')+'</option>';$('#ar-trip-row').hidden=true;fillTripSel();$('#arch-body').style.display='none';$('#btn-del-arch').hidden=true;$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;renderSummary();fillReportFilters();renderArList();return;}
+ /* weeks of one trip sit together under the trip's name (no trips yet: the plain list as before) */
+ var opt=function(i){var w=S.archive[i];return'<option value="'+i+'">'+(w.userRole==='driver'?'👨‍✈️ ':'🚚 ')+esc(w.weekLabel||t('c.week.n',{n:i+1}))+' ('+money(w.totalGross,0)+' / '+money(w.netProfit,0)+')</option>';};
+ var B=arBlocks(),body='',loose=[];
+ if(!B.some(function(b){return b.k;}))body=S.archive.map(function(w,i){return opt(i);}).join('');
+ else{var flush=function(){if(loose.length){body+='<optgroup label="'+esc(t('tp.loose'))+'">'+loose.map(opt).join('')+'</optgroup>';loose=[];}};
+  B.forEach(function(b){if(!b.k){loose.push(b.idx[0]);return;}flush();var r=rawRange(b.idx.map(function(i){return S.archive[i];}));body+='<optgroup label="'+esc('🛣️ '+b.name+(r.a?' · '+dShort(r.a)+' – '+dShort(r.b):''))+'">'+b.idx.map(opt).join('')+'</optgroup>';});flush();}
+ sel.innerHTML='<option value="">'+t('ar.pick')+'</option>'+body;
+ buildCustomList();fillReportFilters();fillTripSel();
  if(S.archSel!=null&&S.archive[S.archSel]){sel.value=S.archSel;showArchived(S.archSel);}else{sel.value='';$('#arch-body').style.display='none';$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;}
  renderSummary();renderArList();
 }
 function expTypeLabel(type,val){if(type==='fixed')return t('ex.fixed').replace('($)','')+'$'+f0(val);if(type==='percent')return f1(val)+'% '+t('ex.pct').replace('%','').trim();if(type==='cpm')return f1(val)+' ¢/mi';if(type==='dlr_mile')return'$'+f2(val)+'/mi';return'';}
 function showArchived(idx){
  var w=S.archive[idx];var body=$('#arch-body');
- if(!w){body.style.display='none';$('#btn-del-arch').hidden=true;$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;S.archSel=null;return;}
- S.archSel=+idx;body.style.display='flex';$('#btn-del-arch').hidden=S.ro;$('#btn-edit-arch').hidden=S.ro;
+ if(!w){body.style.display='none';$('#btn-del-arch').hidden=true;$('#btn-edit-arch').hidden=true;$('#ar-edited').hidden=true;$('#ar-trip-row').hidden=true;S.archSel=null;return;}
+ S.archSel=+idx;body.style.display='flex';$('#btn-del-arch').hidden=S.ro;$('#btn-edit-arch').hidden=S.ro;arTripFill(w);
  var edN=$('#ar-edited'),eAt=w.editedAt?new Date(w.editedAt):null;edN.hidden=!(eAt&&!isNaN(eAt));
  if(!edN.hidden)edN.textContent=t('ar.edited',{d:shortDate(isoOf(eAt))+' '+String(eAt.getHours()).padStart(2,'0')+':'+String(eAt.getMinutes()).padStart(2,'0')});
  $('#ar-from').value=w.startDate||'';$('#ar-to').value=w.endDate||w.weekEndDate||'';$('#ar-dates-src').textContent=t(w.datesManual?'ar.dManual':'ar.dLoads');
@@ -2769,8 +2822,8 @@ function renderXtRes(){smTop(true);}
      is not counted a second time;
    - TONU loads stay out of lane and trip-length rates.
    ========================================================= */
-var SM={mode:SafeStorage.get('hs_smode')||'month',month:'',spot:'',spotCmp:'prev',metric:SafeStorage.get('hs_smetric')||'net',sort:{k:'date',d:-1},hmAll:false,mview:'period',munit:'usd',lane:'freq',lanesAll:false,othOpen:false,xtOpen:false,sel:null};
-var SM_MODES=['month','w4','w8','w12','all','custom'];
+var SM={mode:SafeStorage.get('hs_smode')||'month',month:'',trip:'',spot:'',spotCmp:'prev',metric:SafeStorage.get('hs_smetric')||'net',sort:{k:'date',d:-1},hmAll:false,mview:'period',munit:'usd',lane:'freq',lanesAll:false,othOpen:false,xtOpen:false,sel:null};
+var SM_MODES=['trip','month','w4','w8','w12','all','custom'];
 if(SM_MODES.indexOf(SM.mode)<0)SM.mode='month';
 var MON_RU=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'],MON_RU_S=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'],
  MON_EN=['January','February','March','April','May','June','July','August','September','October','November','December'],MON_EN_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2859,21 +2912,40 @@ function smGood(k,dv){var h=SMK[k].hi;if(h==null||Math.abs(dv)<1e-9)return'';ret
 
 /* ---- period ---- */
 function prevMon(m){var p=m.split('-'),y=+p[0],mo=+p[1]-1;if(mo<1){mo=12;y--;}return y+'-'+String(mo).padStart(2,'0');}
+/* ---- trips (рейсы): the weeks of one run away from home share the trip's name ---- */
+function tripNorm(n){return String(n==null?'':n).replace(/\s+/g,' ').trim().slice(0,60);}
+function tripKey(n){return tripNorm(n).toLowerCase();}
+/* every trip of the archive, newest first; each with its weeks (newest first) and dates */
+function tripsAll(){
+ var out=[],idx={};
+ S.archive.forEach(function(w){var k=tripKey(w.tripName);if(!k)return;var T=idx[k];if(!T){T=idx[k]={k:k,name:tripNorm(w.tripName),weeks:[]};out.push(T);}T.weeks.push(w);});
+ out.forEach(function(T){var r=rawRange(T.weeks);T.a=r.a||'';T.b=r.b||'';});
+ out.sort(function(x,y){return String(y.b).localeCompare(String(x.b));});
+ return out;
+}
+/* archive in display order: a trip's weeks together (placed at its newest week), weeks without a trip on their own */
+function arBlocks(){var B=[],seen={};S.archive.forEach(function(w,i){var k=tripKey(w.tripName);if(!k){B.push({idx:[i]});return;}if(seen[k]==null){seen[k]=B.length;B.push({k:k,name:tripNorm(w.tripName),idx:[i]});}else B[seen[k]].idx.push(i);});return B;}
+function tripNext(){var L=tripsAll().map(function(T){return T.k;});if(S.trip&&L.indexOf(tripKey(S.trip))<0)L.push(tripKey(S.trip));var n=L.length+1;while(L.indexOf(tripKey(t('tp.n',{n:n})))>=0)n++;return t('tp.n',{n:n});}
 function rawRange(list){var a='',b='';list.forEach(function(w){var s=wStart(w),e=wEnd(w);if(s&&(!a||s<a))a=s;if(e&&e>b)b=e;});return a&&b?{a:a,b:b}:{none:true};}
 function smSelHas(w){return!SM.sel||!!SM.sel[String(w.db_id)];}
 function smSelFromChecks(){var o={},all=true,any=false;$$('.chk-w').forEach(function(c){var w=S.archive[+c.value];if(!w)return;any=true;if(c.checked)o[String(w.db_id)]=true;else all=false;});if(any)SM.sel=all?null:o;}
 function buildCustomList(){var box=$('#custom-list');if(!box)return;box.innerHTML=S.archive.map(function(w,i){return'<label class="sm-wc"><input type="checkbox" class="chk-w" value="'+i+'"'+(smSelHas(w)?' checked':'')+'><span>'+esc(dShort(wEnd(w))||w.weekLabel||'')+'</span></label>';}).join('');}
 function smPick(){
- var A=S.archive,mode=SM.mode,list=[],cmp=null,cmpTxt='',range={none:true},crange=null,months=[];
+ var A=S.archive,mode=SM.mode,list=[],cmp=null,cmpTxt='',range={none:true},crange=null,months=[],TL=tripsAll();
  A.forEach(function(w){if(w.monthYear&&months.indexOf(w.monthYear)<0)months.push(w.monthYear);});months.sort().reverse();
  if(mode==='month'){
   if(months.indexOf(SM.month)<0)SM.month=months[0]||'';
   list=A.filter(function(w){return w.monthYear===SM.month;});
   if(SM.month){range=monthRange(SM.month);var pm=prevMon(SM.month),pl=A.filter(function(w){return w.monthYear===pm;});if(pl.length){cmp=pl;crange=monthRange(pm);cmpTxt=monName(pm);}}
- }else if(mode==='all'){list=A.slice();range={all:true};}
+ }else if(mode==='trip'){
+  if(!TL.some(function(x){return x.k===SM.trip;}))SM.trip=TL.length?TL[0].k:'';
+  var ti=TL.findIndex(function(x){return x.k===SM.trip;});
+  if(ti>=0){list=TL[ti].weeks.slice();range=spansRange(list);var pt=TL[ti+1];if(pt){cmp=pt.weeks.slice();crange=spansRange(cmp);cmpTxt=t('sm.cmpT',{n:pt.name,a:dShort(pt.a),b:dShort(pt.b)});}}
+ }
+ else if(mode==='all'){list=A.slice();range={all:true};}
  else if(mode==='custom'){list=A.filter(smSelHas);range=spansRange(list);}
  else{var n=+mode.slice(1)||4;list=A.slice(0,n);range=rawRange(list);var pl2=A.slice(n,n*2);if(pl2.length){cmp=pl2;crange=rawRange(pl2);cmpTxt=t('sm.cmpW',{n:plN(pl2.length,'wk'),a:dShort(crange.a),b:dShort(crange.b)});}}
- return{mode:mode,months:months,list:list,cmp:cmp,cmpTxt:cmpTxt,range:range,crange:crange};
+ return{mode:mode,months:months,trips:TL,list:list,cmp:cmp,cmpTxt:cmpTxt,range:range,crange:crange};
 }
 function renderSummary(val){
  if(val==='ALL')SM.mode='all';
@@ -2882,26 +2954,127 @@ function renderSummary(val){
  SafeStorage.set('hs_smode',SM.mode);
  var P=smPick(),ws=P.list.map(smWeek),cws=P.cmp?P.cmp.map(smWeek):null;
  var cur=smAgg(ws),prev=cws?smAgg(cws):null;
- SUMCTX={val:P.mode==='month'?SM.month:(P.mode==='all'?'ALL':(P.mode==='custom'?'CUSTOM':P.mode)),mode:P.mode,months:P.months,list:P.list,range:P.range,crange:P.crange,cmp:P.cmp,cmpTxt:P.cmpTxt,
+ SUMCTX={val:P.mode==='month'?SM.month:(P.mode==='all'?'ALL':(P.mode==='custom'?'CUSTOM':P.mode)),mode:P.mode,months:P.months,trips:P.trips,list:P.list,range:P.range,crange:P.crange,cmp:P.cmp,cmpTxt:P.cmpTxt,
   ws:ws,cws:cws,cur:cur,prev:prev,G:cur.G,E:cur.C,N:cur.N,M:cur.M};
  smBar(SUMCTX);
  var has=ws.length>0,emp=$('#sm-empty');
- emp.hidden=has;if(!has)emp.textContent=S.archive.length?t('sm.emptyP'):t('sm.empty');
+ emp.hidden=has;if(!has)emp.textContent=S.archive.length?(P.mode==='trip'&&!P.trips.length?t('sm.noTrips'):t('sm.emptyP')):t('sm.empty');
  ['sm-hero','sm-spot','sm-dyn','sm-heat','sm-money','sum-map-card'].forEach(function(id){var e=$('#'+id);if(e)e.hidden=!has;});
+ renderTrips(SUMCTX);
  queueSumMap(P.list);
  if(!has)return;
  renderXt();renderSpot();renderDyn();renderHeat();renderLanes(SUMCTX);
 }
 function smBar(c){
- $('#sm-seg').innerHTML=SM_MODES.map(function(m){var l=m==='month'?t('sm.m.month'):m==='all'?t('sm.m.all'):m==='custom'?t('sm.m.custom'):t('sm.m.w',{n:m.slice(1)});return'<button type="button" data-act="smMode" data-m="'+m+'"'+(c.mode===m?' class="on" aria-pressed="true"':' aria-pressed="false"')+'>'+l+'</button>';}).join('');
+ $('#sm-seg').innerHTML=SM_MODES.map(function(m){var l=m==='trip'?t('sm.m.trip'):m==='month'?t('sm.m.month'):m==='all'?t('sm.m.all'):m==='custom'?t('sm.m.custom'):t('sm.m.w',{n:m.slice(1)});return'<button type="button" data-act="smMode" data-m="'+m+'"'+(c.mode===m?' class="on" aria-pressed="true"':' aria-pressed="false"')+'>'+l+'</button>';}).join('');
  var ms=$('#month-select'),i=c.months.indexOf(SM.month);
  ms.innerHTML=c.months.map(function(m){return'<option value="'+m+'">'+esc(monName(m))+'</option>';}).join('');if(SM.month)ms.value=SM.month;
  $('#sm-mon').hidden=c.mode!=='month'||!c.months.length;
  $$('#sm-mon [data-act="smMon"]').forEach(function(b){var j=i+num(b.dataset.d);b.disabled=j<0||j>=c.months.length;});
+ var ts=$('#trip-select'),TL=c.trips||[],ti=TL.findIndex(function(x){return x.k===SM.trip;});
+ ts.innerHTML=TL.map(function(T){return'<option value="'+esc(T.k)+'">'+esc(T.name+(T.a&&T.b?' · '+dShort(T.a)+' – '+dShort(T.b):''))+'</option>';}).join('');if(ti>=0)ts.value=SM.trip;
+ $('#sm-trip').hidden=c.mode!=='trip'||!TL.length;
+ $$('#sm-trip [data-act="smTrip"]').forEach(function(b){var j=ti+num(b.dataset.d);b.disabled=ti<0||j<0||j>=TL.length;});
  $('#custom-panel').hidden=c.mode!=='custom';if(c.mode==='custom')$('#custom-count').textContent=t('sm.sel',{a:c.list.length,b:S.archive.length});
  var a='',b='';c.list.forEach(function(w){var s=wStart(w),e=wEnd(w);if(s&&(!a||s<a))a=s;if(e&&e>b)b=e;});
  $('#sm-span').textContent=c.list.length?(a&&b?dShort(a)+' – '+dShort(b)+' · ':'')+plN(c.list.length,'wk'):'';
- $('#sm-cmp').textContent=c.cmpTxt?t('sm.cmp',{x:c.cmpTxt}):((c.mode==='month'||/^w\d/.test(c.mode))&&c.list.length?t('sm.cmpNone'):'');
+ $('#sm-cmp').textContent=c.cmpTxt?t('sm.cmp',{x:c.cmpTxt}):((c.mode==='month'||/^w\d/.test(c.mode))&&c.list.length?t('sm.cmpNone'):(c.mode==='trip'&&c.list.length?t('sm.cmpTNone'):''));
+}
+
+/* ---- trips side by side (Trip period, 2+ trips): tap one to open it ---- */
+/* a trip's totals exactly as Summary counts them: carry-over of an old minus is not a cost, extras of its dates are */
+function tripAgg(ws){return smWithX(smAgg(ws.map(smWeek)),smXtSum(spansRange(ws)));}
+function renderTrips(c){
+ var box=$('#sm-trips');if(!box)return;
+ var L=(c&&c.trips)||[];box.hidden=!(c&&c.mode==='trip'&&L.length>1&&c.ws.length);if(box.hidden){box.innerHTML='';return;}
+ var R=L.map(function(T){var a=tripAgg(T.weeks);return{T:T,a:a,v:{net:a.N,perday:a.D>0?a.N/a.D:null,nrpm:a.M>0?a.N/a.M:null,gross:a.G}};}),cls={};
+ ['net','perday','nrpm','gross'].forEach(function(k){var v=R.filter(function(r){return r.v[k]!=null;}).sort(function(x,y){return y.v[k]-x.v[k];}),m=v.length;if(m<2)return;
+  v.forEach(function(r,i){var p=i/(m-1);cls[k+'|'+r.T.k]=p<=0.2?'h2':p<=0.4?'h1':p<0.6?'':p<0.8?'l1':'l2';});});
+ var cell=function(r,k,txt,w){return'<td class="ar '+(cls[k+'|'+r.T.k]||'')+(w?' w':'')+'">'+txt+'</td>';};
+ box.innerHTML='<div class="ch"><span class="ct">'+t('sm.trips')+'</span></div><div class="sm-hmw"><table class="sm-hm sm-tt"><thead><tr><th>'+t('sm.tt.trip')+'</th><th class="ar">'+t('sm.tt.wk')+'</th><th class="ar">'+t('sm.tt.net')+'</th><th class="ar">'+t('sm.tt.day')+'</th><th class="ar">Net/mi</th><th class="ar w">Gross</th><th class="ar w">'+t('sm.tt.mi')+'</th></tr></thead><tbody>'+
+  R.map(function(r){var T=r.T,a=r.a;return'<tr data-act="smTripPick" data-k="'+esc(T.k)+'"'+(T.k===SM.trip?' class="sel"':'')+'><td><b>'+esc(T.name)+'</b><div class="cs">'+esc(T.a&&T.b?dShort(T.a)+' – '+dShort(T.b):'')+'</div></td><td class="ar">'+T.weeks.length+'</td>'+
+   cell(r,'net',m0(a.N))+cell(r,'perday',r.v.perday==null?'—':m0(r.v.perday))+cell(r,'nrpm',r.v.nrpm==null?'—':r2(r.v.nrpm))+cell(r,'gross',m0(a.G),1)+'<td class="ar w">'+f0(a.M)+'</td></tr>';}).join('')+
+  '</tbody></table></div><div class="cs" style="margin-top:8px">'+t('sm.tt.note')+'</div>';
+}
+/* Week tab: the trip of the week being filled in (a new week keeps it) */
+function tripNames(){var L=tripsAll().map(function(T){return T.name;}),k=tripKey(S.trip);if(k&&!L.some(function(n){return tripKey(n)===k;}))L.unshift(tripNorm(S.trip));return L;}
+function tripOpts(cur){var k=tripKey(cur),L=tripNames();if(k&&!L.some(function(n){return tripKey(n)===k;}))L.unshift(tripNorm(cur));
+ return{html:'<option value="">'+esc(t('tp.none'))+'</option>'+L.map(function(n){return'<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('')+'<option value="__new">'+esc(t('tp.new'))+'</option>',val:L.find(function(n){return tripKey(n)===k;})||''};}
+function fillTripSel(){
+ var sel=$('#in-trip');if(!sel)return;var o=tripOpts(S.trip),k=tripKey(S.trip);sel.innerHTML=o.html;sel.value=o.val;sel.disabled=!!S.ro;
+ var hn=$('#wk-trip-n');if(hn){var n=k&&!S.ed?S.archive.filter(function(w){return tripKey(w.tripName)===k;}).length:-1;hn.textContent=n>=0?t('tp.wkN',{n:n+1}):'';}
+}
+function weekTripSet(v){
+ if(!guardWrite()){fillTripSel();return;}
+ if(v==='__new'){fillTripSel();tripSheet('draft');return;}
+ S.trip=tripNorm(v);fillTripSel();queueSave();
+}
+/* Archive: the trip of the chosen week */
+function arTripFill(w){var row=$('#ar-trip-row'),sel=$('#ar-trip');if(!row||!sel)return;row.hidden=!w;if(!w)return;var o=tripOpts(w.tripName);sel.innerHTML=o.html;sel.value=o.val;sel.disabled=!!S.ro;}
+async function arTripSet(v){
+ var w=S.archive[S.archSel];if(!w)return;
+ if(!guardWrite()){arTripFill(w);return;}
+ if(S.ed&&S.ed.id===w.db_id){arTripFill(w);edBusy();return;}
+ if(v==='__new'){arTripFill(w);tripSheet('arch','__new');return;}
+ if(!sb||!S.user){arTripFill(w);toast(t('t.login'));return;}
+ var n=tripNorm(v);
+ try{await tripWrite([{w:w,n:n}]);}catch(e){arTripFill(w);toast(t('t.err',{e:(e&&e.message)||e}),4500);return;}
+ toast(n?t('tp.set',{n:n}):t('tp.unset'),2600);await tripReload();
+}
+/* the trip sheet: a new trip for the current week ('draft'), or build / rename / ungroup trips from archived weeks ('arch') */
+var TPS={mode:'',k:''};
+function tripSheet(mode,k){
+ var bg=$('#trip-bg');if(!bg)return;TPS.mode=mode;var arch=mode==='arch',L=tripsAll();
+ $('#tp-title').textContent=t(arch?'tp.manage':'tp.tNew');$('#tp-pick-w').hidden=!arch;$('#tp-weeks-w').hidden=!arch;
+ if(arch){var w=S.archive[S.archSel];if(k==null)k=w&&tripKey(w.tripName)?tripKey(w.tripName):'__new';
+  $('#tp-pick').innerHTML='<option value="__new">'+esc(t('tp.new'))+'</option>'+L.map(function(T){return'<option value="'+esc(T.k)+'">'+esc(T.name)+' · '+plN(T.weeks.length,'wk')+'</option>';}).join('');
+  $('#tp-pick').value=L.some(function(T){return T.k===k;})?k:'__new';}
+ tripSheetFill();bg.hidden=false;
+ if(!arch||$('#tp-pick').value==='__new')setTimeout(function(){var n=$('#tp-name');if(n){n.focus();n.select();}},60);
+}
+function tripSheetFill(){
+ var arch=TPS.mode==='arch',k=arch?$('#tp-pick').value:'__new',T=tripsAll().find(function(x){return x.k===k;})||null;
+ TPS.k=T?T.k:'';$('#tp-name').value=T?T.name:tripNext();$('#tp-dis').hidden=!T;$('#tp-note').textContent=t(arch?'tp.note':'tp.newDraft');
+ if(!arch)return;var sw=S.archive[S.archSel];
+ $('#tp-weeks').innerHTML=S.archive.map(function(w,i){var wk=tripKey(w.tripName),on=T?wk===T.k:w===sw,other=wk&&(!T||wk!==T.k),a=wStart(w),e=wEnd(w),N=num(w.netProfit);
+  return'<label class="tp-w"><input type="checkbox" class="tp-chk" value="'+i+'"'+(on?' checked':'')+'><span class="t1"><b>'+esc(wTag(w)||w.weekLabel||t('c.week.n',{n:i+1}))+'</b><small>'+esc(a&&e?dShort(a)+' – '+dShort(e):'')+(other?' · <span class="tp-in">'+esc(t('tp.in',{n:tripNorm(w.tripName)}))+'</span>':'')+'</small></span><span class="t2 '+(N<0?'r':'a')+'">'+m0(N)+'</span></label>';}).join('');
+ tripSheetCount();
+}
+function tripSheetCount(){var c=$('#tp-cnt');if(c)c.textContent=t('tp.cnt',{n:$$('.tp-chk:checked').length});}
+async function tripWrite(ch){
+ for(var i=0;i<ch.length;i++){var w=ch[i].w,p={};Object.keys(w).forEach(function(k){if(k!=='db_id'&&k!=='weekEndDate')p[k]=w[k];});
+  if(ch[i].n)p.tripName=ch[i].n;else delete p.tripName;
+  var r=await sb.from('weekly_reports').update({full_payload:p}).eq('id',w.db_id);if(r&&r.error)throw r.error;w.tripName=ch[i].n;}
+}
+async function tripReload(){
+ var keep=S.archSel!=null&&S.archive[S.archSel]?S.archive[S.archSel].db_id:null;await loadArchive();
+ if(keep!=null){var ni=S.archive.findIndex(function(z){return z.db_id===keep;});if(ni>=0){S.archSel=ni;$('#archive-select').value=ni;showArchived(ni);}}
+ fillTripSel();renderArList();if(curPage==='summary')renderSummary();if(curPage==='reports')renderReport();
+}
+async function tripSave(){
+ if(!guardWrite())return;
+ var name=tripNorm($('#tp-name').value);if(!name){toast(t('tp.noName'));$('#tp-name').focus();return;}
+ if(TPS.mode==='draft'){S.trip=name;$('#trip-bg').hidden=true;fillTripSel();queueSave();toast(t('tp.saved'));return;}
+ if(!sb||!S.user)return toast(t('t.login'));
+ var ok=TPS.k,on={},ch=[];$$('.tp-chk').forEach(function(c){if(c.checked)on[c.value]=1;});
+ if(!Object.keys(on).length)return toast(t('tp.noWeeks'));
+ S.archive.forEach(function(w,i){var wk=tripKey(w.tripName),want=on[i]?name:(ok&&wk===ok?'':null);if(want===null||String(w.tripName||'')===want)return;ch.push({w:w,n:want});});
+ if(S.ed&&ch.some(function(x){return x.w.db_id===S.ed.id;}))return edBusy();
+ var btn=$('[data-act="tpSave"]');btn.disabled=true;
+ try{await tripWrite(ch);}catch(e){toast(t('t.err',{e:(e&&e.message)||e}),4500);return;}finally{btn.disabled=false;}
+ if(ok&&tripKey(S.trip)===ok&&S.trip!==name){S.trip=name;queueSave();}
+ if(ok&&SM.trip===ok)SM.trip=tripKey(name);
+ $('#trip-bg').hidden=true;toast(t('tp.saved'));await tripReload();
+}
+async function tripDisband(){
+ if(!guardWrite())return;var ok=TPS.k,T=tripsAll().find(function(x){return x.k===ok;});if(!T)return;
+ if(!confirm(t('tp.confirmDis',{n:T.name})))return;
+ if(!sb||!S.user)return toast(t('t.login'));
+ var ch=T.weeks.map(function(w){return{w:w,n:''};});
+ if(S.ed&&ch.some(function(x){return x.w.db_id===S.ed.id;}))return edBusy();
+ try{await tripWrite(ch);}catch(e){toast(t('t.err',{e:(e&&e.message)||e}),4500);return;}
+ if(tripKey(S.trip)===ok){S.trip='';queueSave();}
+ $('#trip-bg').hidden=true;toast(t('tp.disOk'),3000);await tripReload();
 }
 
 /* ---- extras of a date range (truck payment, service…), split like week costs ---- */
@@ -2917,9 +3090,15 @@ function smTop(light){
 
 /* ---- hero: net, goal, tiles, flags, records ---- */
 function smPW(c){return!!(c.B&&c.cws&&c.cws.length!==c.ws.length);}
+/* how two periods are put side by side: periods of a different length per week, trips per day on the road */
+function smNorm(c){
+ if(!c.B||!c.cws)return null;
+ if(c.mode==='trip'){var da=num(c.A.D),db=num(c.B.D);if(da>0&&db>0)return Math.abs(da-db)<1e-9?null:{a:da,b:db,u:t('sm.pd'),was:'sm.wasD'};}
+ return c.cws.length!==c.ws.length?{a:c.ws.length,b:c.cws.length,u:t('sm.pw'),was:'sm.wasW'}:null;
+}
 function smHero(c){
  var A=c.A,B=c.B,h='<div class="cs">'+t('sm.netP')+'</div><div class="sm-net'+(A.N<0?' neg':'')+'">'+m0(A.N)+'</div>',sub=[];
- if(B){var pw=smPW(c),an=pw?A.N/c.ws.length:A.N,bn=pw?B.N/c.cws.length:B.N,d=an-bn;sub.push('<b class="'+(d>=0?'g':'r')+'">'+(d>=0?'▲ ':'▼ ')+sgnM(d)+(pw?t('sm.pw'):'')+'</b> <span class="muted">'+t(pw?'sm.wasW':'sm.was',{a:m0(bn)})+'</span>');}
+ if(B){var nz=smNorm(c),an=nz?A.N/nz.a:A.N,bn=nz?B.N/nz.b:B.N,d=an-bn;sub.push('<b class="'+(d>=0?'g':'r')+'">'+(d>=0?'▲ ':'▼ ')+sgnM(d)+(nz?nz.u:'')+'</b> <span class="muted">'+t(nz?nz.was:'sm.was',{a:m0(bn)})+'</span>');}
  if(A.G>0)sub.push('<span class="muted">'+t('sm.margin2',{p:f0(A.N/A.G*100)})+'</span>');
  if(A.X>0)sub.push('<span class="muted">'+t('sm.withX',{a:m0(A.N+A.X),b:money(A.X,0)})+'</span>');
  $('#sm-hnum').innerHTML=h+(sub.length?'<div class="sm-hsub">'+sub.join('<span class="dim"> · </span>')+'</div>':'');
@@ -2956,7 +3135,7 @@ function smTiles(c){
  var A=c.A,B=c.B,chr=c.ws.slice().reverse();
  $('#sm-tiles').innerHTML=SM_TILES.map(function(T){
   var K=SMK[T.k],v=K.v(A),dv=null,dh='';
-  if(B){var bv=K.v(B),pw=K.sum&&smPW(c);if(v!=null&&bv!=null){dv=pw?v/c.ws.length-bv/c.cws.length:v-bv;var cl=smGood(T.k,dv);dh='<span class="sm-d '+cl+'">'+(dv>0?'▲':dv<0?'▼':'')+' '+K.d(dv)+(pw?t('sm.pw'):'')+'</span>';}}
+  if(B){var bv=K.v(B),nz=K.sum?smNorm(c):null;if(v!=null&&bv!=null){dv=nz?v/nz.a-bv/nz.b:v-bv;var cl=smGood(T.k,dv);dh='<span class="sm-d '+cl+'">'+(dv>0?'▲':dv<0?'▼':'')+' '+K.d(dv)+(nz?nz.u:'')+'</span>';}}
   return'<div class="sm-tile" data-k="'+T.k+'"><div class="l">'+t(T.l)+'</div><div class="sm-tv"><span class="v">'+(v==null?'—':K.f(v))+'</span>'+dh+'</div>'+
    smSpark(chr.map(function(s){return K.v(s);}))+'<div class="s">'+T.s(A)+'</div></div>';}).join('');
 }
@@ -3139,14 +3318,14 @@ function renderLanes(c){
  if(SM.lane==='best')L.sort(function(a,b){return b.r-a.r;});else L.sort(function(a,b){return(b.c-a.c)||(b.g-a.g);});
  var show=SM.lanesAll?L:L.slice(0,3);
  var h='<div class="sm-lh"><span class="ct" style="font-size:17px">'+t('sm.lanes2')+'</span><div class="seg">'+['freq','best'].map(function(v){return'<button type="button" data-act="smLane" data-v="'+v+'"'+(SM.lane===v?' class="on"':'')+'>'+t('sm.ln.'+v)+'</button>';}).join('')+'</div></div>';
- h+=L.length?show.map(function(o,i){return'<div class="sm-ln"><span class="i">'+(i+1)+'</span><b class="k">'+esc(o.k)+'</b><span class="muted">'+plN(o.c,'tr')+' · '+money(o.g,0)+'</span><b class="g">'+r2(o.r)+'/mi</b></div>';}).join(''):'<div class="cs">'+t('sm.ln.none')+'</div>';
+ h+=L.length?show.map(function(o,i){return'<div class="sm-ln"><span class="i">'+(i+1)+'</span><b class="k">'+esc(o.k)+'</b><span class="muted">'+plN(o.c,'ld')+' · '+money(o.g,0)+'</span><b class="g">'+r2(o.r)+'/mi</b></div>';}).join(''):'<div class="cs">'+t('sm.ln.none')+'</div>';
  if(L.length>3)h+='<button type="button" class="btn sm" data-act="smLanesAll" style="margin-top:8px">'+(SM.lanesAll?t('sm.ln.less'):t('sm.ln.all',{n:L.length}))+'</button>';
  if(c.cur.tonuN)h+='<div class="cs" style="margin-top:8px">'+t('sm.ln.tonu',{n:c.cur.tonuN,a:money(c.cur.tonuG,0)})+'</div>';
  h+='<div class="cs" style="margin-top:4px">'+t('sm.ln.note')+'</div>';
  box.innerHTML=h;
  var B=[[0,300,'≤ 300'],[300,600,'300–600'],[600,1000,'600–1000'],[1000,1e9,'1000+']].map(function(b){var o={l:b[2],c:0,g:0,mi:0};c.cur.trips.forEach(function(x){if(x.lm>b[0]&&x.lm<=b[1]||(b[0]===0&&x.lm===0)){o.c++;o.g+=x.g;o.mi+=x.mi;}});o.r=o.mi>0?o.g/o.mi:0;return o;});
  var mr=B.reduce(function(m,o){return Math.max(m,o.r);},0)||1;
- hb.innerHTML='<div class="ct" style="font-size:17px;margin:14px 0 6px">'+t('sm.haul')+'</div>'+B.map(function(o){return'<div class="sm-hl"><span class="l">'+o.l+' mi</span><span class="tr"><i style="width:'+(o.r/mr*100).toFixed(0)+'%"></i></span><span class="v">'+(o.c?plN(o.c,'tr')+' · <b>'+r2(o.r)+'/mi</b>':'<span class="dim">'+t('sm.hl.none')+'</span>')+'</span></div>';}).join('');
+ hb.innerHTML='<div class="ct" style="font-size:17px;margin:14px 0 6px">'+t('sm.haul')+'</div>'+B.map(function(o){return'<div class="sm-hl"><span class="l">'+o.l+' mi</span><span class="tr"><i style="width:'+(o.r/mr*100).toFixed(0)+'%"></i></span><span class="v">'+(o.c?plN(o.c,'ld')+' · <b>'+r2(o.r)+'/mi</b>':'<span class="dim">'+t('sm.hl.none')+'</span>')+'</span></div>';}).join('');
 }
 
 /* =========================================================
@@ -3159,10 +3338,12 @@ function fillReportFilters(){
  var ms=$('#rp-month'),ws=$('#rp-week'),months={};
  ws.innerHTML=S.archive.map(function(w,i){months[w.monthYear]=1;return'<option value="'+i+'">'+esc(w.weekLabel||t('c.week.n',{n:i+1}))+'</option>';}).join('');
  ms.innerHTML=Object.keys(months).sort().reverse().map(function(m){return'<option value="'+m+'">'+m+'</option>';}).join('');
+ var rt=$('#rp-trip');if(rt){var keep=rt.value,TL=tripsAll();rt.innerHTML=TL.map(function(T){return'<option value="'+esc(T.k)+'">'+esc(T.name+(T.a&&T.b?' · '+dShort(T.a)+' – '+dShort(T.b):''))+'</option>';}).join('');if(keep&&TL.some(function(T){return T.k===keep;}))rt.value=keep;}
 }
 function reportList(){
  var mode=$('#rp-mode').value,list=[],sub=t('rp.pAll');
  if(mode==='all')list=S.archive.slice();
+ else if(mode==='trip'){var tk=$('#rp-trip').value,T=tripsAll().find(function(x){return x.k===tk;});if(T){list=T.weeks.slice();sub=t('rp.pTrip',{n:T.name});}}
  else if(mode==='month'){var m=$('#rp-month').value;sub=t('rp.pMonth',{m:m});list=S.archive.filter(function(w){return w.monthYear===m;});}
  else if(mode==='week'){var i=$('#rp-week').value;if(i!==''&&S.archive[i]){list=[S.archive[i]];sub=S.archive[i].weekLabel||'';}}
  else if(mode==='custom'){$$('.chk-rw').forEach(function(c){if(c.checked&&S.archive[+c.value])list.push(S.archive[+c.value]);});sub=t('rp.pCustom',{n:list.length});var cn=$('#rp-cnt');if(cn)cn.textContent=t('sm.sel',{a:list.length,b:S.archive.length});}
@@ -3465,6 +3646,13 @@ var ACT={
   if(inp){inp.focus();if(inp.select)inp.select();}},
  sumReplay:function(){var box=$('#sum-map-box');if(box._map)box._map.replay();},
  smMode:function(b){SM.mode=b.dataset.m;SafeStorage.set('hs_smode',SM.mode);SM.spot='';renderSummary();},
+ smTrip:function(b){var L=tripsAll(),i=L.findIndex(function(x){return x.k===SM.trip;}),j=i+num(b.dataset.d);if(i>=0&&L[j]){SM.trip=L[j].k;SM.spot='';renderSummary();}},
+ smTripPick:function(b){SM.mode='trip';SafeStorage.set('hs_smode','trip');SM.trip=b.dataset.k;SM.spot='';renderSummary();window.scrollTo({top:0,behavior:'smooth'});},
+ tpOpen:function(){if(!guardWrite())return;tripSheet('arch');},
+ tpClose:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#trip-bg').hidden=true;},
+ tpSave:function(){tripSave();},
+ tpDisband:function(){tripDisband();},
+ tpSum:function(b){SM.mode='trip';SafeStorage.set('hs_smode','trip');SM.trip=b.dataset.k;SM.spot='';go('summary');},
  smMon:function(b){var c=SUMCTX;if(!c)return;var i=c.months.indexOf(SM.month)+num(b.dataset.d);if(i>=0&&i<c.months.length){SM.month=c.months[i];SM.spot='';renderSummary();}},
  smSpotCmp:function(b){SM.spotCmp=b.dataset.c;renderSpot();},
  smSpotW:function(b){SM.spot=b.dataset.id;renderSpot();renderHeat();var el=$('#sm-spot');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},
@@ -3583,10 +3771,15 @@ document.addEventListener('change',function(e){
  if(el.id==='in-wFrom'||el.id==='in-wTo'){onWeekDate(el);return;}
  if(el.id==='archive-select'){showArchived(el.value);return;}
  if(el.id==='month-select'){renderSummary(el.value);return;}
+ if(el.id==='trip-select'){SM.trip=el.value;SM.spot='';renderSummary();return;}
+ if(el.id==='in-trip'){weekTripSet(el.value);return;}
+ if(el.id==='ar-trip'){arTripSet(el.value);return;}
+ if(el.id==='tp-pick'){tripSheetFill();return;}
+ if(el.classList&&el.classList.contains('tp-chk')){tripSheetCount();return;}
  if(el.id==='sm-spot-sel'){SM.spot=el.value;renderSpot();renderHeat();return;}
  if(el.id==='admin-select'){switchAdmin(el.value);return;}
- if(el.id==='rp-mode'){var m=el.value;$('#rp-custom').hidden=m!=='custom';$('#rp-w-month').hidden=m!=='month';$('#rp-w-week').hidden=m!=='week';$('#rp-w-from').hidden=m!=='range';$('#rp-w-to').hidden=m!=='range';renderReport();return;}
- if(el.id==='rp-month'||el.id==='rp-week'||el.id==='rp-from'||el.id==='rp-to'){renderReport();return;}
+ if(el.id==='rp-mode'){var m=el.value;$('#rp-w-trip').hidden=m!=='trip';$('#rp-custom').hidden=m!=='custom';$('#rp-w-month').hidden=m!=='month';$('#rp-w-week').hidden=m!=='week';$('#rp-w-from').hidden=m!=='range';$('#rp-w-to').hidden=m!=='range';renderReport();return;}
+ if(el.id==='rp-trip'||el.id==='rp-month'||el.id==='rp-week'||el.id==='rp-from'||el.id==='rp-to'){renderReport();return;}
  if(el.classList&&el.classList.contains('chk-w')){renderSummary('CUSTOM');return;}
  if(el.classList&&el.classList.contains('chk-rw')){renderReport();return;}
  if(el.dataset.place){var card=el.closest('[data-list]'),it=card&&findItem(card);if(it){var side=el.dataset.place;resolveInto(el,it,side+'Text',side+'Geo',function(){placeDone(card,it);});}return;}
@@ -3699,14 +3892,19 @@ function renderArList(){
  var w0=S.archSel!=null?S.archive[S.archSel]:null;
  if(cur)cur.textContent=w0?(w0.weekLabel||'')+(wStart(w0)&&wEnd(w0)&&(w0.weekLabel||'').indexOf('(')<0?' · '+dShort(wStart(w0))+' – '+dShort(wEnd(w0)):''):t('ar.title');
  if(!S.archive.length){box.innerHTML='<div class="cs" style="padding:10px">'+t('ar.empty')+'</div>';return;}
- box.innerHTML='<div class="arl-h">'+t('ar.title')+'<span>'+S.archive.length+'</span></div>'+S.archive.map(function(w,i){
+ var row=function(i,inT){var w=S.archive[i];
   var lbl=wTag(w)||w.weekLabel||t('c.week.n',{n:i+1}),a=wStart(w),e=wEnd(w),N=num(w.netProfit),M=num(w.totalMiles);
-  return'<button type="button" class="arl'+(S.archSel===i?' on':'')+'" data-act="arPick" data-i="'+i+'"'+(S.archSel===i?' aria-current="true"':'')+'><span class="arl-t"><b>'+(w.userRole==='driver'?'👨‍✈️ ':'')+esc(lbl)+'</b><small>'+(a&&e?esc(dShort(a)+' – '+dShort(e)):'')+'</small></span>'+
-   '<span class="arl-v"><b class="'+(N<0?'r':'a')+'">'+m0(N)+'</b><small>'+money(num(w.totalGross),0)+(M>0?' · '+r2(N/M)+'/mi':'')+'</small></span></button>';}).join('');
+  return'<button type="button" class="arl'+(inT?' in':'')+(S.archSel===i?' on':'')+'" data-act="arPick" data-i="'+i+'"'+(S.archSel===i?' aria-current="true"':'')+'><span class="arl-t"><b>'+(w.userRole==='driver'?'👨‍✈️ ':'')+esc(lbl)+'</b><small>'+(a&&e?esc(dShort(a)+' – '+dShort(e)):'')+'</small></span>'+
+   '<span class="arl-v"><b class="'+(N<0?'r':'a')+'">'+m0(N)+'</b><small>'+money(num(w.totalGross),0)+(M>0?' · '+r2(N/M)+'/mi':'')+'</small></span></button>';};
+ box.innerHTML='<div class="arl-h">'+t('ar.title')+'<span>'+S.archive.length+'</span></div>'+arBlocks().map(function(b){
+  if(!b.k)return row(b.idx[0],false);
+  var ws=b.idx.map(function(i){return S.archive[i];}),ag=tripAgg(ws),N=ag.N,M=ag.M,r=rawRange(ws);
+  return'<button type="button" class="arl-g" data-act="tpSum" data-k="'+esc(b.k)+'" title="'+esc(t('tp.sum'))+'"><span class="arl-t"><b>🛣️ '+esc(b.name)+'</b><small>'+(r.a?esc(dShort(r.a)+' – '+dShort(r.b))+' · ':'')+plN(ws.length,'wk')+'</small></span>'+
+   '<span class="arl-v"><b class="'+(N<0?'r':'a')+'">'+m0(N)+(ag.carry>0?' <span class="sm-cy" title="'+esc(t('sm.carryT',{a:money(ag.carry,0)}))+'">↺</span>':'')+'</b><small>'+(M>0?r2(N/M)+'/mi':'')+'</small></span></button>'+b.idx.map(function(i){return row(i,true);}).join('');}).join('');
 }
 function deskKey(e){
  if(!DESK||!S.user||e.ctrlKey||e.metaKey||e.altKey)return;
- var open=['#menu-bg','#pdf-bg','#imp-bg'].filter(function(s){var x=$(s);return x&&!x.hidden;});
+ var open=['#menu-bg','#pdf-bg','#imp-bg','#trip-bg'].filter(function(s){var x=$(s);return x&&!x.hidden;});
  if(e.key==='Escape'){if(open.length){open.forEach(function(s){$(s).hidden=true;});e.preventDefault();}return;}
  var tg=e.target&&e.target.tagName;if(open.length||tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT'||(e.target&&e.target.isContentEditable))return;
  if(e.key==='n'||e.key==='N'||e.key==='т'||e.key==='Т'){e.preventDefault();ACT.deskAdd();}
@@ -3727,8 +3925,9 @@ function init(){
   });
  }
  $('#auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')authLogin();});
+ $('#tp-name').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tripSave();}});
  evSyncUI();runEval();runWeight();
- window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
+ window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
 }
 init();
 })();
