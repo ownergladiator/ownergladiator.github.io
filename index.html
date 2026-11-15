@@ -241,7 +241,7 @@ nav#nav button.on .ic{transform:translateY(-1px)}
  #wk-side #card-tax .crow{row-gap:12px}#wk-side #card-tax .grow{flex:1 0 100%}#wk-side #card-tax .tval{margin-left:auto}
  #sm-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);grid-template-areas:"num tiles" "goal tiles" "recs tiles" "unp unp" "xrow xrow" "xt xt";column-gap:24px;align-items:start}
  #sm-hnum{grid-area:num}#sm-hero>.sm-goal{grid-area:goal}#sm-recs{grid-area:recs}#sm-unp{grid-area:unp}#sm-xrow{grid-area:xrow}#xt-card{grid-area:xt}
- #sm-tiles{grid-area:tiles;margin-top:0;grid-template-columns:repeat(3,minmax(0,1fr))}
+ #sm-tiles{grid-area:tiles;margin-top:0;grid-template-columns:repeat(3,minmax(0,1fr))}#sm-tiles .sm-tile.wide{grid-column:1/-1}#sm-tiles .sm-tile.wide .v{font-size:28px}
  /* loads tools: inputs on the left, the answer on the right and always in view */
  #tl-grid{grid-template-columns:minmax(0,1fr)}
  #card-ev,#card-wt{display:grid;grid-template-columns:minmax(0,1fr) 400px;column-gap:28px;align-items:start}
@@ -427,6 +427,7 @@ body.ro .need-write{display:none!important}
 @media(max-width:699px){.seg.sm-seg{grid-template-columns:repeat(4,minmax(0,1fr))}.seg.sm-seg button:last-child{grid-column:span 2}}
 .sm-mon{margin-top:10px;gap:8px}.sm-mon select{flex:1;min-height:42px;font-weight:700}.sm-mon .icon-btn:disabled{opacity:.35;cursor:default}
 .sm-cmpl{margin-top:8px}.sm-cmpl:empty{display:none}
+.sm-lv{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--grn) 16%,transparent);color:var(--grn);font-size:10.5px;font-weight:800;vertical-align:middle;white-space:nowrap}
 /* trips (рейсы): several weeks of one run away from home */
 .ar-trip{display:flex;gap:8px;align-items:center;margin-top:10px}.ar-trip>span{flex:none;font-weight:700;font-size:13px;color:var(--mut)}.ar-trip select{flex:1;min-width:0;font-weight:700}
 .tp-list{display:flex;flex-direction:column;gap:6px;max-height:min(44dvh,420px);overflow:auto;margin-top:8px}
@@ -450,7 +451,8 @@ body.light .sm-net:not(.neg){color:#a87800}
 .sm-goal input{width:112px;min-height:36px;padding:6px 10px;text-align:right;font-weight:800}
 .sm-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
 @media(min-width:700px){.sm-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(min-width:1180px){.sm-tiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.sm-tile.wide{grid-column:1/-1}.sm-tile.wide .v{font-size:28px}
+@media(min-width:1180px){.sm-tiles{grid-template-columns:repeat(7,minmax(0,1fr))}.sm-tile.wide{grid-column:auto}.sm-tile.wide .v{font-size:23px}}
 .sm-tiles.sm-tiles4{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}
 @media(min-width:700px){.sm-tiles.sm-tiles4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .sm-tile{background:var(--card2);border-radius:12px;padding:9px 10px;min-width:0}
@@ -982,6 +984,7 @@ body.map-full{overflow:hidden}
             <div id="custom-list" class="sm-wcs"></div>
           </div>
           <div class="cs sm-cmpl" id="sm-cmp"></div>
+          <div class="cs sm-cmpl" id="sm-live"></div>
         </div>
         <div class="card empty" id="sm-empty" hidden></div>
         <div class="card" id="sm-hero">
@@ -1140,7 +1143,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.6';
+var APP_VER='7.7';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1275,6 +1278,9 @@ var DICT=[
 ['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.del','Удалить','Delete'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
 ['sync.saving','☁️ Сохранение…','☁️ Saving…'],['sync.ok','☁️ Синхронизировано','☁️ Synced'],['sync.local','⚠️ Только локально','⚠️ Local only'],
 ['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export'],
+['sm.live','текущая','current'],['sm.spanL','{w} + текущая','{w} + current'],['sm.spanL0','текущая неделя','current week'],['sm.tt.liveW','{n} + тек.','{n} + cur.'],['sm.sp.openW','Открыть текущую неделю','Open the current week'],
+['sm.liveNote','🟢 Текущая неделя тоже посчитана. Она ещё идёт: цифры берутся из вкладки «Неделя» и будут меняться, пока не отправишь её в архив.','🟢 The current week is counted too. It is still running: its numbers come from the Week tab and will change until you archive it.'],
+['sm.t.mi','Всего миль','Total miles'],['sm.s.mi','гружёные {a} · пустые {b}','loaded {a} · deadhead {b}'],['sm.s.mid','{a} mi в день','{a} mi per day'],
 ['sm.m.trip','Рейс','Trip'],['sm.cmpT','прошлый рейс «{n}», {a} – {b}','the previous trip “{n}”, {a} – {b}'],['sm.cmpTNone','Сравнения нет: это первый рейс','No comparison: this is the first trip'],
 ['sm.pd','/день','/day'],['sm.wasD','было {a} в день','was {a} per day'],
 ['sm.noTrips','Рейсов пока нет. Выбери рейс у недели во вкладке «Неделя» или собери недели в рейс в «Архиве» — кнопка «🧩 Рейсы».','No trips yet. Set the trip on the Week tab or group weeks into a trip in the Archive with the 🧩 Trips button.'],
@@ -2933,6 +2939,21 @@ function tripsAll(){
  out.sort(function(x,y){return String(y.b).localeCompare(String(x.b));});
  return out;
 }
+/* Summary, Trip period: the week being filled in counts too (as in Dispatch Gladiator) while it has numbers,
+   belongs to a trip and is not a copy of a week that was just archived. Not while an archived week is being edited. */
+function smLive(){
+ if(S.ed||!tripKey(S.trip))return null;
+ var p=weekPayload();if(!(num(p.totalGross)>0||num(p.totalMiles)>0||num(p.fuelCost)>0))return null;
+ if(S.archive.some(function(w){return wStart(w)===String(p.startDate||'')&&wEnd(w)===String(p.endDate||'')&&Math.abs(num(w.totalGross)-num(p.totalGross))<0.5&&Math.abs(num(w.totalMiles)-num(p.totalMiles))<0.5;}))return null;
+ p.db_id='live';p.live=true;p.weekEndDate=p.endDate;return p;
+}
+function smTripsAll(){
+ var L=tripsAll(),lv=smLive();if(!lv)return L;
+ var k=tripKey(lv.tripName),T=L.filter(function(x){return x.k===k;})[0];
+ if(!T){T={k:k,name:tripNorm(lv.tripName),weeks:[]};L.push(T);}
+ T.weeks=[lv].concat(T.weeks);T.live=lv;var r=rawRange(T.weeks);T.a=r.a||'';T.b=r.b||'';
+ L.sort(function(x,y){return String(y.b).localeCompare(String(x.b));});return L;
+}
 /* archive in display order: a trip's weeks together (placed at its newest week), weeks without a trip on their own */
 function arBlocks(){var B=[],seen={};S.archive.forEach(function(w,i){var k=tripKey(w.tripName);if(!k){B.push({idx:[i]});return;}if(seen[k]==null){seen[k]=B.length;B.push({k:k,name:tripNorm(w.tripName),idx:[i]});}else B[seen[k]].idx.push(i);});return B;}
 function tripNext(){var L=tripsAll().map(function(T){return T.k;});if(S.trip&&L.indexOf(tripKey(S.trip))<0)L.push(tripKey(S.trip));var n=L.length+1;while(L.indexOf(tripKey(t('tp.n',{n:n})))>=0)n++;return t('tp.n',{n:n});}
@@ -2941,7 +2962,7 @@ function smSelHas(w){return!SM.sel||!!SM.sel[String(w.db_id)];}
 function smSelFromChecks(){var o={},all=true,any=false;$$('.chk-w').forEach(function(c){var w=S.archive[+c.value];if(!w)return;any=true;if(c.checked)o[String(w.db_id)]=true;else all=false;});if(any)SM.sel=all?null:o;}
 function buildCustomList(){var box=$('#custom-list');if(!box)return;box.innerHTML=S.archive.map(function(w,i){return'<label class="sm-wc"><input type="checkbox" class="chk-w" value="'+i+'"'+(smSelHas(w)?' checked':'')+'><span>'+esc(dShort(wEnd(w))||w.weekLabel||'')+'</span></label>';}).join('');}
 function smPick(){
- var A=S.archive,mode=SM.mode,list=[],cmp=null,cmpTxt='',range={none:true},crange=null,months=[],TL=tripsAll();
+ var A=S.archive,mode=SM.mode,list=[],cmp=null,cmpTxt='',range={none:true},crange=null,months=[],TL=smTripsAll();
  A.forEach(function(w){if(w.monthYear&&months.indexOf(w.monthYear)<0)months.push(w.monthYear);});months.sort().reverse();
  if(mode==='month'){
   if(months.indexOf(SM.month)<0)SM.month=months[0]||'';
@@ -2987,7 +3008,9 @@ function smBar(c){
  $$('#sm-trip [data-act="smTrip"]').forEach(function(b){var j=ti+num(b.dataset.d);b.disabled=ti<0||j<0||j>=TL.length;});
  $('#custom-panel').hidden=c.mode!=='custom';if(c.mode==='custom')$('#custom-count').textContent=t('sm.sel',{a:c.list.length,b:S.archive.length});
  var a='',b='';c.list.forEach(function(w){var s=wStart(w),e=wEnd(w);if(s&&(!a||s<a))a=s;if(e&&e>b)b=e;});
- $('#sm-span').textContent=c.list.length?(a&&b?dShort(a)+' – '+dShort(b)+' · ':'')+plN(c.list.length,'wk'):'';
+ var hasLv=c.list.some(function(w){return w.live;}),nSaved=c.list.length-(hasLv?1:0);
+ $('#sm-span').textContent=c.list.length?(a&&b?dShort(a)+' – '+dShort(b)+' · ':'')+(hasLv?(nSaved?t('sm.spanL',{w:plN(nSaved,'wk')}):t('sm.spanL0')):plN(c.list.length,'wk')):'';
+ $('#sm-live').textContent=hasLv?t('sm.liveNote'):'';
  $('#sm-cmp').textContent=c.cmpTxt?t('sm.cmp',{x:c.cmpTxt}):((c.mode==='month'||/^w\d/.test(c.mode))&&c.list.length?t('sm.cmpNone'):(c.mode==='trip'&&c.list.length?t('sm.cmpTNone'):''));
 }
 
@@ -3002,7 +3025,7 @@ function renderTrips(c){
   v.forEach(function(r,i){var p=i/(m-1);cls[k+'|'+r.T.k]=p<=0.2?'h2':p<=0.4?'h1':p<0.6?'':p<0.8?'l1':'l2';});});
  var cell=function(r,k,txt,w){return'<td class="ar '+(cls[k+'|'+r.T.k]||'')+(w?' w':'')+'">'+txt+'</td>';};
  box.innerHTML='<div class="ch"><span class="ct">'+t('sm.trips')+'</span></div><div class="sm-hmw"><table class="sm-hm sm-tt"><thead><tr><th>'+t('sm.tt.trip')+'</th><th class="ar">'+t('sm.tt.wk')+'</th><th class="ar">'+t('sm.tt.net')+'</th><th class="ar">'+t('sm.tt.day')+'</th><th class="ar">Net/mi</th><th class="ar w">Gross</th><th class="ar w">'+t('sm.tt.mi')+'</th></tr></thead><tbody>'+
-  R.map(function(r){var T=r.T,a=r.a;return'<tr data-act="smTripPick" data-k="'+esc(T.k)+'"'+(T.k===SM.trip?' class="sel"':'')+'><td><b>'+esc(T.name)+'</b><div class="cs">'+esc(T.a&&T.b?dShort(T.a)+' – '+dShort(T.b):'')+'</div></td><td class="ar">'+T.weeks.length+'</td>'+
+  R.map(function(r){var T=r.T,a=r.a;return'<tr data-act="smTripPick" data-k="'+esc(T.k)+'"'+(T.k===SM.trip?' class="sel"':'')+'><td><b>'+esc(T.name)+'</b><div class="cs">'+esc(T.a&&T.b?dShort(T.a)+' – '+dShort(T.b):'')+'</div></td><td class="ar">'+(T.live?(T.weeks.length>1?t('sm.tt.liveW',{n:T.weeks.length-1}):t('sm.live')):T.weeks.length)+'</td>'+
    cell(r,'net',m0(a.N))+cell(r,'perday',r.v.perday==null?'—':m0(r.v.perday))+cell(r,'nrpm',r.v.nrpm==null?'—':r2(r.v.nrpm))+cell(r,'gross',m0(a.G),1)+'<td class="ar w">'+f0(a.M)+'</td></tr>';}).join('')+
   '</tbody></table></div><div class="cs" style="margin-top:8px">'+t('sm.tt.note')+'</div>';
 }
@@ -3134,6 +3157,7 @@ function smSpark(vals){
  return'<svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline class="sm-spark" points="'+pts.join(' ')+'"/></svg>';
 }
 var SM_TILES=[
+ {k:'miles',l:'sm.t.mi',wide:1,s:function(a){var p=[];if(a.DH>0)p.push(t('sm.s.mi',{a:f0(a.LD),b:f0(a.DH)}));if(a.D>0&&a.M>0)p.push(t('sm.s.mid',{a:f0(a.M/a.D)}));return p.join(' · ');}},
  {k:'gross',l:'sm.t.gross',s:function(a){return plN(a.nL,'ld');}},
  {k:'cost',l:'sm.t.cost',s:function(a){return a.M>0?'CPM '+r2(a.C/a.M):'';}},
  {k:'nrpm',l:'sm.t.nrpm',s:function(a){return a.G>0?t('sm.margin2',{p:f0(a.N/a.G*100)}):'';}},
@@ -3146,7 +3170,7 @@ function smTiles(c){
  $('#sm-tiles').innerHTML=SM_TILES.map(function(T){
   var K=SMK[T.k],v=K.v(A),dv=null,dh='';
   if(B){var bv=K.v(B),nz=K.sum?smNorm(c):null;if(v!=null&&bv!=null){dv=nz?v/nz.a-bv/nz.b:v-bv;var cl=smGood(T.k,dv);dh='<span class="sm-d '+cl+'">'+(dv>0?'▲':dv<0?'▼':'')+' '+K.d(dv)+(nz?nz.u:'')+'</span>';}}
-  return'<div class="sm-tile" data-k="'+T.k+'"><div class="l">'+t(T.l)+'</div><div class="sm-tv"><span class="v">'+(v==null?'—':K.f(v))+'</span>'+dh+'</div>'+
+  return'<div class="sm-tile'+(T.wide?' wide':'')+'" data-k="'+T.k+'"><div class="l">'+t(T.l)+'</div><div class="sm-tv"><span class="v">'+(v==null?'—':K.f(v))+'</span>'+dh+'</div>'+
    smSpark(chr.map(function(s){return K.v(s);}))+'<div class="s">'+T.s(A)+'</div></div>';}).join('');
 }
 function smRecs(c){
@@ -3179,12 +3203,12 @@ function renderSpot(){
  var ws=c.ws,W=ws.filter(function(s){return s.id===String(SM.spot);})[0]||ws[0];SM.spot=W.id;
  var mode=SM.spotCmp;if(ws.length<2&&mode!=='prev')mode='prev';
  var T=null,tl='',note='';
- if(mode==='prev'){var ai=S.archive.indexOf(W.w),pw=ai>=0?S.archive[ai+1]:null;if(pw){T=smWeek(pw);tl=dShort(T.end);}}
+ if(mode==='prev'){var ai=S.archive.indexOf(W.w),pw=ai>=0?S.archive[ai+1]:(W.w.live?S.archive[0]:null);if(pw){T=smWeek(pw);tl=dShort(T.end);}}
  else if(mode==='avg'){T=smAvg(c.cur);tl=t('sm.sp.c.avg');}
  else{var o=ws.filter(function(s){return s!==W;}).sort(function(a,b){return b.N-a.N;});T=o[0]||null;var top=ws.every(function(s){return s.N<=W.N;});tl=T?(top?t('sm.sp.c.2nd'):dShort(T.end)):'';if(top)note=t('sm.sp.top');}
  var rk=ws.slice().sort(function(a,b){return b.N-a.N;}).indexOf(W)+1;
  var h='<div class="ch"><span class="ct">'+t('sm.spot')+'</span></div>'+
-  '<div class="sm-sph"><select id="sm-spot-sel" aria-label="'+esc(t('sm.spot'))+'">'+ws.map(function(s){var g=wTag(s.w);return'<option value="'+esc(s.id)+'"'+(s===W?' selected':'')+'>'+esc(dShort(s.end)+(g?' · '+g:''))+'</option>';}).join('')+'</select>'+
+  '<div class="sm-sph"><select id="sm-spot-sel" aria-label="'+esc(t('sm.spot'))+'">'+ws.map(function(s){var g=wTag(s.w);return'<option value="'+esc(s.id)+'"'+(s===W?' selected':'')+'>'+esc(dShort(s.end)+(g?' · '+g:'')+(s.w.live?' · '+t('sm.live'):''))+'</option>';}).join('')+'</select>'+
   '<div class="seg">'+['prev','avg','best'].map(function(m){var dis=m!=='prev'&&ws.length<2;return'<button type="button" data-act="smSpotCmp" data-c="'+m+'"'+(mode===m?' class="on"':'')+(dis?' disabled':'')+'>'+t('sm.sp.'+m)+'</button>';}).join('')+'</div></div>';
  if(ws.length>1)h+='<div class="sm-recs" style="margin-top:10px"><span class="sm-rec">'+(rk===1?'🏆 ':'')+t('sm.sp.rank',{r:rk,n:ws.length})+'</span>'+(note?'<span class="sm-rec">'+note+'</span>':'')+(W.carry>0?'<span class="sm-rec" title="'+esc(t('sm.carryT',{a:money(W.carry,0)}))+'">↺ '+t('sm.sp.carry',{a:money(W.carry,0)})+'</span>':'')+'</div>';
  if(!T){box.innerHTML=h+'<div class="empty">'+t('sm.sp.noPrev')+'</div>';return;}
@@ -3197,7 +3221,7 @@ function renderSpot(){
  h+='<div class="sm-drv">'+F.map(function(x){var w=Math.abs(x.v)/mx*50,p=x.v>0;return'<div class="sm-dr"><span class="l" title="'+esc(x.l)+'">'+esc(x.l)+'</span><span class="tr"><i class="'+(p?'p':'n')+'" style="'+(p?'left':'right')+':50%;width:'+w.toFixed(1)+'%"></i></span><b class="'+(p?'g':'r')+'">'+sgnM(x.v)+'</b></div>';}).join('')+'</div>';
  var hp=F.filter(function(x){return x.v>0&&x.k!=='rest';}).slice(0,2),hr=F.filter(function(x){return x.v<0&&x.k!=='rest';}).slice(0,2),fmt=function(x){return esc(x.l)+' '+sgnM(x.v);};
  if(hp.length||hr.length)h+='<div class="cs sm-verd">'+(hp.length?'<span class="g">'+t('sm.sp.help')+':</span> '+hp.map(fmt).join(', '):'')+(hp.length&&hr.length?' · ':'')+(hr.length?'<span class="r">'+t('sm.sp.hurt')+':</span> '+hr.map(fmt).join(', '):'')+'</div>';
- h+='</div></div><div class="row" style="margin-top:12px"><button type="button" class="btn sm" data-act="smOpenArch">🗂️ '+t('sm.sp.open')+'</button></div>';
+ h+='</div></div><div class="row" style="margin-top:12px"><button type="button" class="btn sm" data-act="smOpenArch">'+(W.w.live?'📝 '+t('sm.sp.openW'):'🗂️ '+t('sm.sp.open'))+'</button></div>';
  box.innerHTML=h;
 }
 
@@ -3210,7 +3234,7 @@ function renderDyn(){
  var k=SM_MET.indexOf(SM.metric)>=0?SM.metric:'net',K=SMK[k];
  $('#sm-mets').innerHTML=SM_MET.map(function(m){return'<button type="button" class="sm-ch'+(m===k?' on':'')+'" data-act="smMetric" data-k="'+m+'" aria-pressed="'+(m===k)+'">'+t('sm.k.'+m)+'</button>';}).join('');
  var cur=c.ws.slice().reverse(),cmp=c.cws?c.cws.slice().reverse():[],all=cmp.concat(cur),nC=cmp.length,isMi=k==='miles';
- var labs=all.map(function(s){return dShort(s.end);}),real=all.map(function(s){return K.v(s);});
+ var labs=all.map(function(s){return dShort(s.end)+(s.w&&s.w.live?' •':'');}),real=all.map(function(s){return K.v(s);});
  var acc=cssv('--acc'),dim=cssv('--dim'),grn=cssv('--grn'),red=cssv('--red'),tx=cssv('--tx'),cap=[];
  if(!real.some(function(v){return v!=null;})){$('#sm-dleg').innerHTML='';mkChart('c-sdyn',{type:'bar',data:{labels:[],datasets:[]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});$('#sm-dcap').textContent=t('sm.dy.none');return;}
  var lo=null,hi=null,vals=real.slice(),clip={};
@@ -3262,7 +3286,7 @@ function renderHeat(){
  var lim=!SM.hmAll&&rows.length>12,show=lim?rows.slice(0,12):rows,ar=function(k){return sk===k?(sd<0?' ↓':' ↑'):'';};
  var h='<div class="ch"><span class="ct">'+t('sm.heat')+'</span></div><div class="sm-hmw"><table class="sm-hm"><thead><tr><th data-act="smSort" data-k="date">'+t('sm.h.wk')+ar('date')+'</th>'+
   SM_HM.map(function(col){return'<th class="ar'+(col.w?' w':'')+'" data-act="smSort" data-k="'+col.k+'">'+t(col.l)+ar(col.k)+'</th>';}).join('')+'</tr></thead><tbody>'+
-  show.map(function(s){var tg=wTag(s.w);return'<tr data-act="smSpotW" data-id="'+esc(s.id)+'"'+(s.id===String(SM.spot)?' class="sel"':'')+'><td><b>'+esc(dShort(s.end))+'</b>'+(s.carry>0?' <span class="sm-cy" title="'+esc(t('sm.carryT',{a:money(s.carry,0)}))+'">↺</span>':'')+(tg?'<div class="cs">'+esc(tg)+'</div>':'')+'</td>'+
+  show.map(function(s){var tg=wTag(s.w);return'<tr data-act="smSpotW" data-id="'+esc(s.id)+'"'+(s.id===String(SM.spot)?' class="sel"':'')+'><td><b>'+esc(dShort(s.end))+'</b>'+(s.w.live?'<span class="sm-lv">'+t('sm.live')+'</span>':'')+(s.carry>0?' <span class="sm-cy" title="'+esc(t('sm.carryT',{a:money(s.carry,0)}))+'">↺</span>':'')+(tg?'<div class="cs">'+esc(tg)+'</div>':'')+'</td>'+
    SM_HM.map(function(col){var v=SMK[col.k].v(s);return'<td class="ar '+(cls[col.k+'|'+s.id]||'')+(col.w?' w':'')+'">'+(v==null?'—':SMK[col.k].f(v))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>'+
   (rows.length>12?'<button type="button" class="btn sm" data-act="smHmAll" style="margin-top:8px">'+(SM.hmAll?t('sm.ln.less'):t('sm.h.all',{n:rows.length}))+'</button>':'')+
   '<div class="cs" style="margin-top:8px">'+t('sm.h.note')+'</div>';
@@ -3656,7 +3680,7 @@ var ACT={
   if(inp){inp.focus();if(inp.select)inp.select();}},
  sumReplay:function(){var box=$('#sum-map-box');if(box._map)box._map.replay();},
  smMode:function(b){SM.mode=b.dataset.m;SafeStorage.set('hs_smode',SM.mode);SM.spot='';renderSummary();},
- smTrip:function(b){var L=tripsAll(),i=L.findIndex(function(x){return x.k===SM.trip;}),j=i+num(b.dataset.d);if(i>=0&&L[j]){SM.trip=L[j].k;SM.spot='';renderSummary();}},
+ smTrip:function(b){var L=smTripsAll(),i=L.findIndex(function(x){return x.k===SM.trip;}),j=i+num(b.dataset.d);if(i>=0&&L[j]){SM.trip=L[j].k;SM.spot='';renderSummary();}},
  smTripPick:function(b){SM.mode='trip';SafeStorage.set('hs_smode','trip');SM.trip=b.dataset.k;SM.spot='';renderSummary();window.scrollTo({top:0,behavior:'smooth'});},
  tpOpen:function(){if(!guardWrite())return;tripSheet('arch');},
  tpClose:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#trip-bg').hidden=true;},
@@ -3675,7 +3699,7 @@ var ACT={
  smLane:function(b){SM.lane=b.dataset.v;renderLanes(SUMCTX);},
  smLanesAll:function(){SM.lanesAll=!SM.lanesAll;renderLanes(SUMCTX);},
  smXt:function(){SM.xtOpen=!SM.xtOpen;if(SUMCTX)smXRow(SUMCTX);},
- smOpenArch:function(){var s=SUMCTX&&SUMCTX.ws.filter(function(x){return x.id===String(SM.spot);})[0],i=s?S.archive.indexOf(s.w):-1;if(i<0)return;S.archSel=i;var sel=$('#archive-select');if(sel)sel.value=i;go('archive');},
+ smOpenArch:function(){var s=SUMCTX&&SUMCTX.ws.filter(function(x){return x.id===String(SM.spot);})[0],i=s?S.archive.indexOf(s.w):-1;if(s&&s.w.live){go('week');return;}if(i<0)return;S.archSel=i;var sel=$('#archive-select');if(sel)sel.value=i;go('archive');},
  impOpen:impOpen,impFind:impFind,impRun:impRun,
  closeImp:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#imp-bg').hidden=true;},
  addFuel:function(){if(!guardWrite())return;var f=newFuel({date:fuelDefDate()});f._open=true;S.fuel.push(f);sortFuel();renderFuel();changed();
@@ -3937,7 +3961,7 @@ function init(){
  $('#auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')authLogin();});
  $('#tp-name').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tripSave();}});
  evSyncUI();runEval();runWeight();
- window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,weekDays:weekDays,daysUnion:daysUnion,spanDays:spanDays,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
+ window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,weekDays:weekDays,daysUnion:daysUnion,spanDays:spanDays,smLive:smLive,smTripsAll:smTripsAll,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
 }
 init();
 })();
