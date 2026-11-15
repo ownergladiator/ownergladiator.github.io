@@ -461,8 +461,12 @@ body.light .sm-net:not(.neg){color:#a87800}
 .sm-tile .v{font-family:var(--fd);font-size:23px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sm-d{font-size:11.5px;font-weight:700;white-space:nowrap}
 .sm-tile .s{font-size:11px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sm-tile svg{display:block;width:100%;height:20px;margin-top:4px}
-.sm-spark{fill:none;stroke:var(--mut);stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+/* the KPI tiles of Summary: an icon and a coloured edge, the change in a pill; no sparklines (the dynamics are right below) */
+#sm-tiles .sm-tile{border-left:3px solid var(--c,var(--line));background:linear-gradient(90deg,color-mix(in srgb,var(--c,transparent) 10%,var(--card2)),var(--card2) 55%);padding:10px 11px}
+#sm-tiles .sm-tile .l{font-weight:700}#sm-tiles .sm-tile .ic{margin-right:5px;font-size:13px}
+#sm-tiles .sm-tv{margin-top:3px;align-items:center;gap:4px 6px}
+#sm-tiles .sm-d{font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:999px;background:color-mix(in srgb,var(--tx) 9%,transparent);color:var(--mut)}
+#sm-tiles .sm-d.g{background:color-mix(in srgb,var(--grn) 16%,transparent);color:var(--grn)}#sm-tiles .sm-d.r{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
 .sm-flag{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;flex-wrap:wrap;padding-top:10px;margin-top:10px;border-top:1px solid var(--line);font-size:13px}
 #xt-card{margin-top:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .sm-recs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.sm-recs:empty{display:none}
@@ -1143,7 +1147,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.7';
+var APP_VER='7.8';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -3150,28 +3154,22 @@ function smGoal(c){
  $('#goal-bar').style.width=Math.min(100,Math.max(0,pct))+'%';
 }
 function updateGoal(){var el=$('#goal-in');if(!el)return;S.goal=num(el.value)>0?num(el.value):10000;if(SUMCTX&&SUMCTX.A)smGoal(SUMCTX);queueSave();}
-function smSpark(vals){
- var v=vals.filter(function(x){return x!=null&&isFinite(x);});if(v.length<2)return'';
- var mn=Math.min.apply(null,v),mx=Math.max.apply(null,v),n=vals.length,pts=[];
- vals.forEach(function(x,i){if(x==null||!isFinite(x))return;pts.push((n>1?i/(n-1)*100:50).toFixed(1)+','+(22-(mx>mn?(x-mn)/(mx-mn):0.5)*20).toFixed(1));});
- return'<svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline class="sm-spark" points="'+pts.join(' ')+'"/></svg>';
-}
 var SM_TILES=[
- {k:'miles',l:'sm.t.mi',wide:1,s:function(a){var p=[];if(a.DH>0)p.push(t('sm.s.mi',{a:f0(a.LD),b:f0(a.DH)}));if(a.D>0&&a.M>0)p.push(t('sm.s.mid',{a:f0(a.M/a.D)}));return p.join(' · ');}},
- {k:'gross',l:'sm.t.gross',s:function(a){return plN(a.nL,'ld');}},
- {k:'cost',l:'sm.t.cost',s:function(a){return a.M>0?'CPM '+r2(a.C/a.M):'';}},
- {k:'nrpm',l:'sm.t.nrpm',s:function(a){return a.G>0?t('sm.margin2',{p:f0(a.N/a.G*100)}):'';}},
- {k:'grpm',l:'sm.t.grpm',s:function(a){return a.LD>0?t('sm.s.lrpm',{a:r2(a.G/a.LD)}):'';}},
- {k:'dhp',l:'sm.t.dh',s:function(a){return t('sm.s.dh',{a:f0(a.DH),b:f0(a.M)});}},
- {k:'perday',l:'sm.t.pd',s:function(a){return plN(a.D,'dy')+' · Per Diem '+money(a.D*(num(S.perDiem)||80),0);}}
+ {k:'miles',ic:'🛣️',c:'#5cc8ff',l:'sm.t.mi',wide:1,s:function(a){var p=[];if(a.DH>0)p.push(t('sm.s.mi',{a:f0(a.LD),b:f0(a.DH)}));if(a.D>0&&a.M>0)p.push(t('sm.s.mid',{a:f0(a.M/a.D)}));return p.join(' · ');}},
+ {k:'gross',ic:'💵',c:'#3ddc97',l:'sm.t.gross',s:function(a){return plN(a.nL,'ld');}},
+ {k:'cost',ic:'🧾',c:'#ff6b6b',l:'sm.t.cost',s:function(a){return a.M>0?'CPM '+r2(a.C/a.M):'';}},
+ {k:'nrpm',ic:'💰',c:'#ffc400',l:'sm.t.nrpm',s:function(a){return a.G>0?t('sm.margin2',{p:f0(a.N/a.G*100)}):'';}},
+ {k:'grpm',ic:'📈',c:'#b388ff',l:'sm.t.grpm',s:function(a){return a.LD>0?t('sm.s.lrpm',{a:r2(a.G/a.LD)}):'';}},
+ {k:'dhp',ic:'↩️',c:'#ff9f43',l:'sm.t.dh',s:function(a){return t('sm.s.dh',{a:f0(a.DH),b:f0(a.M)});}},
+ {k:'perday',ic:'📅',c:'#2dd4bf',l:'sm.t.pd',s:function(a){return plN(a.D,'dy')+' · Per Diem '+money(a.D*(num(S.perDiem)||80),0);}}
 ];
 function smTiles(c){
- var A=c.A,B=c.B,chr=c.ws.slice().reverse();
+ var A=c.A,B=c.B;
  $('#sm-tiles').innerHTML=SM_TILES.map(function(T){
   var K=SMK[T.k],v=K.v(A),dv=null,dh='';
   if(B){var bv=K.v(B),nz=K.sum?smNorm(c):null;if(v!=null&&bv!=null){dv=nz?v/nz.a-bv/nz.b:v-bv;var cl=smGood(T.k,dv);dh='<span class="sm-d '+cl+'">'+(dv>0?'▲':dv<0?'▼':'')+' '+K.d(dv)+(nz?nz.u:'')+'</span>';}}
-  return'<div class="sm-tile'+(T.wide?' wide':'')+'" data-k="'+T.k+'"><div class="l">'+t(T.l)+'</div><div class="sm-tv"><span class="v">'+(v==null?'—':K.f(v))+'</span>'+dh+'</div>'+
-   smSpark(chr.map(function(s){return K.v(s);}))+'<div class="s">'+T.s(A)+'</div></div>';}).join('');
+  return'<div class="sm-tile'+(T.wide?' wide':'')+'" data-k="'+T.k+'" style="--c:'+T.c+'"><div class="l"><span class="ic" aria-hidden="true">'+T.ic+'</span>'+t(T.l)+'</div><div class="sm-tv"><span class="v">'+(v==null?'—':K.f(v))+'</span>'+dh+'</div>'+
+   '<div class="s">'+T.s(A)+'</div></div>';}).join('');
 }
 function smRecs(c){
  var box=$('#sm-recs'),ws=c.ws;if(!box)return;if(ws.length<3){box.innerHTML='';return;}
