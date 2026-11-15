@@ -527,14 +527,27 @@ function ptSum(l) {
 function tripGross(l) { return num(l.gross) + ptSum(l).pay; }
 function tripLoaded(l) { return num(l.miles) + ptSum(l).mi; }
 function isTonu(l) { return /\btonu\b/i.test([l.route, l.fromText, l.toText].join(' ')) || (tripLoaded(l) <= 0 && tripGross(l) > 0); }
-function daysUnion(loads) {
+/* Days on the road in a week, as the Hub counts them (7.6): calendar days covered by the loads, each once.
+   A week that closes on the weekday it opened on (Fri -> Fri) hands the closing day over to the next week: 7 days, not 8. */
+function isHandover(a, b) { if (!isISO(a) || !isISO(b)) return false; var n = daysBetween(a, b); return n >= 7 && n % 7 === 0; }
+function daysUnion(loads, wa, wb) {
   var set = {};
   (loads || []).forEach(function (l) {
     if (!isISO(l.pickup) || !isISO(l.delivery) || l.delivery < l.pickup) return;
     var d = l.pickup, n = 0;
     while (d <= l.delivery && n < 62) { set[d] = 1; d = addDays(d, 1); n++; }
   });
-  return Object.keys(set).length;
+  var ks = Object.keys(set).sort(), n = ks.length;
+  if (n < 2) return n;
+  var f = ks[0], l = ks[n - 1];
+  if (isHandover(f, l) || (l === wb && isHandover(wa, wb))) n--;
+  return n;
+}
+/* a saved week: counted again from its loads (weeks saved before Hub 7.6 hold the old 8), else the stored number */
+function weekDays(w) {
+  var L = w && w.loads;
+  if (Array.isArray(L) && L.some(function (l) { return l && l.pickup && l.delivery; })) return daysUnion(L, String(w.startDate || ''), String(w.endDate || w.weekEndDate || ''));
+  return num(w && w.totalDays);
 }
 
 /* ---------- expense names -> groups (as in the Hub's Summary) ---------- */
@@ -595,7 +608,7 @@ function calcDraft(d) {
     weekLabel: d.weekLabel || '', tripName: tripNorm(d.tripName), startDate: sd, endDate: ed, datesManual: !!(wa || wb), weekFrom: wa, weekTo: wb, loadsFrom: first, loadsTo: last,
     monthYear: monthOf(sd, ed), userRole: isD ? 'driver' : 'owner', driverPct: drvPct, driverGrossPay: drvPay,
     milesMode: split ? 'split' : 'simple', fuelMode: fuelMode, mpg: mpg, dieselPrice: diesel,
-    loadedMiles: loaded, deadheadMiles: dh, totalMiles: miles, totalGross: gross, totalExpenses: totalExp, netProfit: net, totalDays: daysUnion(loads),
+    loadedMiles: loaded, deadheadMiles: dh, totalMiles: miles, totalGross: gross, totalExpenses: totalExp, netProfit: net, totalDays: daysUnion(loads, sd, ed),
     netRpm: miles > 0 ? net / miles : 0, margin: gross > 0 ? net / gross * 100 : 0, cpm: miles > 0 ? totalExp / miles : 0,
     avgRpm: miles > 0 ? gross / miles : 0, loadedRpm: loaded > 0 ? gross / loaded : 0, fuelCost: fuelCost,
     partialPay: pPay, partialMiles: pMi, partialCount: pN,
@@ -661,7 +674,7 @@ function week(w, live) {
   var o = {
     w: w, id: String(live ? 'live' : w.db_id), live: !!live, label: String(w.weekLabel || ''), tripName: tripNorm(w.tripName), tripKey: tripKey(w.tripName), start: s, end: e,
     mid: isISO(s) && isISO(e) ? addDays(s, Math.floor(daysBetween(s, e) / 2)) : (isISO(e) ? e : s),
-    isD: isD, n: 1, G: G, N: N, C: C, M: M, LD: LD, DH: DH, D: num(w.totalDays), carry: carry, cat: cat, oth: oth, items: items,
+    isD: isD, n: 1, G: G, N: N, C: C, M: M, LD: LD, DH: DH, D: weekDays(w), carry: carry, cat: cat, oth: oth, items: items,
     gal: gal, galMi: gal > 0 ? M : 0, dz: dz, fills: fills, stops: stops,
     nL: nL, tonuN: tonuN, tonuG: tonuG, unp: unp, unpN: unpN, lanes: lanes, loads: loads
   };

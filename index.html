@@ -1140,7 +1140,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.5';
+var APP_VER='7.6';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1320,7 +1320,17 @@ function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 function toast(msg,ms){var el=$('#toast');el.textContent=msg;el.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(function(){el.style.display='none';},ms||2400);}
 function stateCodes(text){var u=String(text||'').toUpperCase();var m=u.match(/\b[A-Z]{2}\b/g)||[];return m.filter(function(x){return STATE_NAMES[x];});}
 function loadDays(l){if(!l.pickup||!l.delivery)return 0;var a=new Date(l.pickup+'T00:00:00'),b=new Date(l.delivery+'T00:00:00');if(isNaN(a)||isNaN(b)||b<a)return 0;return Math.round((b-a)/864e5)+1;}
-function daysUnion(loads){var set={};(loads||[]).forEach(function(l){if(!l.pickup||!l.delivery)return;var a=new Date(l.pickup+'T00:00:00'),b=new Date(l.delivery+'T00:00:00');if(isNaN(a)||isNaN(b)||b<a)return;var n=0;while(a<=b&&n<62){set[isoOf(a)]=1;a.setDate(a.getDate()+1);n++;}});return Object.keys(set).length;}
+/* Days on the road in a week = calendar days covered by its loads, each day once.
+   A week that closes on the weekday it opened on (Fri → Fri) hands that closing day over to the next week,
+   which opens on it — so such a week is 7 days, not 8, and the shared day is not counted twice in totals. */
+function isHandover(a,b){if(!isISO(a)||!isISO(b))return false;var n=daysBetween(a,b);return n>=7&&n%7===0;}
+function daysUnion(loads,wa,wb){var set={};(loads||[]).forEach(function(l){if(!l.pickup||!l.delivery)return;var a=new Date(l.pickup+'T00:00:00'),b=new Date(l.delivery+'T00:00:00');if(isNaN(a)||isNaN(b)||b<a)return;var n=0;while(a<=b&&n<62){set[isoOf(a)]=1;a.setDate(a.getDate()+1);n++;}});
+ var ks=Object.keys(set).sort(),n=ks.length;if(n<2)return n;var f=ks[0],l=ks[n-1];
+ if(isHandover(f,l)||(l===wb&&isHandover(wa,wb)))n--;return n;}
+/* a saved week: counted again from its loads (weeks saved before 7.6 hold the old 8), else the stored number */
+function weekDays(w){var L=w&&w.loads;if(L&&L.some&&L.some(function(l){return l&&l.pickup&&l.delivery;}))return daysUnion(L,String(w.startDate||''),String(w.endDate||w.weekEndDate||''));return num(w&&w.totalDays);}
+/* length of a week by its dates, same rule: Fri → Fri is 7 */
+function spanDays(a,b){var n=daysBetween(a,b)+1;return isHandover(a,b)?n-1:n;}
 function monthOf(w){var e=w.endDate||w.weekEndDate||'';if(/^\d{4}-\d{2}/.test(e))return e.slice(0,7);var s=w.startDate||'';if(/^\d{4}-\d{2}-\d{2}/.test(s)){var d=new Date(s+'T00:00:00');var dow=d.getDay()||7;d.setDate(d.getDate()+(4-dow));return isoOf(d).slice(0,7);}return w.monthYear||todayISO().slice(0,7);}
 function isMaintItem(name,type){var n=String(name||'').toLowerCase();return type==='cpm'||type==='dlr_mile'||/(^|[^а-яa-z])то([^а-яa-z]|$)/i.test(n)||/maint|ремонт|oil|масл|аморт|reserve|резерв|tire|шин/.test(n);}
 function hav(a,b){var R=3958.8,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lon)*r;var x=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)*Math.sin(dLo/2);return 2*R*Math.asin(Math.sqrt(x));}
@@ -1452,7 +1462,7 @@ function renderWeekDates(setInputs){
  var ls=loadsSpan(),html;
  if(S.wFrom&&S.wTo){
   var out=0;S.loads.forEach(function(l){var p=isISO(l.pickup)?l.pickup:'',d=isISO(l.delivery)?l.delivery:'';if((p&&(p<S.wFrom||p>S.wTo))||(d&&(d<S.wFrom||d>S.wTo)))out++;});
-  html=esc(t('wk.dSet',{n:daysBetween(S.wFrom,S.wTo)+1,a:dowOf(S.wFrom)+' '+shortDate(S.wFrom),b:dowOf(S.wTo)+' '+shortDate(S.wTo)}))+(out?' <span class="w">'+esc(t('wk.dOut',{n:out}))+'</span>':'');
+  html=esc(t('wk.dSet',{n:spanDays(S.wFrom,S.wTo),a:dowOf(S.wFrom)+' '+shortDate(S.wFrom),b:dowOf(S.wTo)+' '+shortDate(S.wTo)}))+(out?' <span class="w">'+esc(t('wk.dOut',{n:out}))+'</span>':'');
  }else if(ls.a)html=esc(t('wk.dLoadsHint',{a:shortDate(ls.a),b:shortDate(ls.b)}));
  else html=esc(t('wk.dNone'));
  hint.innerHTML=html;
@@ -1466,7 +1476,7 @@ function calc(){
  var loaded=0,dh=0,gross=0,first='',last='',unpaid=0,unpaidN=0;
  var pPay=0,pMi=0,pN=0;
  S.loads.forEach(function(l){var ps=ptSum(l),g0=num(l.gross),m=num(l.miles)+ps.mi,d=split?num(l.deadhead):0,g=g0+ps.pay;loaded+=m;dh+=d;gross+=g;pPay+=ps.pay;pMi+=ps.mi;pN+=ps.n;if(l.pickup&&(!first||l.pickup<first))first=l.pickup;if(l.delivery&&(!last||l.delivery>last))last=l.delivery;if(l.unpaid&&g0>0){unpaid+=g0;unpaidN++;}unpaid+=ps.unp;unpaidN+=ps.unpN;});
- var miles=loaded+dh,days=daysUnion(S.loads);
+ var miles=loaded+dh;
  var dGal=0,dUsd=0,defUsd=0,fStates={};
  S.fuel.forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);dGal+=g;dUsd+=c;defUsd+=num(f.defCost);if(g>0||c>0){var sc=stateCodes(f.loc);var k=sc.length?sc[sc.length-1]:'OTHER';if(!fStates[k])fStates[k]={gal:0,cost:0};fStates[k].gal+=g;fStates[k].cost+=c;}});
  var fuelCost=0;
@@ -1483,7 +1493,7 @@ function calc(){
  /* the week's own dates (picked in the Week tab) win; otherwise the first pickup / last delivery */
  var wa=isISO(S.wFrom)?S.wFrom:'',wb=isISO(S.wTo)?S.wTo:'',sd=wa||first||(wb?addDaysISO(wb,-6):''),ed=wb||last||(wa?addDaysISO(wa,6):'');
  return{weekLabel:S.label||'Week',tripName:tripNorm(S.trip),startDate:sd,endDate:ed,datesManual:!!(wa||wb),loadsFrom:first,loadsTo:last,partialPay:pPay,partialMiles:pMi,partialCount:pN,monthYear:monthOf({endDate:ed,startDate:sd}),userRole:S.role,driverPct:drvPct,driverGrossPay:drvPay,
-  milesMode:S.milesMode,milesCalc:S.milesCalc,fuelMode:S.fuelMode,loadedMiles:loaded,deadheadMiles:dh,totalMiles:miles,totalGross:gross,totalExpenses:totalExp,netProfit:net,totalDays:days,
+  milesMode:S.milesMode,milesCalc:S.milesCalc,fuelMode:S.fuelMode,loadedMiles:loaded,deadheadMiles:dh,totalMiles:miles,totalGross:gross,totalExpenses:totalExp,netProfit:net,totalDays:daysUnion(S.loads,sd,ed),
   netRpm:miles>0?net/miles:0,margin:gross>0?net/gross*100:0,cpm:miles>0?totalExp/miles:0,avgRpm:miles>0?gross/miles:0,loadedRpm:loaded>0?gross/loaded:0,fuelCost:fuelCost,
   fuelLogs:S.fuel.map(fuelOut),
   fixedExpenses:fixed,percentExpenses:pct,cpmExpenses:cpmS,maintSaved:maintAdd,expensesList:list,
@@ -2359,7 +2369,7 @@ function showArchived(idx){
  $('#arch-kpis').innerHTML=kpi('Gross',money(gross),'g')+
   (isD?kpi(t('k.earned'),money(w.driverGrossPay||net),'b',t('k.deduct',{a:money(exp,0)})):kpi(t('k.exp'),money(exp),'r'))+
   kpi(t(isD?'h.net.d':'h.net.o'),money(net),'a')+kpi('Net / mi','$'+f2(nrpm),'a','',true)+
-  kpi(t(isD?'h.m.d':'h.m.o'),f1(w.margin)+'%')+kpi(t('k.miles'),f0(mi),'',hasDh?('DH '+f0(dh)+' ('+f0(mi>0?dh/mi*100:0)+'%)'):(num(w.totalDays)+' d'))+kpi(t('k.rpm'),'$'+f2(rpm));
+  kpi(t(isD?'h.m.d':'h.m.o'),f1(w.margin)+'%')+kpi(t('k.miles'),f0(mi),'',hasDh?('DH '+f0(dh)+' ('+f0(mi>0?dh/mi*100:0)+'%)'):(weekDays(w)+' d'))+kpi(t('k.rpm'),'$'+f2(rpm));
  // expenses breakdown
  var items=[],palette=['#8b7cff','#ff6fae','#4cc9f0','#b36bff','#ff5a7a','#2dd4bf','#5b8cff'];
  var fuel=num(w.fuelCost);
@@ -2879,7 +2889,7 @@ function smWeek(w){
   if(isTonu(l)){tonuN++;tonuG+=g;return;}
   var fa=loadSide(l,'from'),ta=loadSide(l,'to'),fs=stateCodes(fa),ts=stateCodes(ta);
   trips.push({a:fs.length?fs[fs.length-1]:smClean(fa).slice(0,18),b:ts.length?ts[ts.length-1]:smClean(ta).slice(0,18),g:g,lm:lm,mi:lm+num(l.deadhead)});});
- return{w:w,id:String(w.db_id),end:wEnd(w),start:wStart(w),n:1,G:G,N:N,C:C,M:M,LD:LD,DH:DH,D:num(w.totalDays),carry:carry,cat:cat,oth:oth,
+ return{w:w,id:String(w.db_id),end:wEnd(w),start:wStart(w),n:1,G:G,N:N,C:C,M:M,LD:LD,DH:DH,D:weekDays(w),carry:carry,cat:cat,oth:oth,
   gal:gal,galMi:gal>0?M:0,dz:dz,fills:fills,stops:stops,nL:nL,tonuN:tonuN,tonuG:tonuG,unp:unp,unpN:unpN,trips:trips};
 }
 var SM_SUMK=['G','N','C','M','LD','DH','D','carry','gal','galMi','dz','fills','nL','tonuN','tonuG','unp','unpN'];
@@ -3381,7 +3391,7 @@ function reportData(){
  var R={list:list,sub:rl.sub,rate:num(S.perDiem)||80,G:0,E:0,N:0,M:0,LD:0,DH:0,D:0,F:0,st:{},cats:[],det:[],weeks:[],loads:[],xs:[],X:0},cats={};
  list.forEach(function(w,i){
   var wm=num(w.totalMiles),wd=num(w.deadheadMiles),wl=w.loadedMiles!==undefined?num(w.loadedMiles):Math.max(0,wm-wd),we=num(w.totalExpenses);
-  R.G+=num(w.totalGross);R.E+=we;R.N+=num(w.netProfit);R.M+=wm;R.LD+=wl;R.DH+=wd;R.D+=num(w.totalDays);R.F+=num(w.fuelCost);
+  R.G+=num(w.totalGross);R.E+=we;R.N+=num(w.netProfit);R.M+=wm;R.LD+=wl;R.DH+=wd;R.D+=weekDays(w);R.F+=num(w.fuelCost);
   (w.fuelLogs||[]).forEach(function(f){var g=num(f.dieselGal),c=num(f.dieselCost);if(g>0||c>0){var sc=stateCodes(f.loc),k=sc.length?sc[sc.length-1]:'OTHER';if(!R.st[k])R.st[k]={g:0,c:0};R.st[k].g+=g;R.st[k].c+=c;}});
   var lab=w.weekLabel||t('c.week.n',{n:i+1}),items=weekExpItems(w),isum=0;
   items.forEach(function(x){isum+=x.sum;});
@@ -3389,7 +3399,7 @@ function reportData(){
   if(we-isum>0.5)items.push({key:'~other',name:t('rp.other'),type:'',sum:we-isum});
   items.forEach(function(x){var c=cats[x.key];if(!c)c=cats[x.key]={name:x.name,types:{},sum:0,weeks:0};c.sum+=x.sum;c.weeks++;if(x.type)c.types[x.type]=1;});
   R.det.push({label:lab,dates:weekDatesText(w),items:items,total:we});
-  R.weeks.push({label:lab,dates:(w.startDate||'')+' — '+(w.endDate||w.weekEndDate||''),mi:wm,days:num(w.totalDays),g:num(w.totalGross),e:we,n:num(w.netProfit)});
+  R.weeks.push({label:lab,dates:(w.startDate||'')+' — '+(w.endDate||w.weekEndDate||''),mi:wm,days:weekDays(w),g:num(w.totalGross),e:we,n:num(w.netProfit)});
   (w.loads||[]).forEach(function(l){var lm=num(l.miles),ld=num(l.deadhead),lg=num(l.gross);R.loads.push({wk:(w.weekLabel||'').split('(')[0],dates:(l.pickup||'')+' — '+(l.delivery||''),sdates:[l.pickup,l.delivery].filter(Boolean).map(shortDate).join(' – '),route:l.route||'',lm:lm,ld:ld,g:lg,rpm:lm+ld>0?lg/(lm+ld):0,broker:(l.broker||'')+(l.unpaid?' ⏳':'')});
    ptList(l).forEach(function(q){var pm=num(q.miles),pg=num(q.pay);R.loads.push({pt:1,wk:'',dates:'',sdates:'',route:'↳ 📦 '+(ptRoute(q)||'Partial'),lm:pm,ld:0,g:pg,rpm:pm>0?pg/pm:0,broker:(q.broker||'')+(q.unpaid?' ⏳':'')});});});
  });
@@ -3927,7 +3937,7 @@ function init(){
  $('#auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')authLogin();});
  $('#tp-name').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tripSave();}});
  evSyncUI();runEval();runWeight();
- window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
+ window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,weekDays:weekDays,daysUnion:daysUnion,spanDays:spanDays,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
 }
 init();
 })();
