@@ -448,7 +448,9 @@ body.ro .need-write{display:none!important}
 body.light .sm-net:not(.neg){color:#a87800}
 .sm-hsub{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;font-size:13px;margin-top:8px}
 .sm-goal{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.sm-goal input{width:112px;min-height:36px;padding:6px 10px;text-align:right;font-weight:800}
+.sm-goal #goal-in{width:112px;flex:none;min-height:36px;padding:6px 10px;text-align:right;font-weight:800}
+.sm-goal select{flex:1;min-width:0;min-height:36px;padding:6px 10px;font-weight:700;font-size:13px}
+.sm-goal-d{display:flex;align-items:center;gap:8px;margin-top:8px}.sm-goal-d input{flex:1;min-width:0;min-height:36px;padding:6px 8px}.sm-goal-d span{color:var(--mut)}
 .sm-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
 @media(min-width:700px){.sm-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .sm-tile.wide{grid-column:1/-1}.sm-tile.wide .v{font-size:28px}
@@ -994,7 +996,8 @@ body.map-full{overflow:hidden}
         <div class="card" id="sm-hero">
           <div id="sm-hnum"></div>
           <div class="sm-goal">
-            <div class="row between"><label for="goal-in" class="cs" style="margin:0;font-weight:700" data-i18n="sm.goalM"></label><input type="number" inputmode="numeric" id="goal-in" value="10000"></div>
+            <div class="row between" style="gap:8px"><select id="goal-kind" aria-label="goal"></select><input type="number" inputmode="numeric" id="goal-in" value="10000"></div>
+            <div class="sm-goal-d" id="goal-dates" hidden><input type="date" id="goal-from" aria-label="from"><span>–</span><input type="date" id="goal-to" aria-label="to"></div>
             <div class="prog"><i id="goal-bar" style="width:0"></i></div>
             <div class="row between cs" style="margin-top:6px;gap:10px;align-items:flex-start"><span id="goal-amt"></span><b id="goal-pct"></b></div>
           </div>
@@ -1147,7 +1150,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.8';
+var APP_VER='7.9';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1282,6 +1285,8 @@ var DICT=[
 ['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.del','Удалить','Delete'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
 ['sync.saving','☁️ Сохранение…','☁️ Saving…'],['sync.ok','☁️ Синхронизировано','☁️ Synced'],['sync.local','⚠️ Только локально','⚠️ Local only'],
 ['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export'],
+['gk.month','Цель в месяц','Monthly goal'],['gk.week','Цель в неделю','Weekly goal'],['gk.w4','Цель за 4 недели','Goal per 4 weeks'],['gk.period','Цель за этот период','Goal for this period'],['gk.custom','Цель за свои даты','Goal for my dates'],
+['sm.goalC','{f} – {t}: {a} из {b}','{f} – {t}: {a} of {b}'],['sm.goalCLeft','осталось {n} дн.','{n} days left'],['sm.goalCNo','Поставь даты, за которые хочешь выйти на эту сумму.','Set the dates you want to reach this amount in.'],['sm.goalCLive','с текущей неделей','incl. the current week'],
 ['sm.live','текущая','current'],['sm.spanL','{w} + текущая','{w} + current'],['sm.spanL0','текущая неделя','current week'],['sm.tt.liveW','{n} + тек.','{n} + cur.'],['sm.sp.openW','Открыть текущую неделю','Open the current week'],
 ['sm.liveNote','🟢 Текущая неделя тоже посчитана. Она ещё идёт: цифры берутся из вкладки «Неделя» и будут меняться, пока не отправишь её в архив.','🟢 The current week is counted too. It is still running: its numbers come from the Week tab and will change until you archive it.'],
 ['sm.t.mi','Всего миль','Total miles'],['sm.s.mi','гружёные {a} · пустые {b}','loaded {a} · deadhead {b}'],['sm.s.mid','{a} mi в день','{a} mi per day'],
@@ -1348,7 +1353,7 @@ function hav(a,b){var R=3958.8,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lo
 /* =========================================================
    State
    ========================================================= */
-var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',trip:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,goal:10000,
+var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',trip:'',goalKind:'month',goals:{},goalFrom:'',goalTo:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,goal:10000,
  extras:[],maintOn:false,maintStart:0,maintInterval:10000,maintBase:0,template:null,loads:[],fuel:[],exps:[],archive:[],archSel:null};
 var LAST={};var CH={};var saveT=null;var mapToken=0;var curPage='week';
 
@@ -1515,7 +1520,7 @@ function calc(){
    ========================================================= */
 function draftObj(){
  return{weekLabel:S.label,tripName:tripNorm(S.trip),weekFrom:S.wFrom||'',weekTo:S.wTo||'',userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
-  defaultTemplate:S.template||null,mpg:S.mpg,dieselPrice:S.diesel,taxPct:S.taxPct,perDiem:S.perDiem,goal:num(S.goal)||10000,
+  defaultTemplate:S.template||null,mpg:S.mpg,dieselPrice:S.diesel,taxPct:S.taxPct,perDiem:S.perDiem,goal:num(S.goal)||10000,goalKind:S.goalKind||'month',goals:S.goals||{},goalFrom:S.goalFrom||'',goalTo:S.goalTo||'',
   loads:S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:num(l.deadhead),gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid,partials:ptList(l).map(ptOut)};}),
   fuelLogs:S.fuel.map(fuelOut),
   expenses:S.exps.map(function(e){return{name:e.name,type:e.type,val:num(e.val)};}),
@@ -1550,6 +1555,7 @@ function applyDraft(d){
  S.maintOn=!!d.maintEnabled;S.maintStart=num(d.maintStartBal);S.maintInterval=num(d.maintInterval)||10000;S.maintBase=num(d.maintResetBase);
  if(d.mpg!=null&&d.mpg!=='')S.mpg=num(d.mpg);if(d.dieselPrice!=null&&d.dieselPrice!=='')S.diesel=num(d.dieselPrice);
  if(d.taxPct!=null)S.taxPct=num(d.taxPct);if(d.perDiem!=null)S.perDiem=num(d.perDiem)||80;if(d.goal!=null&&num(d.goal)>0)S.goal=num(d.goal);
+ S.goalKind=GOAL_KINDS.indexOf(d.goalKind)>=0?d.goalKind:'month';S.goals=d.goals&&typeof d.goals==='object'?d.goals:{};S.goalFrom=isISO(d.goalFrom)?d.goalFrom:'';S.goalTo=isISO(d.goalTo)?d.goalTo:'';
  if(Array.isArray(d.loads)&&d.loads.length)S.loads=d.loads.map(normLoad);
  if(Array.isArray(d.fuelLogs)){S.fuel=d.fuelLogs.map(function(f){return newFuel(f);});sortFuel();}
  if(Array.isArray(d.expenses)&&d.expenses.length)S.exps=d.expenses.map(function(e){return newExp(e);});
@@ -3141,19 +3147,42 @@ function smHero(c){
  $('#sm-hnum').innerHTML=h+(sub.length?'<div class="sm-hsub">'+sub.join('<span class="dim"> · </span>')+'</div>':'');
  smGoal(c);smTiles(c);smRecs(c);
 }
+/* The net goal. Kinds: per month (scaled to the period shown), per week, per 4 weeks, for the period shown as it is,
+   or for the user's own dates (then it does not depend on the period picked above). Each kind keeps its own amount. */
+var GOAL_KINDS=['month','week','w4','period','custom'];
+function goalAmt(k){var m=num(S.goal)>0?num(S.goal):10000,v=k==='month'?m:num((S.goals||{})[k]);if(v>0)return v;return k==='week'?Math.round(m/4.345/50)*50:k==='w4'?Math.round(m*28/30.44/100)*100:m;}
 function smGoal(c){
- var g=num(S.goal)>0?num(S.goal):10000,A=c.A,el=$('#goal-in'),pct=0,txt='',fc='';
+ var k=GOAL_KINDS.indexOf(S.goalKind)>=0?S.goalKind:'month',g=goalAmt(k),A=c.A,el=$('#goal-in'),ks=$('#goal-kind'),pct=0,txt='',fc='',n=c.list.length;
+ if(ks){ks.innerHTML=GOAL_KINDS.map(function(x){return'<option value="'+x+'">'+esc(t('gk.'+x))+', $</option>';}).join('');ks.value=k;ks.disabled=!!S.ro;}
  if(el){if(document.activeElement!==el)el.value=g;el.readOnly=!!S.ro;}
- if(c.mode==='month'){pct=A.N/g*100;txt=t('sm.goalMon',{a:m0(A.N),b:money(g,0)});
+ var gd=$('#goal-dates'),gf=$('#goal-from'),gt=$('#goal-to');
+ if(gd){gd.hidden=k!=='custom';if(document.activeElement!==gf)gf.value=S.goalFrom||'';if(document.activeElement!==gt)gt.value=S.goalTo||'';gf.disabled=gt.disabled=!!S.ro;}
+ if(k==='custom'){
+  var a=S.goalFrom,b=S.goalTo;
+  if(!isISO(a)||!isISO(b)||b<a)txt=t('sm.goalCNo');
+  else{var ws=S.archive.filter(function(w){var e=wEnd(w);return e&&e>=a&&e<=b;}),lv=null,p=S.ed?null:weekPayload();
+   if(p&&(num(p.totalGross)>0||num(p.totalMiles)>0)&&p.endDate&&p.endDate>=a&&p.endDate<=b&&!ws.some(function(w){return wStart(w)===String(p.startDate||'')&&wEnd(w)===p.endDate&&Math.abs(num(w.totalGross)-num(p.totalGross))<0.5;})){p.db_id='live';p.live=true;p.weekEndDate=p.endDate;lv=p;ws=[p].concat(ws);}
+   var N=smWithX(smAgg(ws.map(smWeek)),smXtSum({a:a,b:b})).N,td=todayISO();pct=N/g*100;
+   txt=t('sm.goalC',{f:dShort(a),t:dShort(b),a:m0(N),b:money(g,0)})+(lv?' · '+t('sm.goalCLive'):'');if(td>=a&&td<=b)fc=t('sm.goalCLeft',{n:daysBetween(td,b)});}
+ }
+ else if(k==='period'){pct=A.N/g*100;txt=t('sm.goalMon',{a:m0(A.N),b:money(g,0)});}
+ else if(k==='week'||k==='w4'){var tg=k==='week'?g*n:g*n/4;pct=tg>0?A.N/tg*100:0;txt=t('sm.goalW',{w:plN(n,'wk'),b:money(tg,0),a:m0(A.N)});}
+ else if(c.mode==='month'){pct=A.N/g*100;txt=t('sm.goalMon',{a:m0(A.N),b:money(g,0)});
   if(SM.month===todayISO().slice(0,7)){var r=monthRange(SM.month),last='';c.list.forEach(function(w){var e=wEnd(w);if(e>last)last=e;});if(last>r.b)last=r.b;
    var cov=last&&last>=r.a?daysBetween(r.a,last)+1:0,dim=daysBetween(r.a,r.b)+1;if(cov>=7&&cov<dim)fc=t('sm.fc',{a:m0(A.N/cov*dim)});}}
- else if(c.mode==='all'){var a='',b='';c.list.forEach(function(w){var s=wStart(w),e=wEnd(w);if(s&&(!a||s<a))a=s;if(e&&e>b)b=e;});var days=a&&b?daysBetween(a,b)+1:c.list.length*7,am=days>0?A.N/days*30.44:0;pct=am/g*100;txt=t('sm.goalAll',{a:m0(am)});}
- else{var tg=g*c.list.length*7/30.44;pct=tg>0?A.N/tg*100:0;txt=t('sm.goalW',{w:plN(c.list.length,'wk'),b:money(tg,0),a:m0(A.N)});}
+ else if(c.mode==='all'){var a2='',b2='';c.list.forEach(function(w){var s=wStart(w),e=wEnd(w);if(s&&(!a2||s<a2))a2=s;if(e&&e>b2)b2=e;});var days=a2&&b2?daysBetween(a2,b2)+1:n*7,am=days>0?A.N/days*30.44:0;pct=am/g*100;txt=t('sm.goalAll',{a:m0(am)});}
+ else{var tg2=g*n*7/30.44;pct=tg2>0?A.N/tg2*100:0;txt=t('sm.goalW',{w:plN(n,'wk'),b:money(tg2,0),a:m0(A.N)});}
  $('#goal-amt').innerHTML=txt+(fc?' <span class="b">· '+fc+'</span>':'');
  var gp=$('#goal-pct');gp.textContent=Math.round(pct)+'%';gp.className=pct>=100?'g':'a';
  $('#goal-bar').style.width=Math.min(100,Math.max(0,pct))+'%';
 }
-function updateGoal(){var el=$('#goal-in');if(!el)return;S.goal=num(el.value)>0?num(el.value):10000;if(SUMCTX&&SUMCTX.A)smGoal(SUMCTX);queueSave();}
+function updateGoal(){var el=$('#goal-in');if(!el)return;var k=S.goalKind||'month',v=num(el.value);
+ if(k==='month')S.goal=v>0?v:10000;else{S.goals=S.goals||{};if(v>0)S.goals[k]=v;else delete S.goals[k];}
+ if(SUMCTX&&SUMCTX.A)smGoal(SUMCTX);queueSave();}
+function goalSet(el){if(!guardWrite()){if(SUMCTX&&SUMCTX.A)smGoal(SUMCTX);return;}
+ if(el.id==='goal-kind')S.goalKind=el.value;else if(el.id==='goal-from')S.goalFrom=el.value;else S.goalTo=el.value;
+ if(S.goalKind==='custom'&&!S.goalFrom&&!S.goalTo){var td=todayISO(),r=monthRange(td.slice(0,7));S.goalFrom=r.a;S.goalTo=r.b;}
+ if(SUMCTX&&SUMCTX.A)smGoal(SUMCTX);queueSave();}
 var SM_TILES=[
  {k:'miles',ic:'🛣️',c:'#5cc8ff',l:'sm.t.mi',wide:1,s:function(a){var p=[];if(a.DH>0)p.push(t('sm.s.mi',{a:f0(a.LD),b:f0(a.DH)}));if(a.D>0&&a.M>0)p.push(t('sm.s.mid',{a:f0(a.M/a.D)}));return p.join(' · ');}},
  {k:'gross',ic:'💵',c:'#3ddc97',l:'sm.t.gross',s:function(a){return plN(a.nL,'ld');}},
@@ -3803,6 +3832,7 @@ document.addEventListener('change',function(e){
  if(el.id==='in-wFrom'||el.id==='in-wTo'){onWeekDate(el);return;}
  if(el.id==='archive-select'){showArchived(el.value);return;}
  if(el.id==='month-select'){renderSummary(el.value);return;}
+ if(el.id==='goal-kind'||el.id==='goal-from'||el.id==='goal-to'){goalSet(el);return;}
  if(el.id==='trip-select'){SM.trip=el.value;SM.spot='';renderSummary();return;}
  if(el.id==='in-trip'){weekTripSet(el.value);return;}
  if(el.id==='ar-trip'){arTripSet(el.value);return;}
@@ -3860,7 +3890,7 @@ async function handleSession(session){
  }else{S.user=null;S.viewId=null;$('#app').hidden=true;$('#auth').hidden=false;}
 }
 async function openProfile(){
- S.ed=null;S.template=null;S.archive=[];S.archSel=null;S.extras=[];S.goal=10000;S.milesMode='split';S.milesCalc='auto';loadTemplate();resetWeek();
+ S.ed=null;S.template=null;S.archive=[];S.archSel=null;S.extras=[];S.goal=10000;S.goalKind='month';S.goals={};S.goalFrom='';S.goalTo='';S.milesMode='split';S.milesCalc='auto';loadTemplate();resetWeek();
  var local=null;try{local=JSON.parse(SafeStorage.get(draftKey())||'null');}catch(e){}
  if(!S.ro&&local)applyDraft(local);
  edResume();
@@ -3957,6 +3987,11 @@ function init(){
   });
  }
  $('#auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')authLogin();});
+ document.addEventListener('focusin',function(e){var el=e.target;if(!el||el.tagName!=='INPUT'||el.readOnly||el.disabled)return;
+  if(el.type!=='number'&&!/decimal|numeric/.test(el.getAttribute('inputmode')||''))return;
+  var v=String(el.value).trim();if(v==='')return;
+  if(Number(v.replace(',','.'))===0){if(!el.getAttribute('placeholder'))el.setAttribute('placeholder',v);el.value='';return;}
+  setTimeout(function(){if(document.activeElement===el){try{el.select();}catch(x){}}},0);});
  $('#tp-name').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tripSave();}});
  evSyncUI();runEval();runWeight();
  window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,weekDays:weekDays,daysUnion:daysUnion,spanDays:spanDays,smLive:smLive,smTripsAll:smTripsAll,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
