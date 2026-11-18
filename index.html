@@ -435,6 +435,9 @@ body.ro .need-write{display:none!important}
 .sh-l{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.sh-l:first-child{border-top:0}
 .sh-l .t1{flex:1;min-width:0;display:flex;flex-direction:column}.sh-l .t1 b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sh-l .t1 small{font-size:11.5px;color:var(--mut)}
 .sh-l .t1 small.x{color:var(--red)}
+.sh-lw{border-top:1px solid var(--line)}.sh-lw:first-child{border-top:0}.sh-lw .sh-l{border-top:0}
+.sh-v{display:block;width:100%;text-align:left;background:none;border:0;padding:0 0 8px;font:inherit;font-size:12px;color:var(--acc);font-weight:700;cursor:pointer}.sh-v[disabled]{color:var(--mut);cursor:default}
+.sh-vl{display:flex;flex-direction:column;gap:3px;padding:0 0 10px 2px;font-size:12px;color:var(--mut)}.sh-vl b{color:var(--tx);font-weight:600}
 .sm-lv{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--grn) 16%,transparent);color:var(--grn);font-size:10.5px;font-weight:800;vertical-align:middle;white-space:nowrap}
 /* trips (рейсы): several weeks of one run away from home */
 .ar-trip{display:flex;gap:8px;align-items:center;margin-top:10px}.ar-trip>span{flex:none;font-weight:700;font-size:13px;color:var(--mut)}.ar-trip select{flex:1;min-width:0;font-weight:700}
@@ -1180,7 +1183,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='8.0';
+var APP_VER='8.1';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1325,7 +1328,10 @@ var DICT=[
 ['sh.copy','Копировать','Copy'],['sh.copied','🔗 Ссылка скопирована','🔗 Link copied'],['sh.send','Отправить…','Send…'],['sh.open','Открыть','Open'],
 ['sh.mine','Мои ссылки','My links'],['sh.none','Ссылок пока нет.','No links yet.'],['sh.until','до {d}','until {d}'],['sh.forever','бессрочно','no end date'],['sh.expd','истекла','expired'],
 ['sh.revoke','Отозвать','Revoke'],['sh.confirmRev','Отозвать ссылку «{n}»? Она перестанет открываться у всех, кому ты её отправил.','Revoke the link “{n}”? It will stop opening for everyone you sent it to.'],['sh.revoked','Ссылка отозвана','Link revoked'],
-['sh.tTrip','Рейс «{n}»','Trip “{n}”'],['sh.tW','Последние {n} нед.','Last {n} weeks'],['sh.tAll','За всё время','All time'],['sh.tCustom','Выбранные недели','Selected weeks'],
+['sh.tTrip','Рейс «{n}»','Trip “{n}”'],
+['sh.v0','👁 ещё не открывали','👁 not opened yet'],['sh.vN','👁 {o} · {d} · последнее {l}','👁 {o} · {d} · last {l}'],['pl.op.1','открытие','open'],['pl.op.2','открытия','opens'],['pl.op.5','открытий','opens'],
+['pl.dv.1','устройство','device'],['pl.dv.2','устройства','devices'],['pl.dv.5','устройств','devices'],['sh.dev','устройство {n}','device {n}'],
+['sh.d.phone','📱','📱'],['sh.d.tablet','📲','📲'],['sh.d.desktop','💻','💻'],['sh.vNote','Кто именно — не видно: считаются устройства. Твои открытия с этого телефона/компьютера не считаются.','Who exactly is not shown: devices are counted. Your own opens from this device do not count.'],['sh.tW','Последние {n} нед.','Last {n} weeks'],['sh.tAll','За всё время','All time'],['sh.tCustom','Выбранные недели','Selected weeks'],
 ['gk.month','Цель в месяц','Monthly goal'],['gk.week','Цель в неделю','Weekly goal'],['gk.w4','Цель за 4 недели','Goal per 4 weeks'],['gk.period','Цель за этот период','Goal for this period'],['gk.custom','Цель за свои даты','Goal for my dates'],
 ['sm.goalC','{f} – {t}: {a} из {b}','{f} – {t}: {a} of {b}'],['sm.goalCLeft','осталось {n} дн.','{n} days left'],['sm.goalCNo','Поставь даты, за которые хочешь выйти на эту сумму.','Set the dates you want to reach this amount in.'],['sm.goalCLive','с текущей неделей','incl. the current week'],
 ['sm.live','текущая','current'],['sm.spanL','{w} + текущая','{w} + current'],['sm.spanL0','текущая неделя','current week'],['sm.tt.liveW','{n} + тек.','{n} + cur.'],['sm.sp.openW','Открыть текущую неделю','Open the current week'],
@@ -3293,6 +3299,7 @@ async function shMake(){
  var r=await sb.from('og_shares').insert({id:id,title:(d.title+(d.span?' · '+d.span:'')).slice(0,200),data:d,expires_at:days?new Date(Date.now()+days*864e5).toISOString():null});
  btn.disabled=false;
  if(r&&r.error){toast(t('t.err',{e:r.error.message||r.error}),4500);return;}
+ try{var own=JSON.parse(localStorage.getItem('og_own')||'[]')||[];own.unshift(id);localStorage.setItem('og_own',JSON.stringify(own.slice(0,200)));}catch(e){}
  var u=shUrl(id);$('#sh-url').value=u;$('#sh-go').href=u;$('#sh-send').hidden=!navigator.share;
  $('#sh-make').hidden=true;$('#sh-done').hidden=false;shList();
 }
@@ -3300,10 +3307,17 @@ async function shList(){
  var box=$('#sh-list');if(!box||!sb||!S.user)return;
  var r=await sb.from('og_shares').select('id,title,created_at,expires_at').order('created_at',{ascending:false}).limit(30);
  if(r.error){box.innerHTML='<div class="cs">'+esc(r.error.message||'')+'</div>';return;}
- var now=Date.now(),L=r.data||[];
- box.innerHTML=L.length?L.map(function(x){var ex=x.expires_at?new Date(x.expires_at):null,dead=ex&&ex.getTime()<=now,dt=function(z){return dShort(new Date(z).toISOString().slice(0,10));};
-  return'<div class="sh-l"><span class="t1"><b>'+esc(x.title||x.id)+'</b><small'+(dead?' class="x"':'')+'>'+esc(dt(x.created_at))+' · '+esc(dead?t('sh.expd'):(ex?t('sh.until',{d:dt(x.expires_at)}):t('sh.forever')))+'</small></span>'+
-   (dead?'':'<button type="button" class="btn sm" data-act="shCopyId" data-id="'+esc(x.id)+'">'+t('sh.copy')+'</button>')+'<button type="button" class="btn sm" data-act="shRevoke" data-id="'+esc(x.id)+'" data-n="'+esc(x.title||'')+'">'+t('sh.revoke')+'</button></div>';}).join(''):'<div class="cs">'+t('sh.none')+'</div>';
+ var now=Date.now(),L=r.data||[],V={};
+ if(L.length){try{var rv=await sb.from('og_share_views').select('share_id,visitor,device,viewed_at').in('share_id',L.map(function(x){return x.id;})).order('viewed_at',{ascending:false}).limit(2000);
+  ((rv&&rv.data)||[]).forEach(function(v){(V[v.share_id]=V[v.share_id]||[]).push(v);});}catch(e){V={};}}
+ var tm=function(z){var d=new Date(z),p=function(n){return(n<10?'0':'')+n;},iso=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());return dShort(iso)+' '+p(d.getHours())+':'+p(d.getMinutes());};
+ box.innerHTML=L.length?'<div class="cs">'+t('sh.vNote')+'</div>'+L.map(function(x){var ex=x.expires_at?new Date(x.expires_at):null,dead=ex&&ex.getTime()<=now,dt=function(z){return dShort(new Date(z).toISOString().slice(0,10));};
+  var vs=V[x.id]||[],nums={},n=0;vs.slice().reverse().forEach(function(v){if(!nums[v.visitor])nums[v.visitor]=++n;});
+  var vline=vs.length?t('sh.vN',{o:plN(vs.length,'op'),d:plN(n,'dv'),l:tm(vs[0].viewed_at)}):t('sh.v0');
+  var vlist=vs.map(function(v){return'<span><b>'+esc(tm(v.viewed_at))+'</b> · '+(v.device?t('sh.d.'+v.device)+' ':'')+esc(t('sh.dev',{n:nums[v.visitor]}))+'</span>';}).join('');
+  return'<div class="sh-lw"><div class="sh-l"><span class="t1"><b>'+esc(x.title||x.id)+'</b><small'+(dead?' class="x"':'')+'>'+esc(dt(x.created_at))+' · '+esc(dead?t('sh.expd'):(ex?t('sh.until',{d:dt(x.expires_at)}):t('sh.forever')))+'</small></span>'+
+   (dead?'':'<button type="button" class="btn sm" data-act="shCopyId" data-id="'+esc(x.id)+'">'+t('sh.copy')+'</button>')+'<button type="button" class="btn sm" data-act="shRevoke" data-id="'+esc(x.id)+'" data-n="'+esc(x.title||'')+'">'+t('sh.revoke')+'</button></div>'+
+   '<button type="button" class="sh-v" data-act="shViews"'+(vs.length?'':' disabled')+'>'+vline+(vs.length?' ▾':'')+'</button><div class="sh-vl" hidden>'+vlist+'</div></div>';}).join(''):'<div class="cs">'+t('sh.none')+'</div>';
 }
 function shCopyText(u){
  function ok(){toast(t('sh.copied'));}
@@ -3824,6 +3838,7 @@ var ACT={
  sumReplay:function(){var box=$('#sum-map-box');if(box._map)box._map.replay();},
  smMode:function(b){SM.mode=b.dataset.m;SafeStorage.set('hs_smode',SM.mode);SM.spot='';renderSummary();},
  shOpen:function(){shOpen();},shClose:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#share-bg').hidden=true;},shMake:function(){shMake();},
+ shViews:function(b){var l=b.nextElementSibling;if(!l)return;l.hidden=!l.hidden;b.textContent=b.textContent.replace(/[▾▴]$/,l.hidden?'▾':'▴');},
  shCopy:function(){shCopyText($('#sh-url').value);},shCopyId:function(b){shCopyText(shUrl(b.dataset.id));},shRevoke:function(b){shRevoke(b);},
  shSend:function(){var u=$('#sh-url').value;if(navigator.share)navigator.share({title:'OwnerGladiator · '+$('#sh-period').textContent,url:u}).catch(function(){});},
  smTrip:function(b){var L=smTripsAll(),i=L.findIndex(function(x){return x.k===SM.trip;}),j=i+num(b.dataset.d);if(i>=0&&L[j]){SM.trip=L[j].k;SM.spot='';renderSummary();}},
