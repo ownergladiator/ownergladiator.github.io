@@ -427,6 +427,14 @@ body.ro .need-write{display:none!important}
 @media(max-width:699px){.seg.sm-seg{grid-template-columns:repeat(4,minmax(0,1fr))}.seg.sm-seg button:last-child{grid-column:span 2}}
 .sm-mon{margin-top:10px;gap:8px}.sm-mon select{flex:1;min-height:42px;font-weight:700}.sm-mon .icon-btn:disabled{opacity:.35;cursor:default}
 .sm-cmpl{margin-top:8px}.sm-cmpl:empty{display:none}
+.sm-shr{margin-top:10px;display:flex;justify-content:flex-end}
+.sh-make{display:flex;flex-direction:column;gap:10px}
+.sh-o{display:flex;gap:12px;align-items:flex-start;margin:0;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);cursor:pointer;color:var(--tx);white-space:normal}
+.sh-o span{display:flex;flex-direction:column;gap:2px;min-width:0}.sh-o b{font-size:14px}.sh-o small{font-size:12px;color:var(--mut);font-weight:500}
+.sh-mine{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.sh-l{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.sh-l:first-child{border-top:0}
+.sh-l .t1{flex:1;min-width:0;display:flex;flex-direction:column}.sh-l .t1 b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sh-l .t1 small{font-size:11.5px;color:var(--mut)}
+.sh-l .t1 small.x{color:var(--red)}
 .sm-lv{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--grn) 16%,transparent);color:var(--grn);font-size:10.5px;font-weight:800;vertical-align:middle;white-space:nowrap}
 /* trips (рейсы): several weeks of one run away from home */
 .ar-trip{display:flex;gap:8px;align-items:center;margin-top:10px}.ar-trip>span{flex:none;font-weight:700;font-size:13px;color:var(--mut)}.ar-trip select{flex:1;min-width:0;font-weight:700}
@@ -991,6 +999,7 @@ body.map-full{overflow:hidden}
           </div>
           <div class="cs sm-cmpl" id="sm-cmp"></div>
           <div class="cs sm-cmpl" id="sm-live"></div>
+          <div class="sm-shr"><button type="button" class="btn sm need-write" data-act="shOpen" id="sm-share" data-i18n="sh.btn"></button></div>
         </div>
         <div class="card empty" id="sm-empty" hidden></div>
         <div class="card" id="sm-hero">
@@ -1110,6 +1119,27 @@ body.map-full{overflow:hidden}
     <div class="cs" style="text-align:center" id="app-ver">OwnerGladiator Hub 7.1</div>
   </div>
 </div>
+<!-- share: a read-only link to a snapshot of the summary -->
+<div id="share-bg" class="sheet-bg" hidden data-act="shClose">
+  <div class="sheet" id="share-sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+    <div class="row between"><b style="font-size:16px" id="sh-title" data-i18n="sh.title"></b><button class="icon-btn" data-act="shClose">✕</button></div>
+    <div><b id="sh-period"></b><div class="cs" id="sh-span" style="margin-top:2px"></div></div>
+    <div id="sh-make" class="sh-make">
+      <div class="cs" data-i18n="sh.sub"></div>
+      <label class="sh-o"><input type="checkbox" id="sh-net" checked><span><b data-i18n="sh.net"></b><small data-i18n="sh.netH"></small></span></label>
+      <label class="sh-o"><input type="checkbox" id="sh-map"><span><b data-i18n="sh.map"></b><small id="sh-mapH" data-i18n="sh.mapH"></small></span></label>
+      <label class="sh-o"><input type="checkbox" id="sh-wk"><span><b data-i18n="sh.wk"></b><small data-i18n="sh.wkH"></small></span></label>
+      <div class="row between" style="gap:10px"><span class="cs" style="font-weight:700" data-i18n="sh.exp"></span><select id="sh-exp" style="max-width:190px"><option value="7" data-i18n="sh.e7"></option><option value="30" data-i18n="sh.e30" selected></option><option value="0" data-i18n="sh.e0"></option></select></div>
+      <button class="btn pri" data-act="shMake" id="sh-mk" data-i18n="sh.make"></button>
+    </div>
+    <div id="sh-done" class="sh-make" hidden>
+      <div class="cs" data-i18n="sh.ready"></div>
+      <input type="text" id="sh-url" readonly>
+      <div class="row wrap" style="gap:8px"><button class="btn pri" data-act="shCopy" data-i18n="sh.copy"></button><button class="btn" data-act="shSend" id="sh-send" data-i18n="sh.send"></button><a class="btn" id="sh-go" target="_blank" rel="noopener" data-i18n="sh.open"></a></div>
+    </div>
+    <div class="sh-mine"><b data-i18n="sh.mine"></b><div id="sh-list"></div></div>
+  </div>
+</div>
 <!-- trips: name a trip, pick its weeks, rename or ungroup -->
 <div id="trip-bg" class="sheet-bg" hidden data-act="tpClose">
   <div class="sheet" id="trip-sheet" role="dialog" aria-modal="true" aria-labelledby="tp-title">
@@ -1150,7 +1180,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='7.9';
+var APP_VER='8.0';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1285,6 +1315,17 @@ var DICT=[
 ['c.week','Неделя','Week'],['c.clear','Очистить','Clear'],['c.del','Удалить','Delete'],['c.on','Вкл','On'],['c.off','Выкл','Off'],['c.week.n','Неделя #{n}','Week #{n}'],['c.route','Маршрут','Route'],['c.load','Рейс','Load'],
 ['sync.saving','☁️ Сохранение…','☁️ Saving…'],['sync.ok','☁️ Синхронизировано','☁️ Synced'],['sync.local','⚠️ Только локально','⚠️ Local only'],
 ['t.saved','Сохранено','Saved'],['t.archived','Неделя сохранена в архив','Week archived'],['t.deleted','Неделя удалена','Week deleted'],['t.login','Войдите в аккаунт','Please sign in'],['t.ro','Режим просмотра: изменения отключены','View-only mode: changes are disabled'],['t.err','Ошибка: {e}','Error: {e}'],['t.nodata','Нет данных для экспорта','Nothing to export'],
+['sh.btn','🔗 Поделиться','🔗 Share'],['sh.title','🔗 Поделиться итогами','🔗 Share this summary'],
+['sh.sub','Человек откроет ссылку без регистрации и увидит снимок этих итогов на сегодня. Если потом что-то изменишь — создай новую ссылку.','Anyone with the link sees a snapshot of this summary as of now, no sign-up. If you change things later, make a new link.'],
+['sh.net','Чистая прибыль и расходы','Net profit and costs'],['sh.netH','Выключи, если отправляешь брокеру или компании: останутся мили, gross и RPM.','Turn off for a broker or carrier: miles, gross and RPM stay.'],
+['sh.map','Карта и направления','Map and lanes'],['sh.mapH','Города, где ты грузился и разгружался.','The cities you loaded and unloaded in.'],['sh.mapNo','Карта ещё рисуется — подожди пару секунд.','The map is still drawing — give it a few seconds.'],
+['sh.wk','По неделям','Week by week'],['sh.wkH','График и таблица по каждой неделе.','A chart and a table for each week.'],
+['sh.exp','Ссылка работает','The link works for'],['sh.e7','7 дней','7 days'],['sh.e30','30 дней','30 days'],['sh.e0','Пока не отзову','Until I revoke it'],
+['sh.make','Создать ссылку','Create link'],['sh.ready','✅ Ссылка готова — отправь её кому нужно:','✅ Link ready — send it to anyone:'],
+['sh.copy','Копировать','Copy'],['sh.copied','🔗 Ссылка скопирована','🔗 Link copied'],['sh.send','Отправить…','Send…'],['sh.open','Открыть','Open'],
+['sh.mine','Мои ссылки','My links'],['sh.none','Ссылок пока нет.','No links yet.'],['sh.until','до {d}','until {d}'],['sh.forever','бессрочно','no end date'],['sh.expd','истекла','expired'],
+['sh.revoke','Отозвать','Revoke'],['sh.confirmRev','Отозвать ссылку «{n}»? Она перестанет открываться у всех, кому ты её отправил.','Revoke the link “{n}”? It will stop opening for everyone you sent it to.'],['sh.revoked','Ссылка отозвана','Link revoked'],
+['sh.tTrip','Рейс «{n}»','Trip “{n}”'],['sh.tW','Последние {n} нед.','Last {n} weeks'],['sh.tAll','За всё время','All time'],['sh.tCustom','Выбранные недели','Selected weeks'],
 ['gk.month','Цель в месяц','Monthly goal'],['gk.week','Цель в неделю','Weekly goal'],['gk.w4','Цель за 4 недели','Goal per 4 weeks'],['gk.period','Цель за этот период','Goal for this period'],['gk.custom','Цель за свои даты','Goal for my dates'],
 ['sm.goalC','{f} – {t}: {a} из {b}','{f} – {t}: {a} of {b}'],['sm.goalCLeft','осталось {n} дн.','{n} days left'],['sm.goalCNo','Поставь даты, за которые хочешь выйти на эту сумму.','Set the dates you want to reach this amount in.'],['sm.goalCLive','с текущей неделей','incl. the current week'],
 ['sm.live','текущая','current'],['sm.spanL','{w} + текущая','{w} + current'],['sm.spanL0','текущая неделя','current week'],['sm.tt.liveW','{n} + тек.','{n} + cur.'],['sm.sp.openW','Открыть текущую неделю','Open the current week'],
@@ -2662,7 +2703,7 @@ function mapMount(box,M,spec){
   resize:function(){if(dead)return;var c=[v.cx,v.cy],k=v.k,w0=W;size();if(W===w0&&!full)return;v.cx=c[0];v.cy=c[1];v.k=clampK(k*(W/w0));clampC();apply();cull();},
   replay:function(){rtP.forEach(function(p){p.classList.remove('go');});void svg.getBoundingClientRect();rtP.forEach(function(p){p.classList.add('go');});},
   destroy:function(){dead=true;rq.dead=true;document.removeEventListener('keydown',onKey);if(full)document.body.classList.remove('map-full');MAPS_LIVE=MAPS_LIVE.filter(function(m){return m!==api;});},
-  view:function(){return{k:v.k,cx:v.cx,cy:v.cy,W:W,H:H,kUS:kUS};},legs:legs,fit:fit,zoomAt:zoomAt,setFull:setFull,
+  view:function(){return{k:v.k,cx:v.cx,cy:v.cy,W:W,H:H,kUS:kUS};},legs:legs,stops:stops,fit:fit,zoomAt:zoomAt,setFull:setFull,
   visible:function(kind){return ov.filter(function(o){return o.k===kind&&o.el.style.display!=='none';}).length;}
  };
  MAPS_LIVE.push(api);
@@ -3192,13 +3233,88 @@ var SM_TILES=[
  {k:'dhp',ic:'↩️',c:'#ff9f43',l:'sm.t.dh',s:function(a){return t('sm.s.dh',{a:f0(a.DH),b:f0(a.M)});}},
  {k:'perday',ic:'📅',c:'#2dd4bf',l:'sm.t.pd',s:function(a){return plN(a.D,'dy')+' · Per Diem '+money(a.D*(num(S.perDiem)||80),0);}}
 ];
-function smTiles(c){
+/* the tiles as data: {k,ic,c,l,v,d,dc,s,wide} (screen and shared snapshot use the same) */
+function tileData(c){
  var A=c.A,B=c.B;
- $('#sm-tiles').innerHTML=SM_TILES.map(function(T){
-  var K=SMK[T.k],v=K.v(A),dv=null,dh='';
-  if(B){var bv=K.v(B),nz=K.sum?smNorm(c):null;if(v!=null&&bv!=null){dv=nz?v/nz.a-bv/nz.b:v-bv;var cl=smGood(T.k,dv);dh='<span class="sm-d '+cl+'">'+(dv>0?'▲':dv<0?'▼':'')+' '+K.d(dv)+(nz?nz.u:'')+'</span>';}}
-  return'<div class="sm-tile'+(T.wide?' wide':'')+'" data-k="'+T.k+'" style="--c:'+T.c+'"><div class="l"><span class="ic" aria-hidden="true">'+T.ic+'</span>'+t(T.l)+'</div><div class="sm-tv"><span class="v">'+(v==null?'—':K.f(v))+'</span>'+dh+'</div>'+
-   '<div class="s">'+T.s(A)+'</div></div>';}).join('');
+ return SM_TILES.map(function(T){
+  var K=SMK[T.k],v=K.v(A),d='',dc='';
+  if(B){var bv=K.v(B),nz=K.sum?smNorm(c):null;if(v!=null&&bv!=null){var dv=nz?v/nz.a-bv/nz.b:v-bv;dc=smGood(T.k,dv);d=(dv>0?'▲':dv<0?'▼':'')+' '+K.d(dv)+(nz?nz.u:'');}}
+  return{k:T.k,ic:T.ic,c:T.c,l:t(T.l),v:v==null?'—':K.f(v),d:d,dc:dc,s:T.s(A),wide:!!T.wide};});
+}
+function smTiles(c){
+ $('#sm-tiles').innerHTML=tileData(c).map(function(x){
+  return'<div class="sm-tile'+(x.wide?' wide':'')+'" data-k="'+x.k+'" style="--c:'+x.c+'"><div class="l"><span class="ic" aria-hidden="true">'+x.ic+'</span>'+x.l+'</div><div class="sm-tv"><span class="v">'+x.v+'</span>'+(x.d?'<span class="sm-d '+x.dc+'">'+x.d+'</span>':'')+'</div>'+
+   '<div class="s">'+x.s+'</div></div>';}).join('');
+}
+/* ---- share: a read-only link to a snapshot of the summary on screen (table og_shares, page s/) ---- */
+function shPeriod(c){
+ var m=c.mode;
+ if(m==='trip'){var T=(c.trips||[]).filter(function(x){return x.k===SM.trip;})[0];return T?t('sh.tTrip',{n:T.name}):t('sm.m.trip');}
+ if(m==='month'){var o=$('#month-select');return o&&o.selectedOptions[0]?o.selectedOptions[0].textContent:SM.month;}
+ if(/^w\d+$/.test(m))return t('sh.tW',{n:m.slice(1)});
+ return m==='all'?t('sh.tAll'):t('sh.tCustom');
+}
+function shMap(){
+ var box=$('#sum-map-box'),api=box&&box._map;if(!api||!api.legs||!api.legs.length)return null;
+ var shade={};[].forEach.call(box.querySelectorAll('.m-st'),function(p){var c=(p.getAttribute('class')||'').replace('m-st','').trim();if(c)shade[p.getAttribute('data-st')]=c;});
+ return{legs:api.legs.map(function(l){return{t:l.t==='ld'?'ld':'dh',w:Math.round(l.w*10)/10,p:menc(dpS(l.pts,0.8),0.5)};}),
+  stops:(api.stops||[]).map(function(s){return{x:Math.round(s.p[0]*10)/10,y:Math.round(s.p[1]*10)/10,r:Math.round(s.r*10)/10,l:String(s.label||'').slice(0,40),p:Math.round(num(s.pri))};}),shade:shade};
+}
+function shBuild(o){
+ var c=SUMCTX,A=c.A,B=c.B,tiles=tileData(c),d={v:1,lang:LANG,made:new Date().toISOString(),role:S.role,title:shPeriod(c),span:$('#sm-span').textContent,cmp:$('#sm-cmp').textContent,net:!!o.net};
+ if(o.net){var sub=[],dl=null;
+  if(B){var nz=smNorm(c),an=nz?A.N/nz.a:A.N,bn=nz?B.N/nz.b:B.N,dd=an-bn;dl={t:(dd>=0?'▲ ':'▼ ')+sgnM(dd)+(nz?nz.u:''),c:dd>=0?'g':'r'};sub.push(t(nz?nz.was:'sm.was',{a:m0(bn)}));}
+  if(A.G>0)sub.push(t('sm.margin2',{p:f0(A.N/A.G*100)}));
+  d.hero={l:t('sm.netP'),v:m0(A.N),neg:A.N<0,d:dl,sub:sub};d.tiles=tiles;}
+ else{var g=tiles.filter(function(x){return x.k==='gross';})[0];
+  d.hero={l:'Gross',v:g.v,neg:false,d:g.d?{t:g.d,c:g.dc}:null,sub:[g.s]};
+  d.tiles=tiles.filter(function(x){return['gross','cost','nrpm','perday'].indexOf(x.k)<0;});}
+ d.tiles=d.tiles.map(function(x){return{ic:x.ic,c:x.c,l:x.l,v:x.v,d:x.d,dc:x.dc,s:x.s,w:x.wide?1:0};});
+ if(o.wk)d.weeks=c.ws.slice().reverse().map(function(w){var r={e:dShort(w.end),lv:w.w&&w.w.live?1:0,g:Math.round(w.G),m:Math.round(w.M)};if(o.net)r.n=Math.round(w.N);return r;});
+ if(o.map){var mp=shMap();if(mp)d.map=mp;
+  var L={};(c.cur&&c.cur.trips||[]).forEach(function(x){var k=x.a+' → '+x.b,q=L[k]||(L[k]={k:k,c:0,g:0,mi:0});q.c++;q.g+=x.g;q.mi+=x.mi;});
+  d.lanes=Object.keys(L).map(function(k){var q=L[k];return{k:k,c:q.c,g:Math.round(q.g),r:q.mi>0?Math.round(q.g/q.mi*100)/100:0};}).sort(function(a,b){return(b.c-a.c)||(b.g-a.g);}).slice(0,8);}
+ return d;
+}
+function shToken(){var a=new Uint8Array(18);crypto.getRandomValues(a);var s='';for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function shUrl(id){return location.origin+location.pathname.replace(/[^\/]*$/,'')+'s/#'+id;}
+function shOpen(){
+ if(!guardWrite())return;if(!SUMCTX||!SUMCTX.list||!SUMCTX.list.length)return toast(t('sm.emptyP'));
+ $('#sh-period').textContent=shPeriod(SUMCTX);$('#sh-span').textContent=$('#sm-span').textContent;
+ $('#sh-make').hidden=false;$('#sh-done').hidden=true;$('#sh-mk').disabled=false;
+ var api=$('#sum-map-box')&&$('#sum-map-box')._map;$('#sh-mapH').textContent=t(api?'sh.mapH':'sh.mapNo');
+ $('#share-bg').hidden=false;shList();
+}
+async function shMake(){
+ if(!guardWrite())return;if(!sb||!S.user)return toast(t('t.login'));
+ var o={net:$('#sh-net').checked,map:$('#sh-map').checked,wk:$('#sh-wk').checked};
+ if(o.map&&!shMap()){toast(t('sh.mapNo'));return;}
+ var d=shBuild(o),id=shToken(),days=num($('#sh-exp').value),btn=$('#sh-mk');btn.disabled=true;
+ var r=await sb.from('og_shares').insert({id:id,title:(d.title+(d.span?' · '+d.span:'')).slice(0,200),data:d,expires_at:days?new Date(Date.now()+days*864e5).toISOString():null});
+ btn.disabled=false;
+ if(r&&r.error){toast(t('t.err',{e:r.error.message||r.error}),4500);return;}
+ var u=shUrl(id);$('#sh-url').value=u;$('#sh-go').href=u;$('#sh-send').hidden=!navigator.share;
+ $('#sh-make').hidden=true;$('#sh-done').hidden=false;shList();
+}
+async function shList(){
+ var box=$('#sh-list');if(!box||!sb||!S.user)return;
+ var r=await sb.from('og_shares').select('id,title,created_at,expires_at').order('created_at',{ascending:false}).limit(30);
+ if(r.error){box.innerHTML='<div class="cs">'+esc(r.error.message||'')+'</div>';return;}
+ var now=Date.now(),L=r.data||[];
+ box.innerHTML=L.length?L.map(function(x){var ex=x.expires_at?new Date(x.expires_at):null,dead=ex&&ex.getTime()<=now,dt=function(z){return dShort(new Date(z).toISOString().slice(0,10));};
+  return'<div class="sh-l"><span class="t1"><b>'+esc(x.title||x.id)+'</b><small'+(dead?' class="x"':'')+'>'+esc(dt(x.created_at))+' · '+esc(dead?t('sh.expd'):(ex?t('sh.until',{d:dt(x.expires_at)}):t('sh.forever')))+'</small></span>'+
+   (dead?'':'<button type="button" class="btn sm" data-act="shCopyId" data-id="'+esc(x.id)+'">'+t('sh.copy')+'</button>')+'<button type="button" class="btn sm" data-act="shRevoke" data-id="'+esc(x.id)+'" data-n="'+esc(x.title||'')+'">'+t('sh.revoke')+'</button></div>';}).join(''):'<div class="cs">'+t('sh.none')+'</div>';
+}
+function shCopyText(u){
+ function ok(){toast(t('sh.copied'));}
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(ok,function(){fb();});else fb();
+ function fb(){var i=$('#sh-url');i.value=u;i.removeAttribute('readonly');i.select();try{document.execCommand('copy');ok();}catch(e){}i.setAttribute('readonly','');}
+}
+async function shRevoke(b){
+ if(!guardWrite())return;if(!confirm(t('sh.confirmRev',{n:b.dataset.n||b.dataset.id})))return;
+ var r=await sb.from('og_shares').delete().eq('id',b.dataset.id);
+ if(r&&r.error)return toast(t('t.err',{e:r.error.message||r.error}),4500);
+ toast(t('sh.revoked'));if($('#sh-url').value.indexOf(b.dataset.id)>=0){$('#sh-done').hidden=true;$('#sh-make').hidden=false;}shList();
 }
 function smRecs(c){
  var box=$('#sm-recs'),ws=c.ws;if(!box)return;if(ws.length<3){box.innerHTML='';return;}
@@ -3707,6 +3823,9 @@ var ACT={
   if(inp){inp.focus();if(inp.select)inp.select();}},
  sumReplay:function(){var box=$('#sum-map-box');if(box._map)box._map.replay();},
  smMode:function(b){SM.mode=b.dataset.m;SafeStorage.set('hs_smode',SM.mode);SM.spot='';renderSummary();},
+ shOpen:function(){shOpen();},shClose:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#share-bg').hidden=true;},shMake:function(){shMake();},
+ shCopy:function(){shCopyText($('#sh-url').value);},shCopyId:function(b){shCopyText(shUrl(b.dataset.id));},shRevoke:function(b){shRevoke(b);},
+ shSend:function(){var u=$('#sh-url').value;if(navigator.share)navigator.share({title:'OwnerGladiator · '+$('#sh-period').textContent,url:u}).catch(function(){});},
  smTrip:function(b){var L=smTripsAll(),i=L.findIndex(function(x){return x.k===SM.trip;}),j=i+num(b.dataset.d);if(i>=0&&L[j]){SM.trip=L[j].k;SM.spot='';renderSummary();}},
  smTripPick:function(b){SM.mode='trip';SafeStorage.set('hs_smode','trip');SM.trip=b.dataset.k;SM.spot='';renderSummary();window.scrollTo({top:0,behavior:'smooth'});},
  tpOpen:function(){if(!guardWrite())return;tripSheet('arch');},
@@ -3966,7 +4085,7 @@ function renderArList(){
 }
 function deskKey(e){
  if(!DESK||!S.user||e.ctrlKey||e.metaKey||e.altKey)return;
- var open=['#menu-bg','#pdf-bg','#imp-bg','#trip-bg'].filter(function(s){var x=$(s);return x&&!x.hidden;});
+ var open=['#menu-bg','#pdf-bg','#imp-bg','#trip-bg','#share-bg'].filter(function(s){var x=$(s);return x&&!x.hidden;});
  if(e.key==='Escape'){if(open.length){open.forEach(function(s){$(s).hidden=true;});e.preventDefault();}return;}
  var tg=e.target&&e.target.tagName;if(open.length||tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT'||(e.target&&e.target.isContentEditable))return;
  if(e.key==='n'||e.key==='N'||e.key==='т'||e.key==='Т'){e.preventDefault();ACT.deskAdd();}
@@ -3994,7 +4113,7 @@ function init(){
   setTimeout(function(){if(document.activeElement===el){try{el.select();}catch(x){}}},0);});
  $('#tp-name').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tripSave();}});
  evSyncUI();runEval();runWeight();
- window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,weekDays:weekDays,daysUnion:daysUnion,spanDays:spanDays,smLive:smLive,smTripsAll:smTripsAll,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
+ window.__hs={SM:SM,smWeek:smWeek,sumCtx:function(){return SUMCTX;},mapData:mapData,graphRoute:graphRoute,routeFetch:routeFetch,viaCanada:viaCanada,ALB:ALB,RTC:function(){return RTC;},rtKey:rtKey,renderSumMap:renderSumMap,routeParts:routeParts,S:S,EV:EV,CFG_OK:CFG_OK,DB_REF:DB_REF,calcLoadMiles:calcLoadMiles,calcAllMiles:calcAllMiles,afterLoadPlace:afterLoadPlace,renderMap:renderMap,resetWeek:resetWeek,applyDraft:applyDraft,draftObj:draftObj,calc:calc,refresh:refresh,renderStatic:renderStatic,ACT:ACT,resolvePlace:resolvePlace,parseCityState:parseCityState,parseSingleRelay:parseSingleRelay,parseRelayTable:parseRelayTable,relayDate:relayDate,relayCode:relayCode,sortFuel:sortFuel,pushFuel:pushFuel,importFuelText:importFuelText,weekFromPayload:weekFromPayload,weekPayload:weekPayload,weekDays:weekDays,shBuild:shBuild,shMap:shMap,daysUnion:daysUnion,spanDays:spanDays,smLive:smLive,smTripsAll:smTripsAll,tripsAll:tripsAll,tripSheet:tripSheet,fillTripSel:fillTripSel,arEdit:arEdit,edSave:edSave,edCancel:edCancel,loadArchive:loadArchive,openProfile:openProfile,showArchived:showArchived,renderSummary:renderSummary,renderReport:renderReport,go:go,rerender:rerender,handleSession:handleSession,monthOf:monthOf,t:t};
 }
 init();
 })();
