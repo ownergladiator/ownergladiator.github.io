@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WeightGladiator</title>
+<meta name="description" content="WeightGladiator — нагрузка на каждую ось хотшот-сцепки: трак + гуснек-трейлер, груз расставляется пальцем.">
+<meta name="theme-color" content="#0d0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Weight">
+<meta name="application-name" content="WeightGladiator">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<!--
+  WeightGladiator: axle loads of a pickup + gooseneck hotshot rig. A sibling of OwnerGladiator Hub (same Supabase project, same sign-in).
+  What it owns: wg_state (one row per user: rig = truck/trailer sizes, ratings, tare, limits; items = the load being placed now)
+  and wg_loads (saved placements). It never reads or writes the Hub's tables.
+  Physics: the trailer is a beam on two supports (ball, tandem centre); the pin load is split between the truck axles by the ball offset.
+-->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: рабочий инструмент хотшотчика: коротко, по делу, цифры крупно.
+   IDEA: весовой чек CAT scale плюс чертёж сцепки сбоку и сверху.
+   PICTURE: живой профиль Ram 3500 dually + гуснек 40′, груз таскается пальцем, вес под каждой осью.
+   COLOUR/TYPE: семейство Gladiator: ночной #0d0f12, жёлтый #ffc400, Barlow / Barlow Condensed.
+   LAYOUT: чертёж на всю ширину, под ним оси, предупреждения и список груза; на телефоне одна колонка. */
+:root{color-scheme:dark;--bg:#0d0f12;--card:#15181d;--card2:#1b1f26;--line:#2a2f38;--line2:#22262e;--ink:#f4f4f2;--mut:#9aa1ad;--acc:#ffc400;--acc2:#e3a300;--ok:#3ddc97;--warn:#ffb547;--bad:#ff5a5f;--bad2:#ff8a8d;--cond:'Barlow Condensed','Arial Narrow',sans-serif}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px/1.45 Barlow,-apple-system,'Segoe UI',Roboto,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+a{color:var(--acc)}
+.wrap{max-width:1180px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 14px calc(112px + env(safe-area-inset-bottom))}
+/* boot, sign-in, menu */
+.boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);color:var(--mut);font-size:14px;z-index:70}
+.boot svg{width:76px;height:auto}
+.auth{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+.auth .box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
+.auth .logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:4px;text-align:center}
+.auth .logo svg{width:92px;height:auto}
+.auth .bn{font:800 clamp(28px,9vw,36px)/1 var(--cond);letter-spacing:.3px}
+.auth .bn b{color:var(--acc)}
+.tagline{font-size:14px;color:var(--mut);line-height:1.4;max-width:330px}
+.rdash{height:5px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--acc) 0 22px,transparent 22px 40px);opacity:.85}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld>span{font-size:12.5px;font-weight:600;color:var(--mut)}
+.fld input{text-align:left}
+.msg{font-size:13.5px;line-height:1.4}.msg:empty{display:none}.msg.err{color:var(--bad2)}.msg.ok{color:var(--ok)}
+.auth .seg{display:grid;grid-template-columns:1fr 1fr}
+.auth .btn{width:100%;min-height:46px;font-size:15px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--mut)}
+.hint{font-size:12.5px;color:var(--mut);text-align:center}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.sync{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none}
+.sync.pend{background:var(--warn)}.sync.off{background:var(--bad)}
+.menu-list{display:flex;flex-direction:column}
+.menu-list a,.menu-list button{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 4px;border:0;border-top:1px solid var(--line2);background:none;color:var(--ink);font-size:15px;font-weight:600;text-decoration:none;cursor:pointer;text-align:left;width:100%}
+.menu-list>:first-child{border-top:0}
+.menu-list svg{flex:none;color:var(--mut)}
+.msec{margin-top:14px}
+.ver{font-size:12px;color:var(--mut);text-align:center;margin-top:14px}
+.top{display:flex;align-items:center;justify-content:space-between;height:46px;margin-bottom:8px}
+.brand{display:flex;align-items:center;gap:8px;font:800 25px/1 var(--cond);letter-spacing:.3px}
+.brand b{color:var(--acc);font-weight:800}
+.emb{display:flex}.emb svg{width:24px;height:auto;display:block}
+.iconbtn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.lbl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.num{font-family:var(--cond);font-weight:800;font-variant-numeric:tabular-nums}
+.mut{color:var(--mut)}
+.stack{display:flex;flex-direction:column;gap:10px}
+h2{font:800 22px/1.1 var(--cond);margin:0 0 8px}
+h3{font:700 18px/1.15 var(--cond);margin:14px 0 4px}
+p{margin:6px 0}
+.note{font-size:13px;color:var(--mut)}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:start}
+.big{font-size:clamp(38px,9vw,52px);line-height:1;margin-top:4px;white-space:nowrap}
+.big .of{font-size:.42em;color:var(--mut);font-weight:700}
+.hsub{font-size:14px;color:var(--mut);margin-top:6px}
+.hsub b{color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;font-weight:700;font-size:13px;white-space:nowrap}
+.chip.ok{background:rgba(61,220,151,.12);color:var(--ok);border:1px solid rgba(61,220,151,.35)}
+.chip.warn{background:rgba(255,181,71,.12);color:var(--warn);border:1px solid rgba(255,181,71,.35)}
+.chip.bad{background:rgba(255,90,95,.12);color:var(--bad2);border:1px solid rgba(255,90,95,.4)}
+.bar{height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:8px;position:relative}
+.bar i{display:block;height:100%;border-radius:3px;transition:width .25s ease}
+.hero .bar{grid-column:1/-1}
+/* figure */
+.figc{padding:10px 10px 8px}
+.tb{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.tb .sp{flex:1}
+.seg{display:inline-flex;background:#0f1216;border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{height:34px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:var(--mut);font-weight:600;font-size:13.5px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--card2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn.sm{min-height:36px;padding:0 11px;font-size:13.5px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#171200}
+.btn.pri:hover{background:#ffd54d}
+.btn.dan{color:var(--bad2);border-color:rgba(255,90,95,.4)}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#rig{display:block;width:100%;height:auto;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+#rig text{font-family:Barlow,sans-serif}
+#rig .itm{cursor:grab;touch-action:none}
+#rig .itm:active{cursor:grabbing}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--mut);padding:4px 4px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:8px;border-radius:2px}
+/* results */
+.cols{display:grid;gap:10px;margin-top:10px}
+@media(min-width:960px){.cols{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:start}}
+.axles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(min-width:620px){.axles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ax{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 11px 9px}
+.ax .v{font-size:26px;line-height:1.05;margin-top:2px;white-space:nowrap}
+.ax .m{font-size:12px;color:var(--mut)}
+.ax .d{font-size:12px;margin-top:5px;color:var(--mut);white-space:nowrap}
+.ax.ok .v{color:var(--ink)}.ax.warn .v{color:var(--warn)}.ax.bad .v{color:var(--bad)}
+.ax .lbl{font-size:10.5px;letter-spacing:.05em}
+.units{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.alerts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.al{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:9px 12px;font-size:13.5px;line-height:1.35}
+.al svg{flex:none;margin-top:1px}
+.al.bad{background:rgba(255,90,95,.10);border:1px solid rgba(255,90,95,.35)}
+.al.warn{background:rgba(255,181,71,.09);border:1px solid rgba(255,181,71,.32)}
+.al.ok{background:rgba(61,220,151,.08);border:1px solid rgba(61,220,151,.3)}
+.al.info{background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.al b{color:var(--ink)}
+.al .btn{margin-top:6px}
+/* cargo list */
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.cs{font-size:13px;color:var(--mut)}
+.it{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 4px 6px 2px;border-top:1px solid var(--line2);border-radius:10px;cursor:pointer}
+.it.sel{background:#1d2129;box-shadow:inset 0 0 0 1px #3a414c}
+.sw{width:12px;height:12px;border-radius:4px;grid-row:1/3;align-self:start;margin-top:4px}
+.in{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idm{font-size:12px;color:var(--mut)}
+.iw{font-size:18px;text-align:right;white-space:nowrap}
+.ib{display:flex;gap:4px;justify-content:flex-end;grid-column:3}
+.ib button{width:40px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.ipos{grid-column:2;font-size:12.5px;color:var(--mut)}
+.ipos b{color:var(--ink);font-weight:600}
+.empty{padding:16px 4px;color:var(--mut);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips button{min-height:36px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:#0f1216;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
+.chips button:hover{border-color:var(--acc)}
+.sample{font-size:12px;color:var(--warn);margin:0 0 4px}
+/* settings */
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line2)}
+.row:first-of-type{border-top:0}
+.rl{font-size:14px;flex:1}
+.rl small{display:block;font-size:12px;color:var(--mut)}
+.nu,.fi{display:flex;align-items:center;gap:4px;flex:none}
+.nu input{width:96px}
+.fi input{width:52px}
+.u{color:var(--mut);font-size:12.5px;width:18px}
+input,select{font:500 16px Barlow,sans-serif;color:var(--ink);background:#0f1216;border:1px solid var(--line);border-radius:10px;height:40px;padding:0 9px;width:100%;text-align:right}
+select{text-align:left}
+input[type=text]{text-align:left}
+.der{margin-top:8px;font-size:13px;color:var(--mut);background:#0f1216;border:1px solid var(--line2);border-radius:10px;padding:8px 10px}
+.der b{color:var(--ink)}
+.der .key{color:var(--acc);font-weight:700}
+.sgrid{display:grid;gap:10px}
+@media(min-width:900px){.sgrid{display:block;columns:2;column-gap:10px}.sgrid>.card{break-inside:avoid;margin-bottom:10px}}
+.schem{display:block;width:100%;height:auto;margin:6px 0 2px}
+table.cal{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+table.cal th,table.cal td{padding:6px 4px;border-top:1px solid var(--line2);text-align:right;white-space:nowrap}
+table.cal th:first-child,table.cal td:first-child{text-align:left}
+table.cal th{color:var(--mut);font-weight:600;font-size:12px}
+/* saved */
+.srow{display:flex;gap:8px;margin-top:8px}
+.srow input{text-align:left}
+.sv{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line2)}
+.sv:first-child{border-top:0}
+.sv .t{flex:1}
+.sv .t b{display:block;font-size:15px}
+.sv .t span{font-size:12.5px;color:var(--mut)}
+/* physics */
+.phys{max-width:760px}
+.phys p,.phys li{font-size:15.5px;line-height:1.55}
+.phys ul{padding-left:20px;margin:6px 0}
+.formula{font:700 19px/1.4 var(--cond);background:#0f1216;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.formula span{color:var(--acc)}
+/* nav */
+nav.nav{position:fixed;left:0;right:0;bottom:0;height:calc(76px + env(safe-area-inset-bottom));background:rgba(13,15,18,.97);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;padding:0 max(6px,calc(50vw - 300px)) calc(10px + env(safe-area-inset-bottom));z-index:20}
+nav.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut);font-size:11px;font-weight:600;background:none;border:0;padding:8px 0;cursor:pointer}
+nav.nav button[aria-current=page]{color:var(--acc);font-weight:700}
+nav.nav .plus{justify-self:center;width:56px;height:56px;border-radius:18px;background:var(--acc);color:#171200;margin-top:-24px;box-shadow:0 6px 18px rgba(255,196,0,.28);justify-content:center;padding:0}
+/* sheet */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 16px 22px}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:18px}}
+.shh{display:flex;justify-content:space-between;align-items:center}
+.f{display:block;font-size:13px;color:var(--mut);margin-top:10px}
+.f>input{margin-top:4px;text-align:left}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dim{display:flex;gap:4px;align-items:center;margin-top:4px}
+.dim input{padding:0 6px}
+details{margin-top:12px;border:1px solid var(--line2);border-radius:12px;padding:6px 10px}
+summary{cursor:pointer;font-size:14px;font-weight:600;padding:6px 0}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;justify-content:flex-end}
+.acts .sp{flex:1}
+.err{color:var(--bad2);font-size:13px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#22262e;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;z-index:60;max-width:calc(100vw - 28px)}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div id="boot" class="boot"><span id="boot-emb"></span><div>WeightGladiator</div></div>
+<div id="auth" class="auth" hidden></div>
+<div id="app" hidden>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span id="hdr-emb" class="emb"></span>
+      <span>Weight<b>Gladiator</b></span>
+    </div>
+    <div class="hdr-r">
+      <span class="sync" id="sync" role="img" aria-label="Сохранено"></span>
+      <button class="iconbtn" data-act="menu" aria-label="Меню и аккаунт">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4f4f2" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="t-load" class="tab stack">
+      <div class="card hero" id="hero"></div>
+      <div class="card figc">
+        <div class="tb">
+          <div class="seg" role="group" aria-label="Масштаб схемы">
+            <button data-view="all">Вся сцепка</button>
+            <button data-view="trl">Трейлер</button>
+          </div>
+          <span class="sp"></span>
+          <button class="btn sm" id="undo" disabled aria-label="Отменить последнее действие">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>Отменить</button>
+          <button class="btn sm pri" id="auto" data-act="auto">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 8l-3 4 3 4M19 8l3 4-3 4"/></svg>Авто-расстановка</button>
+        </div>
+        <svg id="rig" role="img" aria-label="Схема сцепки: трак Ram 3500 и гуснек-трейлер с грузом, вид сбоку и сверху"></svg>
+        <div class="legend">
+          <span>Тащи груз пальцем — сбоку только вперёд-назад, сверху ещё и вбок</span>
+          <span><i style="background:rgba(61,220,151,.45)"></i>куда ставить центр груза</span>
+          <span><svg width="12" height="10" viewBox="0 0 12 10" aria-hidden="true"><path d="M1 0h10L6 9z" fill="#ffc400"/></svg>центр груза сейчас</span>
+        </div>
+      </div>
+      <div class="cols">
+        <div>
+          <div class="axles" id="axles"></div>
+          <div class="units" id="units"></div>
+          <div class="alerts" id="alerts"></div>
+        </div>
+        <div class="card" id="cargo"></div>
+      </div>
+    </section>
+
+    <section id="t-saved" class="tab stack" hidden>
+      <div class="card">
+        <h2>Сохранённые погрузки</h2>
+        <p class="note">Сохрани расстановку, чтобы вернуться к ней или повторить похожий груз. Хранится в этом браузере.</p>
+        <form class="srow" id="svform"><input type="text" id="svname" placeholder="Например: Houston → Dallas, паллеты" aria-label="Название погрузки" maxlength="60"><button class="btn pri" type="submit">Сохранить</button></form>
+      </div>
+      <div class="card" id="svlist"></div>
+      <div class="card">
+        <div class="lbl">Начать заново</div>
+        <p class="note">Убирает весь груз с платформы. Настройки сцепки остаются.</p>
+        <button class="btn dan" data-confirm="clear">Очистить платформу</button>
+      </div>
+    </section>
+
+    <section id="t-rig" class="tab" hidden>
+      <div class="sgrid" id="settings"></div>
+    </section>
+
+    <section id="t-phys" class="tab" hidden>
+      <div class="card phys">
+        <h2>Как WeightGladiator считает</h2>
+        <h3>1. Трейлер — балка на двух опорах</h3>
+        <p>Гуснек стоит на шаре в кузове и на тандеме. Каждый груз делится между ними как на рычаге: чем ближе груз к шару, тем больше его веса идёт на трак.</p>
+        <div class="formula">На шар (pin) = <span>W × (L − x) ÷ L</span><br>На тандем = <span>W × x ÷ L</span></div>
+        <p class="note">W — вес груза, x — расстояние от шара до центра груза, L — от шара до середины между осями трейлера.</p>
+        <p>Пример: L = 38′6″, паллеты 4,800 lb с центром в 25′ от шара. На шар идёт 4,800 × 13.5 ÷ 38.5 ≈ 1,680 lb, на тандем ≈ 3,120 lb.</p>
+        <h3>2. Pin делится между осями трака</h3>
+        <p>Шар над задней осью — почти весь pin ложится на ведущую ось, рулевая не меняется. Если шар впереди оси на d, рулевая получает pin × d ÷ колёсная база. Если позади (офсетный шар) — рулевая на столько же разгружается.</p>
+        <h3>3. Тандем делится пополам</h3>
+        <p>На рессорах с балансиром (slipper spring, equalizer) нагрузка между двумя осями выравнивается. На торсионных осях реальная разница бывает до нескольких сотен lb.</p>
+        <h3>4. Что с чем сравнивается</h3>
+        <ul>
+          <li><b>Трак</b> = рулевая + ведущая (pin уже внутри) → GVWR трака 14,000.</li>
+          <li><b>Трейлер</b> = pin + тандем → GVWR трейлера 12,000. От того, где лежит груз, не зависит.</li>
+          <li><b>Сцепка (GCW)</b> = рулевая + ведущая + тандем → 26,000.</li>
+        </ul>
+        <p>Pin сидит и в весе трака, и в весе трейлера. Поэтому GCW = трак + трейлер − pin, и при рейтингах 14,000 + 12,000 настоящий потолок сцепки — <b>26,000 минус pin</b>. При pin 2,500 lb это около 23,500 lb, а чаще раньше упираешься в GVWR трейлера. Поэтому строка «ещё можно» под весом сцепки показывает, во что ты упрёшься первым.</p>
+        <h3>5. Pin weight 15–25%</h3>
+        <p>Для гуснека обычно советуют 15–25% веса трейлера на шар. Меньше — трейлер хуже держит дорогу. Больше — перегружаешь ведущую ось и GVWR трака. Границы меняются в «Сцепке → Лимиты».</p>
+        <h3>6. Зелёная зона и авто-расстановка</h3>
+        <p>Зелёная полоса показывает, где должен стоять общий центр груза, чтобы все оси были в лимитах и pin попал в 15–25%. Жёлтый треугольник — где центр сейчас. «Авто-расстановка» сдвигает весь груз на основной платформе целиком, сохраняя порядок: сначала даёт запас по осям и GVWR, потом ставит pin ближе к середине нормы (около 20%).</p>
+        <h3>7. Точность</h3>
+        <ul>
+          <li>Главное — три размера рулеткой (A, B, D в «Сцепке») и честная тара: взвесь пустую сцепку на CAT scale и введи чек.</li>
+          <li>После первого гружёного взвешивания введи чек в «Сверку» — увидишь расхождение, и приложение подгонит положение тандема.</li>
+          <li>Расчёт статический: ровная площадка, без торможения и уклона. Влево-вправо на оси не влияет — считается только перед/зад.</li>
+          <li>Правила по весу, CDL и oversize разные по штатам — сверяйся с ними сам. Это не юридическая консультация.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="nav" aria-label="Разделы">
+  <button data-tab="load" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16V8h9v8M11 11h4l3 3v2h-7"/><circle cx="6" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>Погрузка</button>
+  <button data-tab="saved"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Сохранено</button>
+  <button class="plus" data-act="add" aria-label="Добавить груз"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-tab="rig"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Сцепка</button>
+  <button data-tab="phys"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 7h14M7 7l-3 7a3 3 0 0 0 6 0zM17 7l-3 7a3 3 0 0 0 6 0z"/></svg>Физика</button>
+</nav>
+
+</div>
+<div id="ov" class="ov" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+{
+'use strict';
+const CFG={
+  url:'https://cbbqnocjrcalatlcjvzz.supabase.co',
+  key:'sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3',
+  hub:'https://ownergladiator.github.io/',accounting:'https://ownergladiator.github.io/accounting/',
+  dispatch:'https://ownergladiator.github.io/dispatch/',money:'https://ownergladiator.github.io/money/'
+};
+const VER='1.0';
+const Store={mem:{},
+  get(k){try{return localStorage.getItem(k);}catch(e){return k in this.mem?this.mem[k]:null;}},
+  set(k,v){try{localStorage.setItem(k,v);}catch(e){this.mem[k]=v;}},
+  del(k){try{localStorage.removeItem(k);}catch(e){delete this.mem[k];}}};
+const TRUCKS={
+  crew8:{n:'Crew Cab, кузов 8′',wb:169.5,fo:41,ro:50,bed:98,cab:'crew'},
+  mega:{n:'Mega Cab, кузов 6′4″',wb:160.5,fo:41,ro:46,bed:76,cab:'mega'},
+  reg8:{n:'Regular Cab, кузов 8′',wb:140.5,fo:41,ro:50,bed:98,cab:'reg'}
+};
+const COLORS=['#5cc8ff','#b39cff','#3ddc97','#ff9f45','#e9e36b','#ff7a7e','#7ee0d6','#d59cff'];
+const PRESETS=[
+  {n:'Паллета 48×40',len:48,wid:40,hgt:48,w:1500},
+  {n:'Паллета 48×48',len:48,wid:48,hgt:48,w:1500},
+  {n:'Легковая машина',len:186,wid:72,hgt:57,w:3500,cg:42},
+  {n:'Пикап',len:231,wid:80,hgt:77,w:5200,cg:42},
+  {n:'Мини-погрузчик',len:132,wid:72,hgt:80,w:7500,cg:45},
+  {n:'Пачка труб 20′',len:240,wid:48,hgt:24,w:2500}
+];
+const BY={steer:'рулевую ось',drive:'ведущую ось',truck:'GVWR трака',axle:'оси трейлера',trl:'GVWR трейлера',gcw:'GCWR сцепки'};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const lbs=n=>fmt(Math.round(n/10)*10);
+const num=v=>{const x=parseFloat(String(v).replace(',','.'));return isFinite(x)?x:0;};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function ftin(v){const s=v<0?'−':'';v=Math.abs(Math.round(v));const f=Math.floor(v/12),i=v%12;if(!f)return s+i+'″';return s+f+'′'+(i?' '+i+'″':'');}
+
+function defaults(){
+  const narrow=window.innerWidth<700;
+  return {
+    truck:{preset:'crew8',wb:169.5,fo:41,ro:50,bed:98,cab:'crew',ball:0,fg:6000,rg:9750,gv:14000},
+    trailer:{nose:18,neck:108,deck:480,dove:60,tan:108,spread:41,w:102,h:36,nh:70,ag:6000,tire:3520,gv:12000},
+    tare:{mode:'est',est:{tf:5400,tr:3400,trl:6000,pin:1400},cat:{steer:0,drive:0,trl:0,bob:0,pct:22}},
+    lim:{gc:26000,pmin:15,pmax:25,h:162,w:102,oh:48},
+    cal:{steer:0,drive:0,trl:0},
+    items:[
+      {id:'s1',n:'Паллета 1',len:48,wid:40,hgt:48,w:1200,cg:50,u:168,v:0,c:0},
+      {id:'s2',n:'Паллета 2',len:48,wid:40,hgt:48,w:1200,cg:50,u:168,v:62,c:1},
+      {id:'s3',n:'Паллета 3',len:48,wid:40,hgt:48,w:1200,cg:50,u:216,v:0,c:2},
+      {id:'s4',n:'Паллета 4',len:48,wid:40,hgt:48,w:1200,cg:50,u:216,v:62,c:3}
+    ],
+    sample:true,nid:5,view:narrow?'trl':'all',tab:'load'
+  };
+}
+function merge(d,s){if(!s||typeof s!=='object')return d;for(const k in d){if(k in s){const dv=d[k],sv=s[k];if(dv&&typeof dv==='object'&&!Array.isArray(dv))merge(dv,sv);else if(Array.isArray(dv))d[k]=Array.isArray(sv)?sv:dv;else if(typeof sv===typeof dv)d[k]=sv;}}return d;}
+const RIG_KEYS=['truck','trailer','tare','lim','cal','sample','nid'];
+const cleanItems=a=>(Array.isArray(a)?a:[]).filter(i=>i&&typeof i==='object').map(i=>({id:String(i.id),n:String(i.n||'Груз').slice(0,40),len:Math.max(1,num(i.len)),wid:Math.max(1,num(i.wid)),hgt:Math.max(1,num(i.hgt)),w:Math.max(0,num(i.w)),cg:clamp(num(i.cg)||50,0,100),u:num(i.u),v:num(i.v),c:Math.abs(Math.round(num(i.c)))%COLORS.length}));
+function prefs(){const d=defaults();return {view:Store.get('wg_view')||d.view,tab:Store.get('wg_tab')||'load'};}
+let S=Object.assign(defaults(),prefs()), SV=[], USER=null;
+function rigOf(){const r={};for(const k of RIG_KEYS)r[k]=S[k];return r;}
+function applyRig(rig,items){S=Object.assign(merge(defaults(),Object.assign({},rig||{},{items:items||[]})),prefs());S.items=cleanItems(S.items);view=S.view;}
+const mapLoad=r=>({id:String(r.id),name:String(r.name||''),items:cleanItems(r.items),date:r.created_at?new Date(r.created_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'}):(r.date||'')});
+let sel=null;
+
+/* ---------- cloud: Supabase (one sign-in with OwnerGladiator Hub) ---------- */
+const sb=(()=>{try{return window.supabase&&window.supabase.createClient?window.supabase.createClient(CFG.url,CFG.key):null;}catch(e){return null;}})();
+const isNet=e=>/fetch|network|load failed|timeout|abort|offline/i.test(String((e&&(e.message||e.details))||e||''));
+let dirty=false,saving=false,saveT=0,lastAt=null,known=false,loadedAt=0,syncSt='ok',errShown=false;
+const cacheKey=()=>'wg_cache_'+USER.id;
+function writeCache(){if(!USER)return;try{Store.set(cacheKey(),JSON.stringify({rig:rigOf(),items:S.items,loads:SV,at:lastAt,dirty,known}));}catch(e){}}
+function readCache(){
+  try{const c=JSON.parse(Store.get(cacheKey())||'null');if(!c||!c.rig)return false;
+    applyRig(c.rig,c.items);SV=Array.isArray(c.loads)?c.loads.map(mapLoad):[];lastAt=c.at||null;dirty=!!c.dirty;known=!!c.known;return true;}catch(e){return false;}
+}
+const SYNC_T={ok:'Сохранено в облаке',pend:'Сохраняю…',off:'Нет связи — сохраню, когда появится интернет'};
+function setSync(st){syncSt=st;const el=$('#sync');if(!el)return;el.className='sync'+(st==='ok'?'':st==='off'?' off':' pend');el.setAttribute('aria-label',SYNC_T[st]);el.title=SYNC_T[st];}
+function save(){if(!USER)return;dirty=true;writeCache();setSync('pend');clearTimeout(saveT);saveT=setTimeout(push,900);}
+async function push(){
+  if(!USER||!sb)return;
+  if(!known){setSync('off');return;}           // never overwrite the cloud before we have seen what is there
+  if(saving){clearTimeout(saveT);saveT=setTimeout(push,600);return;}
+  if(!dirty){setSync('ok');return;}
+  saving=true;dirty=false;setSync('pend');
+  const uid=USER.id;
+  try{
+    const r=await sb.from('wg_state').upsert({user_id:uid,rig:rigOf(),items:S.items}).select('updated_at').single();
+    if(r.error)throw r.error;
+    if(USER&&USER.id===uid){lastAt=r.data.updated_at;errShown=false;writeCache();setSync(dirty?'pend':'ok');}
+  }catch(e){
+    dirty=true;writeCache();setSync('off');
+    if(!isNet(e)&&!errShown){errShown=true;toast('Не удалось сохранить: '+String(e.message||e));}
+    clearTimeout(saveT);saveT=setTimeout(push,isNet(e)?8000:20000);
+  }finally{saving=false;}
+}
+async function loadAll(){
+  if(!USER||!sb)return false;
+  const uid=USER.id;
+  try{
+    const [st,ld]=await Promise.all([
+      sb.from('wg_state').select('rig,items,updated_at').eq('user_id',uid).maybeSingle(),
+      sb.from('wg_loads').select('id,name,items,created_at').order('created_at',{ascending:false})]);
+    if(st.error)throw st.error;if(ld.error)throw ld.error;
+    if(!USER||USER.id!==uid)return false;
+    if(st.data){
+      const newer=!lastAt||Date.parse(st.data.updated_at)>Date.parse(lastAt);
+      if(!dirty||newer){
+        if(dirty&&known)toast('В облаке версия новее — загрузил её');
+        applyRig(st.data.rig,st.data.items);dirty=false;
+      }
+      lastAt=st.data.updated_at;
+    }else dirty=true;                           // first visit: put this rig (defaults) into the cloud
+    known=true;
+    SV=(ld.data||[]).map(mapLoad);
+    loadedAt=Date.now();writeCache();setSync(dirty?'pend':'ok');
+    if(dirty)push();
+    return true;
+  }catch(e){setSync('off');return false;}
+}
+async function refresh(){
+  if(!USER||drag||!$('#ov').hidden)return;
+  if(dirty&&known){push();return;}
+  if(await loadAll()){renderAll();if(!$('#t-saved').hidden)renderSaved();if(!$('#t-rig').hidden)renderSettings();}
+}
+const getp=k=>k.split('.').reduce((o,p)=>o[p],S);
+const setp=(k,v)=>{const ps=k.split('.');const last=ps.pop();ps.reduce((o,p)=>o[p],S)[last]=v;};
+
+/* ---------- physics ---------- */
+function geo(){
+  const t=S.truck,r=S.trailer;
+  const fa=t.fo,ra=t.fo+t.wb,L=t.fo+t.wb+t.ro;
+  const ballX=ra-t.ball,noseX=ballX-r.nose,stepX=noseX+r.neck,rearX=stepX+r.deck,tanX=rearX-r.tan;
+  return {fa,ra,L,ballX,noseX,stepX,rearX,tanX,a1:tanX-r.spread/2,a2:tanX+r.spread/2,Lt:Math.max(1,tanX-ballX),WB:Math.max(1,t.wb),b:t.ball};
+}
+function tare(g){
+  const T=S.tare;
+  if(T.mode==='cat'&&T.cat.steer>0&&T.cat.drive>0&&T.cat.trl>0){
+    const F0=T.cat.steer,R0=T.cat.drive,T0=T.cat.trl;
+    const pct=clamp(T.cat.pct,0,60);
+    let P0=T.cat.bob>0?F0+R0-T.cat.bob:T0*pct/(100-pct);
+    return {F0,R0,T0,P0:Math.max(0,P0),src:'cat',pinMeasured:T.cat.bob>0};
+  }
+  const e=T.est,P0=Math.max(0,e.pin);
+  return {F0:e.tf+P0*g.b/g.WB,R0:e.tr+P0*(g.WB-g.b)/g.WB,T0:e.trl-P0,P0,src:'est'};
+}
+function loads(g,t0,W,Mb){
+  const dT=Mb/g.Lt,dP=W-dT;
+  const F=t0.F0+dP*g.b/g.WB,R=t0.R0+dP*(g.WB-g.b)/g.WB,P=t0.P0+dP,T=t0.T0+dT;
+  return {F,R,P,T,ax:T/2,truck:F+R,trl:P+T,gcw:F+R+T,pin:(P+T)>0?P/(P+T)*100:0};
+}
+function lims(){const t=S.truck,r=S.trailer;return {f:t.fg,r:t.rg,tg:t.gv,ax:r.tire>0?Math.min(r.ag,2*r.tire):r.ag,trg:r.gv,gc:S.lim.gc};}
+function checks(ld,L){return [
+  {k:'steer',n:'Рулевая ось',v:ld.F,m:L.f},
+  {k:'drive',n:'Ведущая ось',v:ld.R,m:L.r},
+  {k:'truck',n:'GVWR трака',v:ld.truck,m:L.tg},
+  {k:'axle',n:'Ось трейлера',v:ld.ax,m:L.ax},
+  {k:'trl',n:'GVWR трейлера',v:ld.trl,m:L.trg},
+  {k:'gcw',n:'GCWR сцепки',v:ld.gcw,m:L.gc}];}
+function posOK(ld,L){return ld.P>0&&ld.F<=L.f&&ld.R<=L.r&&ld.truck<=L.tg&&ld.ax<=L.ax;}
+function cgx(g,it){return g.stepX+it.u+it.len*it.cg/100;}
+function moments(g,items){let W=0,Mb=0;for(const it of items){W+=it.w;Mb+=it.w*(cgx(g,it)-g.ballX);}return {W,Mb};}
+function zone(g,t0,W,L){
+  if(W<=0)return {ideal:null,legal:null};
+  let ideal=null,legal=null;
+  for(let c=Math.ceil(g.noseX-g.ballX);c<=g.rearX-g.ballX;c++){
+    const ld=loads(g,t0,W,W*c);
+    if(!posOK(ld,L))continue;
+    const s=c+g.ballX-g.stepX;
+    if(legal)legal[1]=s;else legal=[s,s];
+    if(ld.pin>=S.lim.pmin&&ld.pin<=S.lim.pmax){if(ideal)ideal[1]=s;else ideal=[s,s];}
+  }
+  return {ideal,legal};
+}
+function elevs(){
+  const res={},done=[];
+  for(const it of S.items){
+    let e=0;
+    for(const o of done){if(it.u<o.u+o.len-1&&o.u<it.u+it.len-1&&it.v<o.v+o.wid-1&&o.v<it.v+it.wid-1&&((it.u<0)===(o.u<0)))e=Math.max(e,res[o.id]+o.hgt);}
+    res[it.id]=e;done.push(it);
+  }
+  return res;
+}
+function calc(){
+  const g=geo(),t0=tare(g),L=lims(),{W,Mb}=moments(g,S.items);
+  const ld=loads(g,t0,W,Mb),e0=loads(g,t0,0,0),ck=checks(ld,L),el=elevs();
+  const cgS=W>0?Mb/W+g.ballX-g.stepX:null;
+  const z=zone(g,t0,W,L);
+  // remaining payload if added at current cargo centre (or mid-zone / mid-deck when empty)
+  let c=W>0?Mb/W:(z.ideal?(z.ideal[0]+z.ideal[1])/2:S.trailer.deck/2)+g.stepX-g.ballX;
+  if(W<=0){const zz=zone(g,t0,1000,L);if(zz.ideal)c=(zz.ideal[0]+zz.ideal[1])/2+g.stepX-g.ballX;}
+  const k=c/g.Lt,dp=1-k,slope={steer:dp*g.b/g.WB,drive:dp*(g.WB-g.b)/g.WB,truck:dp,axle:k/2,trl:1,gcw:1};
+  let rem=Infinity,by='trl';
+  for(const x of ck){const s=slope[x.k];if(s>1e-6){const room=(x.m-x.v)/s;if(room<rem){rem=room;by=x.k;}}}
+  rem=Math.max(0,rem);
+  // geometry checks
+  let topH=0,minV=0,maxV=S.trailer.w,maxR=-Infinity,minF=Infinity;const straddle=[];
+  for(const it of S.items){
+    const base=it.u<0?S.trailer.nh:S.trailer.h;
+    topH=Math.max(topH,base+el[it.id]+it.hgt);
+    minV=Math.min(minV,it.v);maxV=Math.max(maxV,it.v+it.wid);
+    maxR=Math.max(maxR,it.u+it.len);minF=Math.min(minF,it.u);
+    if(it.u<0&&it.u+it.len>0)straddle.push(it.n);
+  }
+  const width=maxV-minV,ohR=maxR-S.trailer.deck,ohF=-S.trailer.neck-minF;
+  // alerts
+  const al=[];
+  for(const x of ck){
+    const fixed=x.k==='trl'||x.k==='gcw';
+    if(x.v>x.m+0.5)al.push({l:'bad',t:`<b>${x.n}: перегруз ${lbs(x.v-x.m)} lb</b> (${lbs(x.v)} из ${fmt(x.m)}).${fixed?' Расстановка не поможет — нужно снять груз.':''}`});
+    else if(x.v>0.95*x.m)al.push({l:'warn',t:`<b>${x.n}: ${Math.round(x.v/x.m*100)}% лимита</b> — запас ${lbs(x.m-x.v)} lb.`});
+  }
+  if(W>0){
+    if(ld.P<=0)al.push({l:'bad',t:'<b>Шар разгружен.</b> Груз слишком далеко назад — трейлер тянет трак вверх. Двигай груз вперёд.'});
+    else if(ld.pin<S.lim.pmin)al.push({l:'warn',t:`<b>Мало веса на шаре: ${ld.pin.toFixed(1)}%</b> (норма ${S.lim.pmin}–${S.lim.pmax}%). Трейлер хуже держит дорогу.`});
+    else if(ld.pin>S.lim.pmax)al.push({l:'warn',t:`<b>Много веса на шаре: ${ld.pin.toFixed(1)}%</b> (норма ${S.lim.pmin}–${S.lim.pmax}%). Нагружаешь ведущую ось трака.`});
+    const zi=z.ideal;
+    if(zi&&(cgS<zi[0]||cgS>zi[1])){
+      const d=cgS<zi[0]?zi[0]-cgS+3:zi[1]-cgS-3;
+      al.push({l:'warn',t:`<b>Сдвинь весь груз на ${ftin(Math.abs(d))} ${d>0?'назад':'вперёд'}</b> — центр груза попадёт в зелёную зону (${ftin(zi[0])} – ${ftin(zi[1])} от ступеньки).`,auto:true});
+    }else if(!zi&&z.legal){al.push({l:'warn',t:`<b>Pin не попадает в ${S.lim.pmin}–${S.lim.pmax}% ни при какой расстановке</b> этого груза. Держи центр груза в ${ftin(z.legal[0])} – ${ftin(z.legal[1])} от ступеньки — там оси в лимитах.`});}
+    else if(!zi&&!z.legal){al.push({l:'bad',t:'<b>Ни одна расстановка не укладывает оси в лимиты.</b> Груз тяжёлый для этой сцепки — уменьши вес.'});}
+  }
+  if(topH>S.lim.h)al.push({l:'bad',t:`<b>Высота ${ftin(topH)}</b> — выше лимита ${ftin(S.lim.h)}. Нужен oversize permit или другая укладка.`});
+  if(width>S.lim.w+0.5)al.push({l:'bad',t:`<b>Ширина груза ${ftin(width)}</b> — шире ${ftin(S.lim.w)}. Нужен oversize permit.`});
+  if(ohR>S.lim.oh)al.push({l:'warn',t:`<b>Свес сзади ${ftin(ohR)}</b> — больше ${ftin(S.lim.oh)}, нужен красный флаг (ночью — фонарь).`});
+  if(ohF>0)al.push({l:'warn',t:`<b>Груз выступает вперёд за нос трейлера на ${ftin(ohF)}</b> — может задеть кабину на повороте.`});
+  if(straddle.length)al.push({l:'warn',t:`<b>${esc(straddle.join(', '))}</b> лежит на ступеньке гусака — передвинь целиком на гусак или на платформу.`});
+  const status=al.some(a=>a.l==='bad')?'bad':al.some(a=>a.l==='warn')?'warn':'ok';
+  if(W>0&&status==='ok')al.push({l:'ok',t:'<b>Всё в лимитах.</b> Оси, GVWR, GCWR и pin weight в норме.'});
+  if(!S.items.length)al.push({l:'info',t:'Платформа пустая. Добавь груз кнопкой «+» внизу.'});
+  if(t0.src==='est')al.push({l:'info',t:'Тара сейчас — оценка. Взвесь пустую сцепку на CAT scale и введи чек в «Сцепке» — расчёт станет точным.',tab:true});
+  return {g,t0,L,W,Mb,ld,e0,ck,cgS,z,rem,by,el,al,status,topH};
+}
+
+/* ---------- drawing ---------- */
+let Y0=104; // top of plan view (recomputed in drawRig)
+let view=S.view;
+function wheel(x,r,cut){return `${cut?`<circle cx="${x}" cy="${-r}" r="${r+4}" fill="${cut}"/>`:''}<circle cx="${x}" cy="${-r}" r="${r}" fill="#0a0b0d" stroke="#3a404a" stroke-width="2"/><circle cx="${x}" cy="${-r}" r="${(r*.56).toFixed(1)}" fill="#5b6370"/><circle cx="${x}" cy="${-r}" r="${(r*.22).toFixed(1)}" fill="#2a2f38"/>`;}
+function truckSide(g){
+  const t=S.truck,L=g.L,ws=g.fa+28,cb=L-t.bed-3,ra=g.ra;
+  const body=`M3,-19 L0,-34 L2,-57 L12,-61 L${ws},-64 L${ws+24},-80 L${cb-9},-81 Q${cb-1},-81 ${cb},-73 L${cb},-19 Z`;
+  const bed=`M${cb+3},-20 L${cb+3},-56 L${L-1},-56 L${L},-54 L${L},-24 L${L-2},-20 Z`;
+  const flare=`M${ra-31},-21 C${ra-28},-47 ${ra+28},-47 ${ra+31},-21 Z`;
+  const win=`M${ws+8},-65 L${ws+24},-76 L${cb-10},-77 Q${cb-5},-77 ${cb-5},-71 L${cb-5},-65 Z`;
+  const bp=t.cab==='reg'?'':`<path d="M${((ws+24+cb)/2+4).toFixed(1)},-78 V-20" stroke="#2c323b" stroke-width="3"/>`;
+  return `<g aria-hidden="true">
+<path d="${body}" fill="#3a414c" stroke="#566070" stroke-width="1.5"/>
+<path d="${bed}" fill="#353c47" stroke="#566070" stroke-width="1.5"/>
+<path d="${flare}" fill="#404855" stroke="#566070" stroke-width="1.5"/>
+<path d="${win}" fill="#101419"/>${bp}
+<path d="M${ws+6},-64 V-22" stroke="#2c323b" stroke-width="2"/>
+<rect x="-2" y="-33" width="9" height="15" rx="2" fill="#8b929d"/>
+<rect x="${L-4}" y="-31" width="7" height="10" rx="2" fill="#8b929d"/>
+<rect x="0" y="-55" width="4" height="20" fill="#1b1f26"/>
+<rect x="2" y="-57" width="10" height="5" rx="2" fill="#e8e6da" opacity=".85"/>
+<rect x="${ws+12}" y="-75" width="9" height="13" rx="2" fill="#2a2f38" stroke="#566070"/>
+${wheel(g.fa,17,'#15181d')}${wheel(ra,17,'#15181d')}</g>`;
+}
+function trailerSide(g){
+  const r=S.trailer,nx=g.noseX,sx=g.stepX,rx=g.rearX,dh=r.h,nh=r.nh,dv=Math.min(r.dove,r.deck),fr='#262b33',st='#4f5866',wood='#7a6446';
+  const nb=nh-10;
+  return `<g aria-hidden="true">
+<rect x="${g.ballX-3}" y="${-nb}" width="6" height="${Math.max(0,nb-38)}" fill="#8b929d"/>
+<circle cx="${g.ballX}" cy="-38" r="3.5" fill="#c7ccd3"/>
+<rect x="${nx+5}" y="${-nb}" width="5" height="18" fill="#4a515c"/>
+<rect x="${nx}" y="${-nh}" width="${sx-nx}" height="10" fill="${fr}" stroke="${st}" stroke-width="1.5"/>
+<rect x="${nx}" y="${-nh-3}" width="${sx-nx}" height="3" fill="${wood}"/>
+<path d="M${sx-38},${-nb} L${sx+2},${-nb} L${sx+2},${-(dh-12)} L${sx-4},${-(dh-12)} Z" fill="${fr}" stroke="${st}" stroke-width="1.5"/>
+<rect x="${sx}" y="${-(dh-2)}" width="${rx-dv-sx}" height="12" fill="${fr}" stroke="${st}" stroke-width="1.5"/>
+<rect x="${sx}" y="${-dh-1}" width="${rx-dv-sx}" height="3" fill="${wood}"/>
+<path d="M${rx-dv},${-(dh-2)} L${rx},${-(dh-11)} L${rx},${-(dh-19)} L${rx-dv},${-(dh-14)} Z" fill="${fr}" stroke="${st}" stroke-width="1.5"/>
+<path d="M${rx-dv},${-dh} L${rx},${-(dh-9)}" stroke="${wood}" stroke-width="3"/>
+<rect x="${rx-3}" y="${-(dh-12)}" width="4" height="4" fill="#ff5a5f"/>
+${wheel(g.a1,15.4,null)}${wheel(g.a2,15.4,null)}</g>`;
+}
+function itemTxt(x,y,w,h,lines,size){
+  const fit=s=>s.length*size*0.56<=w-6;
+  const out=[];
+  for(const alts of lines){
+    const s=alts.find(fit);
+    if(s){out.push(s);continue;}
+    const k=Math.floor((w-6)/(size*0.56))-1;
+    if(alts[0].length>8&&k>=6)out.push(alts[0].slice(0,k)+'…');
+  }
+  while(out.length&&h<size*1.15*out.length+4)out.shift();
+  let yy=y-(out.length-1)*size*0.56;
+  return out.map(s=>{const t=`<text x="${x}" y="${yy.toFixed(1)}" font-size="${size.toFixed(1)}" font-weight="700" fill="#f4f4f2" text-anchor="middle" dominant-baseline="middle" pointer-events="none">${esc(s)}</text>`;yy+=size*1.12;return t;}).join('');
+}
+function drawRig(c){
+  const g=c.g,r=S.trailer,svg=$('#rig');
+  let rigEnd=g.rearX;for(const it of S.items)rigEnd=Math.max(rigEnd,g.stepX+it.u+it.len);
+  const cw=svg.clientWidth||900,x1=rigEnd+30;
+  let P=(x1-(view==='trl'?g.noseX-26:-30))/cw; // svg units per CSS pixel
+  const pw=Math.min(Math.max(128,70*P),g.ra-g.fa-12),ph=Math.max(46,34*P);
+  const x0=view==='trl'?Math.min(g.noseX-26,g.ra-pw/2-6):Math.min(-30,g.fa-pw/2-6);
+  P=(x1-x0)/cw;
+  const fz=(base,px)=>Math.max(base,px*P);
+  const rfs=fz(15,10),ry=10+ph+rfs+18;Y0=ry+16;
+  const topH=Math.max(S.lim.h+fz(18,14),c.topH+14,100);
+  const bfs=fz(14,9.5),y0=-topH,y1=Y0+r.w+bfs+16;
+  svg.setAttribute('viewBox',`${x0} ${y0} ${x1-x0} ${y1-y0}`);
+  const o=[];
+  // height limit
+  o.push(`<path d="M${x0+4},${-S.lim.h} H${x1-4}" stroke="#ff5a5f" stroke-opacity=".5" stroke-dasharray="6 6" stroke-width="1.5"/><text x="${x1-8}" y="${-S.lim.h-6}" font-size="${fz(15,10)}" fill="#ff8a8d" text-anchor="end">лимит высоты ${ftin(S.lim.h)}</text>`);
+  o.push(truckSide(g),trailerSide(g));
+  // cargo side view
+  const sorted=[...S.items].sort((a,b)=>a.v-b.v);
+  for(const it of sorted){
+    const x=g.stepX+it.u,base=(it.u<0?r.nh:r.h)+c.el[it.id],y=-(base+it.hgt),col=COLORS[it.c%COLORS.length],on=it.id===sel;
+    o.push(`<g class="itm" data-id="${esc(it.id)}" data-v="s">${hit(x,y,it.len,it.hgt,P)}<rect x="${x}" y="${y}" width="${it.len}" height="${it.hgt}" rx="3" fill="${col}" fill-opacity=".32" stroke="${on?'#ffffff':col}" stroke-width="${on?3:2}"/>${itemTxt(x+it.len/2,y+it.hgt/2,it.len,it.hgt,[[fmt(it.w)]],fz(17,10))}</g>`);
+  }
+  o.push(`<path d="M${x0},0 H${x1}" stroke="#4a515c" stroke-width="2"/>`);
+  // axle pills
+  const L=c.L,ld=c.ld;
+  const tone=(v,m)=>v>m+0.5?'#ff5a5f':v>0.9*m?'#ffb547':'#3ddc97';
+  const lf=fz(14,10.5),vf=fz(21,15),short=P>1.3;
+  const pill=(x,lab,val,col)=>`<g><rect x="${x-pw/2}" y="10" width="${pw}" height="${ph}" rx="11" fill="#15181d" stroke="${col}" stroke-width="2"/><text x="${x}" y="${10+ph*0.36}" font-size="${lf}" fill="#9aa1ad" text-anchor="middle">${lab}</text><text x="${x}" y="${10+ph*0.84}" font-size="${vf}" font-weight="700" fill="${col==='#3ddc97'?'#f4f4f2':col}" text-anchor="middle">${val}</text></g>`;
+  o.push(pill(g.fa,'рулевая',lbs(ld.F),tone(ld.F,L.f)));
+  o.push(pill(g.ra,'ведущая',lbs(ld.R),tone(ld.R,L.r)));
+  o.push(pill(g.tanX,short?'тандем':'тандем, 2 оси',`${lbs(ld.T)}`,tone(ld.ax,L.ax)));
+  // ruler + zone
+  const zh=fz(10,6);
+  if(c.z.ideal){const a=g.stepX+c.z.ideal[0],b=g.stepX+c.z.ideal[1];o.push(`<rect x="${a}" y="${Y0}" width="${Math.max(2,b-a)}" height="${r.w}" fill="#3ddc97" fill-opacity=".10"/><rect x="${a}" y="${ry-zh/2}" width="${Math.max(2,b-a)}" height="${zh}" rx="3" fill="#3ddc97" fill-opacity=".45"/>`);}
+  else if(c.z.legal){const a=g.stepX+c.z.legal[0],b=g.stepX+c.z.legal[1];o.push(`<rect x="${a}" y="${ry-zh/2}" width="${Math.max(2,b-a)}" height="${zh}" rx="3" fill="#ffb547" fill-opacity=".4"/>`);}
+  let tk=`M${g.noseX},${ry} H${g.rearX}`;
+  for(let f=0;f<=r.deck;f+=12)tk+=` M${g.stepX+f},${ry} v${f%60===0?-8:-4}`;
+  o.push(`<path d="${tk}" stroke="#4a515c" stroke-width="1.5"/>`);
+  for(let f=0;f<=r.deck;f+=120)o.push(`<text x="${g.stepX+f}" y="${ry-12}" font-size="${rfs}" fill="#9aa1ad" text-anchor="middle">${f/12}′</text>`);
+  if(r.neck>rfs*3.2)o.push(`<text x="${(g.noseX+g.stepX)/2}" y="${ry-8}" font-size="${rfs}" fill="#9aa1ad" text-anchor="middle">гусак</text>`);
+  // plan view: truck
+  const tw=96,ty=Y0+(r.w-tw)/2,cb=g.L-S.truck.bed-3;
+  o.push(`<g aria-hidden="true"><rect x="0" y="${ty}" width="${g.L}" height="${tw}" rx="12" fill="#1b1f26" stroke="#3a414c" stroke-width="1.5"/><rect x="${g.fa+30}" y="${ty+8}" width="${cb-g.fa-36}" height="${tw-16}" rx="8" fill="#252a32"/><path d="M${cb+3},${ty+6} H${g.L-4} M${cb+3},${ty+tw-6} H${g.L-4}" stroke="#3a414c" stroke-width="1.5"/>
+<rect x="${g.fa-17}" y="${ty-7}" width="34" height="10" rx="3" fill="#0a0b0d"/><rect x="${g.fa-17}" y="${ty+tw-3}" width="34" height="10" rx="3" fill="#0a0b0d"/><rect x="${g.ra-17}" y="${ty-12}" width="34" height="15" rx="3" fill="#0a0b0d"/><rect x="${g.ra-17}" y="${ty+tw-3}" width="34" height="15" rx="3" fill="#0a0b0d"/></g>`);
+  // plan view: trailer
+  const dv=Math.min(r.dove,r.deck);
+  let boards='';for(let y=12;y<r.w;y+=12)boards+=` M${g.stepX},${Y0+y} H${g.rearX}`;
+  o.push(`<g aria-hidden="true"><rect x="${g.noseX}" y="${Y0}" width="${r.neck}" height="${r.w}" fill="#20242b" fill-opacity=".92" stroke="#4f5866" stroke-width="1.5"/><rect x="${g.stepX}" y="${Y0}" width="${r.deck}" height="${r.w}" fill="#1f1b15" stroke="#4f5866" stroke-width="1.5"/>${dv>0?`<rect x="${g.rearX-dv}" y="${Y0}" width="${dv}" height="${r.w}" fill="#191612" stroke="#4f5866" stroke-width="1"/>`:''}<path d="${boards}" stroke="#2c2720" stroke-width="1"/>
+${[g.a1,g.a2].map(a=>`<path d="M${a},${Y0+4} V${Y0+r.w-4}" stroke="#4f5866" stroke-dasharray="4 4"/><rect x="${a-15}" y="${Y0+3}" width="30" height="9" rx="2" fill="none" stroke="#4f5866" stroke-dasharray="3 3"/><rect x="${a-15}" y="${Y0+r.w-12}" width="30" height="9" rx="2" fill="none" stroke="#4f5866" stroke-dasharray="3 3"/>`).join('')}
+<circle cx="${g.ballX}" cy="${Y0+r.w/2}" r="${fz(6,4)}" fill="#ffc400"/><text x="${g.ballX}" y="${Y0+r.w/2+fz(22,15)}" font-size="${bfs}" fill="#ffc400" text-anchor="middle">шар</text></g>`);
+  o.push(`<text x="${Math.max(g.noseX,x0+6)}" y="${Y0+r.w+bfs+6}" font-size="${bfs}" fill="#9aa1ad">${short?'вид сверху · низ — водитель':'вид сверху · низ — сторона водителя'}</text>`);
+  // cargo plan view
+  for(const it of S.items){
+    const x=g.stepX+it.u,y=Y0+it.v,col=COLORS[it.c%COLORS.length],on=it.id===sel;
+    o.push(`<g class="itm" data-id="${esc(it.id)}" data-v="p">${hit(x,y,it.len,it.wid,P)}<rect x="${x}" y="${y}" width="${it.len}" height="${it.wid}" rx="3" fill="${col}" fill-opacity="${c.el[it.id]>0?.5:.3}" stroke="${on?'#ffffff':col}" stroke-width="${on?3:2}"/>${itemTxt(x+it.len/2,y+it.wid/2,it.len,it.wid,[[it.n],[fmt(it.w)+' lb',fmt(it.w)]],fz(15,9.5))}</g>`);
+  }
+  // CG marker
+  if(c.cgS!==null){const x=g.stepX+c.cgS,s=fz(9,6);o.push(`<path d="M${x-s},${ry-4-s*1.7} H${x+s} L${x},${ry-4} Z" fill="#ffc400"/><path d="M${x},${Y0} V${Y0+r.w}" stroke="#ffc400" stroke-width="2" stroke-dasharray="5 4"/>`);}
+  svg.innerHTML=o.join('');
+}
+function hit(x,y,w,h,P){const pad=Math.max(0,8*P-4);return pad>0?`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="transparent" stroke-width="${pad*2}" pointer-events="stroke"/>`:'';}
+
+/* ---------- results ---------- */
+const tone=(v,m)=>v>m+0.5?'bad':v>0.9*m?'warn':'ok';
+const tcol={ok:'#3ddc97',warn:'#ffb547',bad:'#ff5a5f'};
+function barH(v,m,t){return `<div class="bar"><i style="width:${clamp(v/m*100,0,100).toFixed(1)}%;background:${tcol[t]}"></i></div>`;}
+const sgn=d=>(d>=0?'+':'−')+lbs(Math.abs(d));
+function renderRes(c){
+  const ld=c.ld,L=c.L,e0=c.e0,gt=tone(ld.gcw,L.gc);
+  const chip={ok:['Всё в норме','ok'],warn:['Есть замечания','warn'],bad:['Перегруз','bad']}[c.status];
+  $('#hero').innerHTML=`<div><div class="lbl">Вес сцепки · GCW</div><div class="big num">${lbs(ld.gcw)} <span class="of">/ ${fmt(L.gc)} lb</span></div></div>
+<span class="chip ${chip[1]}">${chip[0]}</span>${barH(ld.gcw,L.gc,gt)}
+<div class="hsub" style="grid-column:1/-1">Груз <b>${fmt(c.W)} lb</b> · ещё можно <b>${lbs(c.rem)} lb</b> — дальше упрёшься в ${BY[c.by]}</div>`;
+  const pinT=ld.P<=0?'bad':(ld.pin<S.lim.pmin||ld.pin>S.lim.pmax)?'warn':'ok';
+  const ax=[
+    {n:'Рулевая',v:ld.F,m:L.f,d:ld.F-e0.F},
+    {n:'Ведущая',v:ld.R,m:L.r,d:ld.R-e0.R},
+    {n:'Ось трейлера',v:ld.ax,m:L.ax,d:ld.ax-e0.ax,pre:'2 × '}
+  ].map(a=>{const t=tone(a.v,a.m);return `<div class="ax ${t}"><div class="lbl">${a.n}</div><div class="v num">${a.pre||''}${lbs(a.v)}</div><div class="m">из ${fmt(a.m)} lb</div>${barH(a.v,a.m,t)}<div class="d">${sgn(a.d)} от пустой</div></div>`;}).join('');
+  const pinBar=`<div class="bar"><i style="position:absolute;left:${S.lim.pmin/40*100}%;width:${(S.lim.pmax-S.lim.pmin)/40*100}%;background:rgba(61,220,151,.28)"></i><i style="position:absolute;left:calc(${clamp(ld.pin/40*100,0,100)}% - 2px);width:4px;background:${tcol[pinT]}"></i></div>`;
+  $('#axles').innerHTML=ax+`<div class="ax ${pinT}"><div class="lbl">Шар · pin</div><div class="v num">${lbs(ld.P)}</div><div class="m">${ld.pin.toFixed(1)}% · норма ${S.lim.pmin}–${S.lim.pmax}%</div>${pinBar}<div class="d">${sgn(ld.P-e0.P)} от пустой</div></div>`;
+  const tt=tone(ld.truck,L.tg),rt=tone(ld.trl,L.trg);
+  $('#units').innerHTML=`<div class="ax ${tt}"><div class="lbl">Трак · GVW</div><div class="v num">${lbs(ld.truck)}</div><div class="m">из ${fmt(L.tg)} lb · рулевая + ведущая</div>${barH(ld.truck,L.tg,tt)}</div>
+<div class="ax ${rt}"><div class="lbl">Трейлер · GVW</div><div class="v num">${lbs(ld.trl)}</div><div class="m">из ${fmt(L.trg)} lb · pin + тандем</div>${barH(ld.trl,L.trg,rt)}</div>`;
+  const ic={bad:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5a5f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>',warn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffb547" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5h.01"/></svg>',ok:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3ddc97" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',info:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa1ad" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>'};
+  $('#alerts').innerHTML=c.al.map(a=>`<div class="al ${a.l}" role="${a.l==='bad'?'alert':'status'}">${ic[a.l]}<div>${a.t}${a.auto?'<div><button class="btn sm pri" data-act="auto">Авто-расстановка</button></div>':''}${a.tab?'<div><button class="btn sm" data-tab="rig">Ввести CAT-чек</button></div>':''}</div></div>`).join('');
+}
+const ico={l:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',r:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',e:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>'};
+const dims=it=>`${ftin(it.len)} × ${ftin(it.wid)} × ${ftin(it.hgt)}`;
+function renderList(c){
+  const its=S.items;
+  let h=`<div class="ch"><div><div class="lbl">Груз на платформе</div><div class="cs">${its.length?`${its.length} ${plural(its.length,'место','места','мест')} · ${fmt(c.W)} lb${c.cgS!==null?` · центр ${ftin(c.cgS)} от ступеньки`:''}`:'пусто'}</div></div><button class="btn sm pri" data-act="add">+ Груз</button></div>`;
+  if(S.sample&&its.length)h+=`<p class="sample">Пример погрузки — замени на свой груз.</p>`;
+  if(!its.length){h+=`<div class="empty">Добавь первый груз — выбери заготовку или задай свои размеры.</div><div class="chips">${PRESETS.map((p,i)=>`<button data-quick="${i}">${esc(p.n)}</button>`).join('')}</div>`;}
+  for(const it of its){
+    const pos=it.u<0?`на гусаке, <b>${ftin(it.u+S.trailer.neck)}</b> от носа`:`перед в <b>${ftin(it.u)}</b> от ступеньки`;
+    h+=`<div class="it${it.id===sel?' sel':''}" data-row="${esc(it.id)}"><span class="sw" style="background:${COLORS[it.c%COLORS.length]}"></span><div><div class="in">${esc(it.n)}</div><div class="idm">${dims(it)}${it.cg!==50?` · ЦТ ${it.cg}% от переда`:''}${c.el[it.id]>0?' · сверху':''}</div></div><div class="iw num">${fmt(it.w)}</div>
+<div class="ipos">${pos}</div><div class="ib"><button data-mv="-6" data-id="${esc(it.id)}" aria-label="${esc(it.n)}: вперёд на 6 дюймов">${ico.l}</button><button data-mv="6" data-id="${esc(it.id)}" aria-label="${esc(it.n)}: назад на 6 дюймов">${ico.r}</button><button data-ed="${esc(it.id)}" aria-label="Изменить ${esc(it.n)}">${ico.e}</button></div></div>`;
+  }
+  $('#cargo').innerHTML=h;
+}
+function plural(n,a,b,c){const m=n%10,h=n%100;if(m===1&&h!==11)return a;if(m>=2&&m<=4&&(h<12||h>14))return b;return c;}
+
+/* ---------- settings ---------- */
+const FORMS=[
+  {id:'truck',title:'Трак',rows:[
+    {k:'truck.wb',l:'Колёсная база',u:'in',h:'от центра передней до центра задней оси'},
+    {k:'truck.ball',l:'Шар относительно задней оси',u:'in',neg:true,h:'+ впереди оси, − позади. Заводские pucks Ram ≈ 0, офсетный шар обычно −4…−5'},
+    {k:'truck.fg',l:'GAWR передней оси',u:'lb',h:'наклейка на стойке двери'},
+    {k:'truck.rg',l:'GAWR задней оси',u:'lb'},
+    {k:'truck.gv',l:'GVWR трака',u:'lb'}]},
+  {id:'trailer',title:'Трейлер',rows:[
+    {k:'trailer.nose',l:'A · нос трейлера → центр шара',u:'fi'},
+    {k:'trailer.neck',l:'B · нос → ступенька (гусак)',u:'fi'},
+    {k:'trailer.deck',l:'C · основная платформа',u:'fi',h:'вместе с dovetail'},
+    {k:'trailer.tan',l:'D · задняя кромка → середина между осями',u:'fi'},
+    {k:'trailer.dove',l:'Dovetail',u:'fi'},
+    {k:'trailer.spread',l:'Между осями',u:'in'},
+    {k:'trailer.w',l:'Ширина платформы',u:'in'},
+    {k:'trailer.h',l:'Высота платформы от земли',u:'in'},
+    {k:'trailer.nh',l:'Высота гусака от земли',u:'in'},
+    {k:'trailer.ag',l:'GAWR одной оси',u:'lb',h:'табличка VIN трейлера'},
+    {k:'trailer.tire',l:'Шина (одинарная), max',u:'lb',h:'по боковине; 0 — не учитывать'},
+    {k:'trailer.gv',l:'GVWR трейлера',u:'lb'}]},
+  {id:'lim',title:'Лимиты',rows:[
+    {k:'lim.gc',l:'GCWR сцепки',u:'lb'},
+    {k:'lim.pmin',l:'Pin weight, минимум',u:'%'},
+    {k:'lim.pmax',l:'Pin weight, максимум',u:'%'},
+    {k:'lim.h',l:'Макс. высота с грузом',u:'fi'},
+    {k:'lim.w',l:'Макс. ширина',u:'fi'},
+    {k:'lim.oh',l:'Свес сзади без флажка',u:'fi'}]}
+];
+function field(f){
+  const v=getp(f.k);
+  let inp;
+  if(f.u==='fi'){const a=Math.round(v),ft=Math.floor(a/12),i=a-ft*12;inp=`<span class="fi" data-k="${f.k}"><input inputmode="decimal" data-part="ft" value="${ft}" aria-label="${esc(f.l)}, футы"><span class="u">ft</span><input inputmode="decimal" data-part="in" value="${i}" aria-label="${esc(f.l)}, дюймы"><span class="u">in</span></span>`;}
+  else inp=`<span class="nu"><input ${f.neg?'type="number" step="any"':'inputmode="decimal"'} data-k="${f.k}" value="${v}" aria-label="${esc(f.l)}"><span class="u">${f.u}</span></span>`;
+  return `<div class="row"><div class="rl">${f.l}${f.h?`<small>${f.h}</small>`:''}</div>${inp}</div>`;
+}
+const SCHEM=`<svg class="schem" viewBox="0 0 380 124" role="img" aria-label="Где мерить размеры A, B, C, D">
+<g fill="none" stroke="#4f5866" stroke-width="2"><path d="M8 84 V58 H96 V84"/><path d="M40 62 H52"/></g>
+<circle cx="70" cy="92" r="10" fill="#0a0b0d" stroke="#3a404a" stroke-width="2"/>
+<rect x="52" y="40" width="68" height="8" fill="#262b33" stroke="#4f5866"/><rect x="68" y="48" width="4" height="12" fill="#8b929d"/><circle cx="70" cy="61" r="3" fill="#ffc400"/>
+<path d="M120 40 V78 M120 70 H362 L372 76 V80 H120" fill="#262b33" stroke="#4f5866" stroke-width="1.5"/>
+<circle cx="304" cy="92" r="9" fill="#0a0b0d" stroke="#3a404a" stroke-width="2"/><circle cx="326" cy="92" r="9" fill="#0a0b0d" stroke="#3a404a" stroke-width="2"/>
+<path d="M0 102 H380" stroke="#4a515c"/>
+<g stroke="#ffc400" stroke-width="1.5"><path d="M52 30 H70 M52 26 V34 M70 26 V34"/><path d="M52 14 H120 M52 10 V18 M120 10 V18"/><path d="M120 60 H372 M120 56 V64 M372 56 V64"/><path d="M315 114 H372 M315 108 V118 M372 108 V118"/></g>
+<g font-family="Barlow,sans-serif" font-size="12" font-weight="700" fill="#ffc400"><text x="61" y="25" text-anchor="middle">A</text><text x="86" y="9" text-anchor="middle">B</text><text x="246" y="55" text-anchor="middle">C — платформа</text><text x="343" y="110" text-anchor="middle">D</text><text x="315" y="122" font-size="9.5" fill="#9aa1ad" text-anchor="end">середина осей</text></g></svg>`;
+function renderSettings(){
+  const t=S.truck,T=S.tare;
+  const pre=`<div class="row"><div class="rl">Кабина и кузов</div><span class="nu" style="flex:1;max-width:220px"><select id="preset" aria-label="Кабина и кузов">${Object.entries(TRUCKS).map(([k,p])=>`<option value="${k}"${t.preset===k?' selected':''}>${p.n}</option>`).join('')}<option value="custom"${t.preset==='custom'?' selected':''}>Свои размеры</option></select></span></div>`;
+  const cards=FORMS.map(f=>`<div class="card"><h2>${f.title}</h2>${f.id==='truck'?pre:''}${f.id==='trailer'?SCHEM:''}${f.rows.map(field).join('')}${f.id!=='lim'?`<div class="der" id="der-${f.id}"></div>`:''}</div>`);
+  const est=[['tare.est.tf','Трак без трейлера — перед'],['tare.est.tr','Трак без трейлера — зад'],['tare.est.trl','Пустой трейлер — общий вес'],['tare.est.pin','Пустой трейлер — вес на шар']];
+  const cat=[['tare.cat.steer','Steer (сцепка, пустая)'],['tare.cat.drive','Drive'],['tare.cat.trl','Trailer (тандем)'],['tare.cat.bob','Трак один (bobtail), всего — необязательно']];
+  const rows=(T.mode==='cat'?cat:est).map(([k,l])=>field({k,l,u:'lb'})).join('')+(T.mode==='cat'?field({k:'tare.cat.pct',l:'Pin пустого трейлера, если нет bobtail',u:'%'}):'');
+  const tareCard=`<div class="card"><h2>Тара — пустая сцепка</h2><p class="note">С водителем, топливом, цепями и ремнями — как ты реально едешь.</p><div class="seg" role="group" aria-label="Откуда тара"><button data-tm="est" aria-pressed="${T.mode==='est'}">Оценка</button><button data-tm="cat" aria-pressed="${T.mode==='cat'}">CAT-чек</button></div><div style="margin-top:8px">${rows}</div><div class="der" id="der-tare"></div></div>`;
+  const calCard=`<div class="card"><h2>Сверка с весами</h2><p class="note">Взвесился с этим грузом? Введи гружёный CAT-чек — увидишь, насколько расчёт совпал, и сможешь уточнить положение тандема.</p>${[['cal.steer','Steer'],['cal.drive','Drive'],['cal.trl','Trailer']].map(([k,l])=>field({k,l,u:'lb'})).join('')}<div id="cal-out"></div></div>`;
+  $('#settings').innerHTML=[cards[0],cards[1],tareCard,cards[2],calCard].join('');
+  renderDerived();
+}
+function renderDerived(c){
+  if($('#t-rig').hidden)return;
+  c=c||calc();const g=c.g,t0=c.t0,r=S.trailer;
+  const set=(id,h)=>{const el=$('#'+id);if(el)el.innerHTML=h;};
+  set('der-truck',`Шар ${g.b===0?'ровно над задней осью':`${g.b>0?'впереди':'позади'} задней оси на ${Math.abs(g.b)}″`} → рулевая получает ${g.b>=0?'':'минус '}${(Math.abs(g.b)/g.WB*100).toFixed(1)}% pin, ведущая ${((g.WB-g.b)/g.WB*100).toFixed(1)}%.`);
+  const bad=r.tan<=0||r.tan>=r.deck+r.neck-r.nose;
+  set('der-trailer',`<span class="key">Шар → середина тандема: ${ftin(g.Lt)}</span> — главный рычаг расчёта. Длина трейлера ${ftin(r.neck+r.deck)}.${bad?' <b style="color:#ff8a8d">Проверь D — тандем вне трейлера.</b>':''}`);
+  set('der-tare',`Пустая сцепка: steer <b>${lbs(t0.F0)}</b> · drive <b>${lbs(t0.R0)}</b> · тандем <b>${lbs(t0.T0)}</b> · pin <b>${lbs(t0.P0)}</b>${t0.src==='cat'&&!t0.pinMeasured?' (оценка)':''} · GCW <b>${lbs(t0.F0+t0.R0+t0.T0)}</b> lb${S.tare.mode==='cat'&&t0.src!=='cat'?'<br>Введи все три веса из чека — пока считаю по оценке.':''}`);
+  const k=S.cal,out=$('#cal-out');if(!out)return;
+  if(!(k.steer>0&&k.drive>0&&k.trl>0)){out.innerHTML='<p class="note">Нужны все три веса из чека.</p>';return;}
+  const ld=c.ld,rows=[['Рулевая',ld.F,k.steer],['Ведущая',ld.R,k.drive],['Тандем',ld.T,k.trl],['Всего',ld.gcw,k.steer+k.drive+k.trl]];
+  let h=`<table class="cal"><thead><tr><th>Ось</th><th>Расчёт</th><th>Чек</th><th>Разница</th></tr></thead><tbody>${rows.map(([n,p,a])=>`<tr><td>${n}</td><td>${lbs(p)}</td><td>${fmt(a)}</td><td style="color:${Math.abs(a-p)>250?'#ffb547':'#3ddc97'}">${sgn(a-p)}</td></tr>`).join('')}</tbody></table>`;
+  const Wsc=k.steer+k.drive+k.trl-(t0.F0+t0.R0+t0.T0);
+  h+=`<p class="note">Груз по весам ≈ <b style="color:#f4f4f2">${lbs(Wsc)} lb</b>, в приложении ${fmt(c.W)} lb.</p>`;
+  const dT=k.trl-t0.T0;
+  if(c.W>0&&Wsc>0&&dT>50){
+    const cg=c.Mb/c.W,Lt2=cg*Wsc/dT,tan2=Math.round(g.rearX-(g.ballX+Lt2));
+    if(tan2>0&&tan2<r.deck)h+=`<p class="note">По чеку середина тандема ≈ <b style="color:#f4f4f2">${ftin(tan2)}</b> от задней кромки (сейчас ${ftin(r.tan)}).</p><button class="btn sm" data-fit="${tan2}">Применить размер D</button>`;
+    else h+=`<p class="note">Чек не сходится с размерами — проверь тару и позиции груза.</p>`;
+  }
+  out.innerHTML=h;
+}
+
+/* ---------- saved ---------- */
+function renderSaved(){
+  const el=$('#svlist');
+  if(!SV.length){el.innerHTML='<div class="empty">Пока ничего не сохранено.</div>';return;}
+  el.innerHTML=SV.map(s=>{const w=s.items.reduce((a,i)=>a+num(i.w),0);return `<div class="sv"><div class="t"><b>${esc(s.name)}</b><span>${esc(s.date)} · ${s.items.length} ${plural(s.items.length,'место','места','мест')} · ${fmt(w)} lb</span></div><button class="btn sm" data-load="${esc(s.id)}">Загрузить</button><button class="btn sm dan" data-confirm="del:${esc(s.id)}" aria-label="Удалить ${esc(s.name)}">Удалить</button></div>`;}).join('');
+}
+
+/* ---------- render orchestration ---------- */
+const U=[];
+function pushUndo(){U.push(JSON.stringify(S.items));if(U.length>40)U.shift();$('#undo').disabled=false;}
+function renderAll(){
+  const c=calc();
+  drawRig(c);renderRes(c);renderList(c);renderDerived(c);
+  $('#undo').disabled=!U.length;
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));
+}
+let raf=0;
+function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderAll();});}
+let tt=0;
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{t.hidden=true;},2600);}
+function showTab(id){
+  S.tab=id;Store.set('wg_tab',id);
+  document.querySelectorAll('.tab').forEach(s=>s.hidden=s.id!=='t-'+id);
+  document.querySelectorAll('nav.nav [data-tab]').forEach(b=>{if(b.dataset.tab===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  if(id==='rig')renderSettings();
+  if(id==='saved')renderSaved();
+  window.scrollTo(0,0);
+}
+
+/* ---------- cargo ops ---------- */
+function freeSpot(it){
+  const W=S.trailer.w,D=S.trailer.deck;
+  const lanes=it.wid<=W/2?[0,W-it.wid]:[Math.round((W-it.wid)/2)];
+  for(let u=0;u+it.len<=D;u+=6){for(const v of lanes){if(!S.items.some(o=>o.u<u+it.len&&u<o.u+o.len&&o.v<v+it.wid&&v<o.v+o.wid))return {u,v};}}
+  return {u:0,v:lanes[0]};
+}
+function nextColor(){const used=S.items.map(i=>i.c);for(let i=0;i<COLORS.length;i++)if(!used.includes(i))return i;return S.items.length%COLORS.length;}
+function autoArrange(){
+  const g=geo(),t0=tare(g),L=lims(),mv=S.items.filter(i=>i.u>=0);
+  if(!mv.length){toast('На платформе нечего двигать');return;}
+  const lo=-Math.min(...mv.map(i=>i.u)),hi=S.trailer.deck-Math.max(...mv.map(i=>i.u+i.len));
+  if(hi<lo){toast('Груз длиннее платформы — двигать некуда');return;}
+  const {W,Mb}=moments(g,S.items),Wm=mv.reduce((a,i)=>a+i.w,0),pw=Math.max(1,S.lim.pmax-S.lim.pmin);
+  let best=null,bs=null;
+  const better=(a,b)=>{for(let i=0;i<a.length;i++){if(a[i]>b[i]+1e-6)return 1;if(a[i]<b[i]-1e-6)return -1;}return 0;};
+  for(let d=Math.ceil(lo);d<=Math.floor(hi);d++){
+    const ld=loads(g,t0,W,Mb+Wm*d);
+    // ratings count until they have 10% headroom; after that the pin is pulled to the middle of its band
+    const cap=x=>Math.min(x,0.1),hb=pw/2;
+    const m=[cap((L.f-ld.F)/L.f),cap((L.r-ld.R)/L.r),cap((L.tg-ld.truck)/L.tg),cap((L.ax-ld.ax)/L.ax),(ld.pin-S.lim.pmin)/hb,(S.lim.pmax-ld.pin)/hb].sort((a,b)=>a-b);
+    const cmp=bs?better(m,bs):1;
+    if(cmp>0||(cmp===0&&Math.abs(d)<Math.abs(best))){best=d;bs=m;}
+  }
+  if(!best){toast('Груз уже стоит оптимально');return;}
+  pushUndo();mv.forEach(i=>i.u+=best);save();renderAll();
+  toast(`Сдвинул груз на ${ftin(Math.abs(best))} ${best>0?'назад':'вперёд'}`);
+}
+
+/* ---------- sheet (add / edit) ---------- */
+let edit=null;
+function dimIn(id,l,v){const a=Math.round(v||0),ft=Math.floor(a/12),i=a-ft*12;return `<label class="f">${l}<span class="dim"><input id="${id}-f" inputmode="decimal" value="${v?ft:''}" aria-label="${l}, футы"><span class="u">ft</span><input id="${id}-i" inputmode="decimal" value="${v?i:''}" aria-label="${l}, дюймы"><span class="u">in</span></span></label>`;}
+const rdDim=id=>num($('#'+id+'-f').value)*12+num($('#'+id+'-i').value);
+function openSheet(id,preset){
+  const it=id?S.items.find(i=>i.id===id):null;edit=it?it.id:null;
+  const p=preset||{};const d=it||{n:p.n||'',len:p.len||0,wid:p.wid||0,hgt:p.hgt||0,w:p.w||'',cg:p.cg||50};
+  const ov=$('#ov');
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><form id="shf" novalidate>
+<div class="shh"><h2 id="sh-t" style="margin:0">${it?'Груз':'Новый груз'}</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f4f4f2" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+${it?'':`<div class="chips">${PRESETS.map((q,i)=>`<button type="button" data-pre="${i}">${esc(q.n)}</button>`).join('')}</div>`}
+<label class="f">Название<input type="text" id="f-n" value="${esc(d.n)}" maxlength="40" placeholder="Паллета, машина, трубы…"></label>
+<div class="g3">${dimIn('f-l','Длина',d.len)}${dimIn('f-w','Ширина',d.wid)}${dimIn('f-h','Высота',d.hgt)}</div>
+<div class="g2"><label class="f">Вес, lb<input id="f-wt" inputmode="decimal" value="${d.w}"></label>${it?'':'<label class="f">Сколько штук<input id="f-q" inputmode="numeric" value="1"></label>'}</div>
+<details${it?' open':''}><summary>Центр тяжести и точное место</summary>
+<label class="f">Центр тяжести от переда груза, %<input id="f-cg" inputmode="decimal" value="${d.cg}"></label>
+<p class="note">50% — груз ровный. У машины мотор тяжелее: ≈ 40% если едет мотором вперёд.</p>
+${it?`${dimIn('f-u','Перед груза от ступеньки (минус — на гусаке)',0)}<label class="f">От правого борта (верх схемы), in<input id="f-v" inputmode="decimal" value="${Math.round(it.v)}"></label><button type="button" class="btn sm" data-flip style="margin-top:8px">Развернуть задом наперёд</button>`:''}
+</details>
+<div class="err" id="f-err" role="alert"></div>
+<div class="acts">${it?`<button type="button" class="btn sm dan" data-confirm="delitem">Удалить</button><button type="button" class="btn sm" data-dup>Копия</button><span class="sp"></span>`:''}<button type="button" class="btn" data-close>Отмена</button><button type="submit" class="btn pri">${it?'Сохранить':'Добавить'}</button></div>
+</form></div>`;
+  if(it){const a=Math.round(Math.abs(it.u)),s=it.u<0?-1:1;$('#f-u-f').value=s*Math.floor(a/12);$('#f-u-i').value=a%12;if(it.u<0&&Math.floor(a/12)===0)$('#f-u-i').value=-(a%12);}
+  ov.hidden=false;
+  setTimeout(()=>{const n=$('#f-n');if(n&&!it&&window.innerWidth>700)n.focus();},30);
+}
+function closeSheet(){$('#ov').hidden=true;$('#ov').innerHTML='';edit=null;}
+function applyPreset(p){
+  $('#f-n').value=p.n;
+  for(const [id,v] of [['f-l',p.len],['f-w',p.wid],['f-h',p.hgt]]){$('#'+id+'-f').value=Math.floor(v/12);$('#'+id+'-i').value=v%12;}
+  $('#f-wt').value=p.w;$('#f-cg').value=p.cg||50;
+}
+function submitSheet(){
+  const n=$('#f-n').value.trim()||'Груз',len=rdDim('f-l'),wid=rdDim('f-w'),hgt=rdDim('f-h'),w=num($('#f-wt').value),cg=clamp(num($('#f-cg').value)||50,0,100);
+  const err=$('#f-err');
+  if(len<=0||wid<=0||hgt<=0){err.textContent='Укажи длину, ширину и высоту.';return;}
+  if(w<=0){err.textContent='Укажи вес груза в lb.';return;}
+  pushUndo();S.sample=false;
+  if(edit){
+    const it=S.items.find(i=>i.id===edit);
+    const uf=num($('#f-u-f').value),ui=num($('#f-u-i').value);
+    let u=uf*12+(uf<0?-Math.abs(ui):ui);
+    Object.assign(it,{n,len,wid,hgt,w,cg,u:clamp(Math.round(u),-S.trailer.neck,S.trailer.deck),v:clamp(Math.round(num($('#f-v').value)),-24,S.trailer.w-wid+24)});
+  }else{
+    const q=clamp(Math.round(num($('#f-q').value))||1,1,40);
+    for(let k=0;k<q;k++){const it={id:'i'+(S.nid++),n:q>1?`${n} ${k+1}`:n,len,wid,hgt,w,cg,u:0,v:0,c:nextColor()};Object.assign(it,freeSpot(it));S.items.push(it);sel=it.id;}
+  }
+  save();closeSheet();renderAll();
+}
+
+/* ---------- drag ---------- */
+const svg=$('#rig');let drag=null;
+function svgPt(e){const m=svg.getScreenCTM();if(!m)return {x:0,y:0};const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m.inverse());return {x:p.x,y:p.y};}
+svg.addEventListener('pointerdown',e=>{
+  const el=e.target.closest('[data-id]');
+  if(!el){if(sel){sel=null;renderAll();}return;}
+  const it=S.items.find(i=>i.id===el.dataset.id);if(!it)return;
+  e.preventDefault();
+  const p=svgPt(e),g=geo();
+  drag={id:it.id,plan:el.dataset.v==='p',dx:p.x-(g.stepX+it.u),dy:p.y-(Y0+it.v),sx:p.x,sy:p.y,moved:false,snap:JSON.stringify(S.items),was:sel===it.id};
+  sel=it.id;
+  try{svg.setPointerCapture(e.pointerId);}catch(_){}
+  schedule();
+});
+svg.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const p=svgPt(e);
+  if(!drag.moved&&Math.hypot(p.x-drag.sx,p.y-drag.sy)<4)return;
+  if(!drag.moved){U.push(drag.snap);if(U.length>40)U.shift();drag.moved=true;S.sample=false;}
+  const it=S.items.find(i=>i.id===drag.id),g=geo();if(!it)return;
+  it.u=clamp(Math.round(p.x-drag.dx-g.stepX),-S.trailer.neck,S.trailer.deck-it.len+120);
+  if(drag.plan)it.v=clamp(Math.round(p.y-drag.dy-Y0),-24,S.trailer.w-it.wid+24);
+  schedule();
+});
+function endDrag(){
+  if(!drag)return;
+  const d=drag;drag=null;
+  if(d.moved)save();
+  else if(d.was)openSheet(d.id);
+  renderAll();
+}
+svg.addEventListener('pointerup',endDrag);
+svg.addEventListener('pointercancel',endDrag);
+svg.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('[data-id]'))e.preventDefault();},{passive:false});
+let lastW=0;
+const rigRO=new ResizeObserver(()=>{const w=svg.clientWidth;if(w&&Math.abs(w-lastW)>8&&!drag){lastW=w;schedule();}});
+rigRO.observe(svg);
+
+/* ---------- emblem: the Gladiator helmet + a load weight ---------- */
+const EMB={
+  b:'M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 310 458 L 268 332 L 256 332 L 244 332 L 202 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 208.1 167.9 L 161.6 76.7 Q 151.6 57.1 164.3 51.1 A 230 230 0 0 1 347.7 51.1 Q 360.4 57.1 350.4 76.7 L 303.9 167.9 L 286.2 162.5 L 268.1 159.6 L 256 159 L 243.9 159.6 L 225.8 162.5 Z',
+  v:'M 256 322 L 265 306 L 268 298 L 348 270 Q 360 266 358 280 L 354 300 Q 352 306 344 308 L 275 329 Q 268 331 268 334 L 310 459 L 256 459 L 202 459 L 244 334 Q 244 331 237 329 L 168 308 Q 160 306 158 300 L 154 280 Q 152 266 164 270 L 244 298 L 247 306 L 256 322 Z',
+  d:'M 250.7 362 L 261.3 362 L 262.5 377 L 249.5 377 Z M 248.2 394 L 263.8 394 L 265.6 416 L 246.4 416 Z M 245.1 432 L 266.9 432 L 269 459 L 243 459 Z',
+  w:'M34 52 H90 Q98 52 100 60 L118 142 Q120 154 108 154 H16 Q4 154 6 142 L24 60 Q26 52 34 52 Z',
+  lb:'M38 82 V124 H56 M68 82 V124 M68 82 H79 Q89 82 89 92.5 Q89 103 79 103 H68 M68 103 H81 Q92 103 92 113.5 Q92 124 81 124 H68'
+};
+function emblem(id){
+  const c='wgc'+id,r='wgr'+id,ink='#121418';
+  return `<svg viewBox="104 22 348 462" role="img" aria-label="WeightGladiator"><defs><clipPath id="${c}"><rect x="256" y="0" width="256" height="512"/></clipPath><clipPath id="${r}"><rect x="62" y="-20" width="90" height="200"/></clipPath></defs><path fill="#FFC400" d="${EMB.b}"/><path fill="#E3A300" clip-path="url(#${c})" d="${EMB.b}"/><path fill="${ink}" d="${EMB.v}"/><path fill="#FFC400" d="${EMB.d}"/><g transform="translate(324 312) rotate(10) scale(.92)"><circle cx="62" cy="36" r="21" fill="#5CC8FF" stroke="${ink}" stroke-width="9"/><path d="${EMB.w}" fill="#5CC8FF"/><path d="${EMB.w}" fill="#2FA6E0" clip-path="url(#${r})"/><path d="${EMB.w}" fill="none" stroke="${ink}" stroke-width="9" stroke-linejoin="round"/><circle cx="62" cy="34" r="8.5" fill="${ink}"/><path d="${EMB.lb}" fill="none" stroke="${ink}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+}
+
+/* ---------- sign-in, menu, session ---------- */
+let authMode='in',authEmail='';
+function renderAuth(msg,kind){
+  const up=authMode==='up';
+  $('#auth').innerHTML=`<div class="box"><div class="logo">${emblem('a')}<div class="bn">Weight<b>Gladiator</b></div><div class="tagline">Нагрузка на каждую ось хотшот-сцепки: расставь груз на трейлере — оси, pin weight и GVWR посчитаются сами</div></div><div class="rdash"></div>
+<div class="seg" role="group" aria-label="Вход или регистрация"><button data-act="authMode" data-m="in" aria-pressed="${!up}">Вход</button><button data-act="authMode" data-m="up" aria-pressed="${up}">Регистрация</button></div>
+<form id="auform" class="stack" novalidate>
+<label class="fld"><span>Email</span><input id="au-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" value="${esc(authEmail)}"></label>
+<label class="fld"><span>${up?'Пароль (минимум 6 символов)':'Пароль'}</span><input id="au-pass" type="password" autocomplete="${up?'new-password':'current-password'}"></label>
+<div id="au-msg" class="msg${kind?' '+kind:''}" role="status">${esc(msg||'')}</div>
+<button class="btn pri" id="au-go" type="submit">${up?'Создать аккаунт':'Войти'}</button></form>
+${up?'':'<button class="btn ghost" data-act="authForgot">Забыли пароль?</button>'}
+<div class="hint">Аккаунт общий с OwnerGladiator Hub: тот же email и пароль.</div></div>`;
+}
+function authMsg(m,kind){const e=$('#au-msg');if(e){e.textContent=m;e.className='msg'+(kind?' '+kind:'');}}
+function authErr(e){
+  const m=String((e&&(e.message||e.error_description||e.error))||e||'');
+  if(/not confirmed/i.test(m))return 'Email ещё не подтверждён — открой письмо со ссылкой.';
+  if(/invalid login|invalid_grant|credentials/i.test(m))return 'Неверный email или пароль.';
+  if(/already registered|already been registered|user_already_exists/i.test(m))return 'Этот email уже зарегистрирован — просто войди. Пароль тот же, что в OwnerGladiator Hub.';
+  if(isNet(m))return 'Нет связи с сервером. Проверь интернет.';
+  return m;
+}
+const siteUrl=()=>location.href.split('#')[0].split('?')[0];
+async function authGo(){
+  if(!sb)return authMsg('Не загрузилась библиотека входа. Проверь интернет и обнови страницу.','err');
+  const em=$('#au-email').value.trim(),pw=$('#au-pass').value;authEmail=em;
+  if(!em||!pw)return authMsg('Введи email и пароль.','err');
+  const btn=$('#au-go');btn.disabled=true;authMsg('Загрузка…');
+  try{
+    if(authMode==='up'){
+      if(pw.length<6){authMsg('Пароль — минимум 6 символов.','err');return;}
+      const u=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:siteUrl()}});
+      if(u.error){if(/already/i.test(String(u.error.message))){authMode='in';renderAuth(authErr(u.error),'err');}else authMsg(authErr(u.error),'err');return;}
+      if(u.data&&u.data.session){handleSession(u.data.session);return;}
+      if(u.data&&u.data.user&&Array.isArray(u.data.user.identities)&&!u.data.user.identities.length){authMode='in';renderAuth('Этот email уже зарегистрирован — просто войди.','err');return;}
+      authMode='in';renderAuth(`Письмо отправлено на ${em}. Открой ссылку в нём, потом войди.`,'ok');return;
+    }
+    const r=await sb.auth.signInWithPassword({email:em,password:pw});
+    if(r.error)authMsg(authErr(r.error),'err');else if(r.data&&r.data.session)handleSession(r.data.session);
+  }catch(e){authMsg(authErr(e),'err');}
+  finally{const b=$('#au-go');if(b)b.disabled=false;}
+}
+async function authForgot(){
+  if(!sb)return;
+  const em=$('#au-email').value.trim();if(!em)return authMsg('Введи email — пришлём ссылку для нового пароля.','err');
+  const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:siteUrl()});
+  authMsg(r.error?authErr(r.error):'Письмо со ссылкой отправлено.',r.error?'err':'ok');
+}
+const MI={
+  rig:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
+  key:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>',
+  out:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg>',
+  link:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f4f4f2" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+function openMenu(){
+  if(!USER)return;
+  const ov=$('#ov');
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mn-t"><div class="shh"><h2 id="mn-t" style="margin:0">Меню</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${MI.x}</button></div>
+<div class="msec"><div class="lbl">Аккаунт</div><p style="margin:4px 0 0;font-weight:600;overflow-wrap:anywhere">${esc(USER.email||'')}</p><p class="note"><span class="sync${syncSt==='ok'?'':syncSt==='off'?' off':' pend'}" style="display:inline-block;margin-right:6px"></span>${SYNC_T[syncSt]}. Один аккаунт с OwnerGladiator Hub.</p></div>
+<div class="msec card" style="padding:2px 12px"><div class="menu-list">
+<button data-tab="rig">${MI.rig}Настройки сцепки</button><button data-act="pass">${MI.key}Сменить пароль</button><button data-act="signOut">${MI.out}Выйти</button></div></div>
+<div class="msec"><div class="lbl">Другие приложения</div><div class="card" style="padding:2px 12px;margin-top:6px"><div class="menu-list">
+<a href="${CFG.hub}">${MI.link}OwnerGladiator Hub</a><a href="${CFG.accounting}">${MI.link}Accounting Gladiator</a><a href="${CFG.dispatch}">${MI.link}Dispatch Gladiator</a><a href="${CFG.money}">${MI.link}MoneyGladiator</a></div></div></div>
+<div class="ver">WeightGladiator ${VER}</div></div>`;
+  ov.hidden=false;
+}
+function openPass(){
+  if(!USER)return;
+  const ov=$('#ov');
+  ov.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="np-t"><form id="passform" novalidate><div class="shh"><h2 id="np-t" style="margin:0">Новый пароль</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${MI.x}</button></div>
+<label class="fld" style="margin-top:12px"><span>Новый пароль (минимум 6 символов)</span><input id="np" type="password" autocomplete="new-password"></label>
+<div id="np-msg" class="msg" role="status" style="margin-top:8px"></div>
+<div class="acts"><button type="button" class="btn" data-close>Отмена</button><button type="submit" class="btn pri">Сохранить пароль</button></div></form></div>`;
+  ov.hidden=false;setTimeout(()=>{const n=$('#np');if(n)n.focus();},30);
+}
+async function passSave(){
+  const v=$('#np').value,m=$('#np-msg');
+  if(v.length<6){m.textContent='Пароль — минимум 6 символов.';m.className='msg err';return;}
+  const r=await sb.auth.updateUser({password:v});
+  if(r.error){m.textContent=authErr(r.error);m.className='msg err';return;}
+  closeSheet();toast('Пароль изменён');
+}
+async function signOut(){
+  if(dirty&&known){clearTimeout(saveT);await push();}
+  try{if(USER)Store.del(cacheKey());}catch(e){}
+  try{await sb.auth.signOut();}catch(e){}
+  handleSession(null);
+}
+const ACT={
+  menu:()=>openMenu(),pass:()=>openPass(),signOut:()=>signOut(),
+  authMode:b=>{const em=$('#au-email');if(em)authEmail=em.value;authMode=b.dataset.m;renderAuth();},
+  authForgot:()=>authForgot()
+};
+let starting=false;
+function enterApp(){
+  $('#auth').hidden=true;$('#app').hidden=false;
+  showTab(['load','saved','rig','phys'].includes(S.tab)?S.tab:'load');
+  renderAll();$('#boot').hidden=true;
+}
+async function handleSession(session){
+  if(session&&session.user){
+    if(USER&&USER.id===session.user.id){USER=session.user;return;}
+    USER=session.user;dirty=false;known=false;lastAt=null;SV=[];sel=null;U.length=0;
+    if(starting)return;starting=true;
+    if(readCache())enterApp();else{applyRig(null,defaults().items);}
+    await loadAll();
+    starting=false;
+    if(!USER||USER.id!==session.user.id)return;
+    enterApp();
+  }else{
+    USER=null;starting=false;dirty=false;known=false;clearTimeout(saveT);
+    if(!$('#ov').hidden)closeSheet();
+    authMode='in';$('#app').hidden=true;$('#auth').hidden=false;renderAuth();$('#boot').hidden=true;
+  }
+}
+function init(){
+  $('#boot-emb').innerHTML=emblem('b');$('#hdr-emb').innerHTML=emblem('h');
+  if(!sb){$('#auth').hidden=false;renderAuth('Не загрузилась библиотека входа. Проверь интернет и обнови страницу.','err');$('#boot').hidden=true;return;}
+  sb.auth.getSession().then(r=>handleSession(r&&r.data&&r.data.session)).catch(()=>handleSession(null));
+  sb.auth.onAuthStateChange((ev,s)=>{
+    // answer right away and work a moment later: the sign-in library must not wait for our own requests
+    setTimeout(()=>{
+      if(ev==='PASSWORD_RECOVERY')setTimeout(openPass,600);
+      if(!s&&USER)handleSession(null);
+      else if(s&&s.user&&(!USER||USER.id!==s.user.id))handleSession(s);
+    },0);
+  });
+}
+
+/* ---------- events ---------- */
+const armed=new Map();
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button,[data-row]');if(!b)return;
+  const ds=b.dataset;
+  if(ds.tab){if(!$('#ov').hidden)closeSheet();showTab(ds.tab);return;}
+  if(ds.view){view=ds.view;S.view=view;Store.set('wg_view',view);renderAll();return;}
+  if(ds.act&&ACT[ds.act]){ACT[ds.act](b);return;}
+  if(ds.act==='add'){openSheet(null);return;}
+  if(ds.act==='auto'){autoArrange();return;}
+  if(ds.close!==undefined){closeSheet();return;}
+  if(ds.pre!==undefined){applyPreset(PRESETS[+ds.pre]);return;}
+  if(ds.quick!==undefined){openSheet(null,PRESETS[+ds.quick]);return;}
+  if(ds.flip!==undefined){const f=$('#f-cg');f.value=Math.round(100-clamp(num(f.value),0,100));toast('Центр тяжести развёрнут');return;}
+  if(ds.dup!==undefined){const it=S.items.find(i=>i.id===edit);if(it){pushUndo();const cp=Object.assign({},it,{id:'i'+(S.nid++),n:it.n+' (копия)',c:nextColor()});Object.assign(cp,freeSpot(cp));S.items.push(cp);sel=cp.id;save();closeSheet();renderAll();}return;}
+  if(ds.mv){const it=S.items.find(i=>i.id===ds.id);if(it){pushUndo();S.sample=false;it.u=clamp(it.u+num(ds.mv),-S.trailer.neck,S.trailer.deck-it.len+120);sel=it.id;save();renderAll();}return;}
+  if(ds.ed){openSheet(ds.ed);return;}
+  if(ds.row){sel=sel===ds.row?null:ds.row;renderAll();return;}
+  if(ds.tm){S.tare.mode=ds.tm;save();renderSettings();renderAll();return;}
+  if(ds.fit){S.trailer.tan=num(ds.fit);save();renderSettings();renderAll();toast('Размер D обновлён по чеку');return;}
+  if(ds.load){const s=SV.find(x=>x.id===ds.load);if(s){pushUndo();S.items=JSON.parse(JSON.stringify(s.items));S.sample=false;sel=null;save();showTab('load');renderAll();toast(`Загружено: ${s.name}`);}return;}
+  if(ds.confirm){
+    const k=ds.confirm;
+    if(!armed.get(b)){armed.set(b,b.innerHTML);b.textContent='Точно?';setTimeout(()=>{if(armed.has(b)){b.innerHTML=armed.get(b);armed.delete(b);}},3000);return;}
+    armed.delete(b);
+    if(k==='clear'){pushUndo();S.items=[];S.sample=false;sel=null;save();renderAll();toast('Платформа очищена');}
+    else if(k==='delitem'){pushUndo();S.items=S.items.filter(i=>i.id!==edit);sel=null;save();closeSheet();renderAll();}
+    else if(k.startsWith('del:'))delLoad(k.slice(4),b);
+    return;
+  }
+});
+$('#undo').addEventListener('click',()=>{if(!U.length)return;S.items=JSON.parse(U.pop());save();renderAll();});
+$('#ov').addEventListener('click',e=>{if(e.target.id==='ov')closeSheet();});
+document.addEventListener('submit',e=>{
+  const id=e.target.id;if(!['shf','passform','auform'].includes(id))return;
+  e.preventDefault();
+  if(id==='shf')submitSheet();else if(id==='passform')passSave();else authGo();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#ov').hidden)closeSheet();});
+$('#svform').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!S.items.length){toast('Платформа пустая — нечего сохранять');return;}
+  if(!USER||!sb)return;
+  const btn=e.target.querySelector('button');btn.disabled=true;
+  const name=($('#svname').value.trim()||`Погрузка ${SV.length+1}`).slice(0,80);
+  try{
+    const r=await sb.from('wg_loads').insert({name,items:S.items}).select('id,name,items,created_at').single();
+    if(r.error)throw r.error;
+    SV.unshift(mapLoad(r.data));writeCache();$('#svname').value='';renderSaved();toast('Сохранено в облаке');
+  }catch(err){toast(isNet(err)?'Нет связи — погрузка не сохранилась, попробуй ещё раз':'Не удалось сохранить: '+String(err.message||err));}
+  finally{btn.disabled=false;}
+});
+async function delLoad(id,b){
+  if(!USER||!sb)return;
+  b.disabled=true;
+  try{const r=await sb.from('wg_loads').delete().eq('id',id);if(r.error)throw r.error;SV=SV.filter(s=>s.id!==id);writeCache();renderSaved();toast('Удалено');}
+  catch(err){b.disabled=false;b.textContent='Удалить';toast(isNet(err)?'Нет связи — не удалилось':'Не удалось удалить: '+String(err.message||err));}
+}
+document.addEventListener('input',e=>{
+  const el=e.target;let k;
+  if(el.dataset.part){const w=el.closest('.fi');k=w.dataset.k;setp(k,num(w.querySelector('[data-part=ft]').value)*12+num(w.querySelector('[data-part=in]').value));}
+  else if(el.dataset.k&&el.closest('#settings')){k=el.dataset.k;setp(k,num(el.value));}
+  else return;
+  if(k==='truck.wb'){S.truck.preset='custom';const p=$('#preset');if(p)p.value='custom';}
+  save();schedule();
+});
+document.addEventListener('change',e=>{
+  if(e.target.id!=='preset')return;
+  const p=TRUCKS[e.target.value];S.truck.preset=e.target.value;
+  if(p)Object.assign(S.truck,{wb:p.wb,fo:p.fo,ro:p.ro,bed:p.bed,cab:p.cab});
+  save();renderSettings();renderAll();
+});
+
+window.addEventListener('online',()=>{if(USER)refresh();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&USER&&(dirty||Date.now()-loadedAt>60000))refresh();});
+init();
+}
+</script>
+</body>
+</html>
