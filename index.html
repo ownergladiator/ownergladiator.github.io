@@ -123,6 +123,9 @@ textarea{min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:13px
 @media(max-width:379px){.bn-h{display:none}}
 @media(max-width:359px){.brand{font-size:20px}.brand .og-em{height:28px}}
 .rp-brand{display:flex;align-items:center;gap:10px}.rp-brand .og-em{height:42px}
+.trip-pick{gap:6px;flex-wrap:nowrap}.trip-pick select{flex:1;min-width:0}.trip-pick .btn{flex:none;white-space:nowrap}
+.trip-endst{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;padding:7px 10px;border-radius:10px;background:var(--card2,rgba(255,255,255,.04));border:1px dashed var(--line,#2a2f36);font-size:12.5px;color:var(--mut,#9aa3ad)}.trip-endst .btn{flex:none}
+.tp-fin{font-size:11px;font-weight:700;color:var(--mut,#9aa3ad);margin-left:6px;white-space:nowrap}
 .wdates-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 #wk-dhint{min-width:0;flex:1 1 200px}#wk-dhint .w{color:var(--acc);font-weight:700}
 .ar-dates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:end}.ar-dates input,.fgrid input[type=date]{min-width:0;width:100%}
@@ -711,7 +714,7 @@ body.map-full{overflow:hidden}
         <div class="card" id="card-wk">
           <div class="fgrid">
             <div class="s2"><label data-i18n="wk.label"></label><input type="text" id="in-label" data-set="label" style="font-weight:700"></div>
-            <div class="s2" id="wk-trip"><label><span data-i18n="tp.label"></span> <span id="wk-trip-n"></span></label><select id="in-trip" style="font-weight:700"></select></div>
+            <div class="s2" id="wk-trip"><label><span data-i18n="tp.label"></span> <span id="wk-trip-n"></span></label><div class="row trip-pick"><select id="in-trip" style="font-weight:700"></select><button type="button" class="btn sm need-write" id="btn-trip-end" data-act="tripEnd" hidden data-i18n="tp.end"></button></div><div class="trip-endst" id="wk-trip-st" hidden><span id="wk-trip-stt"></span><button type="button" class="btn sm need-write" data-act="tripReopen" data-i18n="tp.reopen"></button></div></div>
             <div><label data-i18n="wk.from"></label><input type="date" id="in-wFrom"></div>
             <div><label data-i18n="wk.to"></label><input type="date" id="in-wTo"></div>
             <div class="s2 wdates-row"><span class="cs" id="wk-dhint"></span><span class="row" style="gap:6px;flex:none"><button class="btn sm need-write" data-act="wkThis" data-i18n="wk.dThis"></button><button class="btn sm need-write" data-act="wkLoads" data-i18n="wk.dLoads"></button></span></div>
@@ -1183,7 +1186,7 @@ body.map-full{overflow:hidden}
    Setup
    ========================================================= */
 /* Connection settings live in window.HS_CONFIG at the top of the file */
-var APP_VER='8.1';
+var APP_VER='8.2';
 var CFG=window.HS_CONFIG||{};
 var SUPABASE_URL=String(CFG.SUPABASE_URL||'').trim().replace(/\/+$/,'');
 var SUPABASE_KEY=String(CFG.SUPABASE_KEY||'').trim();
@@ -1342,7 +1345,7 @@ var DICT=[
 ['sm.noTrips','Рейсов пока нет. Выбери рейс у недели во вкладке «Неделя» или собери недели в рейс в «Архиве» — кнопка «🧩 Рейсы».','No trips yet. Set the trip on the Week tab or group weeks into a trip in the Archive with the 🧩 Trips button.'],
 ['sm.trips','🛣️ Сравнение рейсов','🛣️ Trips compared'],['sm.tt.trip','Рейс','Trip'],['sm.tt.wk','Нед.','Wks'],['sm.tt.net','Чистыми','Net'],['sm.tt.day','В день','Per day'],['sm.tt.mi','Мили','Miles'],
 ['sm.tt.note','Нажми на рейс — откроются его итоги. Зелёный — лучший среди рейсов, красный — худший. «В день» — чистыми за день в пути.','Tap a trip to open it. Green is the best of your trips, red the worst. Per day = net per day on the road.'],
-['tp.label','🛣️ Рейс','🛣️ Trip'],['tp.none','— без рейса —','— no trip —'],['tp.new','+ Новый рейс…','+ New trip…'],['tp.n','Рейс {n}','Trip {n}'],['tp.wkN','· неделя {n}','· week {n}'],
+['tp.label','🛣️ Рейс','🛣️ Trip'],['tp.end','🏁 Завершить рейс','🏁 Finish trip'],['tp.reopen','↩︎ Вернуть','↩︎ Reopen'],['tp.endQ','Завершить рейс «{n}»?\n\nВ Dispatch Gladiator и Accounting Gladiator он станет «завершён».{w}','Finish the trip “{n}”?\n\nDispatch Gladiator and Accounting Gladiator will show it as finished.{w}'],['tp.endQw','\n\nЭта неделя останется последней неделей рейса, а следующая начнётся без рейса.','\n\nThis week stays the last week of the trip; the next one starts without a trip.'],['tp.ended','🏁 Рейс «{n}» завершён','🏁 Trip “{n}” finished'],['tp.endedOn','🏁 Рейс завершён {d} — эта неделя последняя, следующая будет без рейса','🏁 Trip finished {d} — this is its last week, the next one starts without a trip'],['tp.reopened','Рейс «{n}» снова идёт','Trip “{n}” is running again'],['tp.fin','🏁 завершён','🏁 finished'],['tp.none','— без рейса —','— no trip —'],['tp.new','+ Новый рейс…','+ New trip…'],['tp.n','Рейс {n}','Trip {n}'],['tp.wkN','· неделя {n}','· week {n}'],
 ['tp.manage','🧩 Рейсы','🧩 Trips'],['tp.tNew','🛣️ Новый рейс','🛣️ New trip'],['tp.pick','Рейс','Trip'],['tp.name','Название рейса','Trip name'],['tp.weeks','Недели рейса','Weeks of the trip'],
 ['tp.cnt','выбрано: {n}','selected: {n}'],['tp.in','сейчас в «{n}»','now in “{n}”'],['tp.save','Сохранить','Save'],['tp.disband','Расформировать','Ungroup'],['tp.cancel','Отмена','Cancel'],
 ['tp.noName','Впиши название рейса','Enter a trip name'],['tp.noWeeks','Отметь недели этого рейса','Tick the weeks of this trip'],['tp.saved','🛣️ Рейс сохранён','🛣️ Trip saved'],
@@ -1400,7 +1403,7 @@ function hav(a,b){var R=3958.8,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lon-a.lo
 /* =========================================================
    State
    ========================================================= */
-var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',trip:'',goalKind:'month',goals:{},goalFrom:'',goalTo:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,goal:10000,
+var S={user:null,viewId:null,ro:false,role:'owner',milesMode:'split',milesCalc:'auto',startText:'',startGeo:null,fuelMode:'mpg',label:'',trip:'',tripsEnded:{},goalKind:'month',goals:{},goalFrom:'',goalTo:'',wFrom:'',wTo:'',driverPct:30,mpg:9,diesel:6,taxPct:25,perDiem:80,goal:10000,
  extras:[],maintOn:false,maintStart:0,maintInterval:10000,maintBase:0,template:null,loads:[],fuel:[],exps:[],archive:[],archSel:null};
 var LAST={};var CH={};var saveT=null;var mapToken=0;var curPage='week';
 
@@ -1566,7 +1569,7 @@ function calc(){
    Persistence (draft)
    ========================================================= */
 function draftObj(){
- return{weekLabel:S.label,tripName:tripNorm(S.trip),weekFrom:S.wFrom||'',weekTo:S.wTo||'',userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
+ return{weekLabel:S.label,tripName:tripNorm(S.trip),tripsEnded:S.tripsEnded||{},weekFrom:S.wFrom||'',weekTo:S.wTo||'',userRole:S.role,driverPct:num(S.driverPct)||30,fuelMode:S.fuelMode,milesMode:S.milesMode,milesCalc:S.milesCalc,startText:S.startText||'',startGeo:S.startGeo||null,maintEnabled:S.maintOn,maintStartBal:num(S.maintStart),maintInterval:num(S.maintInterval)||10000,maintResetBase:S.maintBase||0,
   defaultTemplate:S.template||null,mpg:S.mpg,dieselPrice:S.diesel,taxPct:S.taxPct,perDiem:S.perDiem,goal:num(S.goal)||10000,goalKind:S.goalKind||'month',goals:S.goals||{},goalFrom:S.goalFrom||'',goalTo:S.goalTo||'',
   loads:S.loads.map(function(l){return{pickup:l.pickup,delivery:l.delivery,route:l.route,miles:num(l.miles),deadhead:num(l.deadhead),gross:num(l.gross),fromText:l.fromText,toText:l.toText,fromGeo:l.fromGeo,toGeo:l.toGeo,broker:l.broker,unpaid:!!l.unpaid,partials:ptList(l).map(ptOut)};}),
   fuelLogs:S.fuel.map(fuelOut),
@@ -1591,7 +1594,7 @@ function applyDraft(d){
  if(!d)return;
  if(d.defaultTemplate){S.template=d.defaultTemplate;SafeStorage.set(tplKey(),JSON.stringify(d.defaultTemplate));}
  if(d.weekLabel!=null)S.label=d.weekLabel;
- S.trip=tripNorm(d.tripName);
+ S.trip=tripNorm(d.tripName);S.tripsEnded=endedClean(d.tripsEnded);
  S.wFrom=isISO(d.weekFrom)?d.weekFrom:'';S.wTo=isISO(d.weekTo)?d.weekTo:'';
  S.role=d.userRole==='driver'?'driver':'owner';
  if(d.driverPct!=null)S.driverPct=num(d.driverPct)||30;
@@ -1622,6 +1625,8 @@ function resetWeek(carryStart){
  S.label=S.wFrom?t('wk.rangeLabel',{a:shortDate(S.wFrom),b:shortDate(S.wTo)}):t('wk.defLabel',{d:todayISO()});S.loads=[newLoad()];S.fuel=[];S.maintBase=S.maintBase||0;
  S.role=(tpl&&tpl.userRole==='driver')?'driver':(tpl?'owner':S.role);
  if(tpl){S.driverPct=num(tpl.driverPct)||30;if(tpl.mpg!=null&&tpl.mpg!=='')S.mpg=num(tpl.mpg);if(tpl.dieselPrice!=null&&tpl.dieselPrice!=='')S.diesel=num(tpl.dieselPrice);S.milesMode=tpl.milesMode==='split'?'split':'simple';S.maintOn=!!tpl.maintEnabled;if(tpl.maintStartBal!=null)S.maintStart=num(tpl.maintStartBal);if(tpl.maintInterval)S.maintInterval=num(tpl.maintInterval);if(tpl.maintResetBase!=null)S.maintBase=num(tpl.maintResetBase);if(tpl.taxPct!=null)S.taxPct=num(tpl.taxPct);}
+ /* a finished trip ends with the week it was finished in */
+ if(S.trip&&tripEndedOn(S.trip))S.trip='';
  S.exps=(tpl&&Array.isArray(tpl.expenses)&&tpl.expenses.length)?tpl.expenses.map(function(e){return newExp(e);}):defaultExps(S.role);
 }
 
@@ -3060,7 +3065,7 @@ function smBar(c){
  $('#sm-mon').hidden=c.mode!=='month'||!c.months.length;
  $$('#sm-mon [data-act="smMon"]').forEach(function(b){var j=i+num(b.dataset.d);b.disabled=j<0||j>=c.months.length;});
  var ts=$('#trip-select'),TL=c.trips||[],ti=TL.findIndex(function(x){return x.k===SM.trip;});
- ts.innerHTML=TL.map(function(T){return'<option value="'+esc(T.k)+'">'+esc(T.name+(T.a&&T.b?' · '+dShort(T.a)+' – '+dShort(T.b):''))+'</option>';}).join('');if(ti>=0)ts.value=SM.trip;
+ ts.innerHTML=TL.map(function(T){return'<option value="'+esc(T.k)+'">'+esc((tripEndedOn(T.k)?'🏁 ':'')+T.name+(T.a&&T.b?' · '+dShort(T.a)+' – '+dShort(T.b):''))+'</option>';}).join('');if(ti>=0)ts.value=SM.trip;
  $('#sm-trip').hidden=c.mode!=='trip'||!TL.length;
  $$('#sm-trip [data-act="smTrip"]').forEach(function(b){var j=ti+num(b.dataset.d);b.disabled=ti<0||j<0||j>=TL.length;});
  $('#custom-panel').hidden=c.mode!=='custom';if(c.mode==='custom')$('#custom-count').textContent=t('sm.sel',{a:c.list.length,b:S.archive.length});
@@ -3082,22 +3087,43 @@ function renderTrips(c){
   v.forEach(function(r,i){var p=i/(m-1);cls[k+'|'+r.T.k]=p<=0.2?'h2':p<=0.4?'h1':p<0.6?'':p<0.8?'l1':'l2';});});
  var cell=function(r,k,txt,w){return'<td class="ar '+(cls[k+'|'+r.T.k]||'')+(w?' w':'')+'">'+txt+'</td>';};
  box.innerHTML='<div class="ch"><span class="ct">'+t('sm.trips')+'</span></div><div class="sm-hmw"><table class="sm-hm sm-tt"><thead><tr><th>'+t('sm.tt.trip')+'</th><th class="ar">'+t('sm.tt.wk')+'</th><th class="ar">'+t('sm.tt.net')+'</th><th class="ar">'+t('sm.tt.day')+'</th><th class="ar">Net/mi</th><th class="ar w">Gross</th><th class="ar w">'+t('sm.tt.mi')+'</th></tr></thead><tbody>'+
-  R.map(function(r){var T=r.T,a=r.a;return'<tr data-act="smTripPick" data-k="'+esc(T.k)+'"'+(T.k===SM.trip?' class="sel"':'')+'><td><b>'+esc(T.name)+'</b><div class="cs">'+esc(T.a&&T.b?dShort(T.a)+' – '+dShort(T.b):'')+'</div></td><td class="ar">'+(T.live?(T.weeks.length>1?t('sm.tt.liveW',{n:T.weeks.length-1}):t('sm.live')):T.weeks.length)+'</td>'+
+  R.map(function(r){var T=r.T,a=r.a;return'<tr data-act="smTripPick" data-k="'+esc(T.k)+'"'+(T.k===SM.trip?' class="sel"':'')+'><td><b>'+esc(T.name)+'</b>'+(tripEndedOn(T.k)?'<span class="tp-fin">🏁</span>':'')+'<div class="cs">'+esc(T.a&&T.b?dShort(T.a)+' – '+dShort(T.b):'')+'</div></td><td class="ar">'+(T.live?(T.weeks.length>1?t('sm.tt.liveW',{n:T.weeks.length-1}):t('sm.live')):T.weeks.length)+'</td>'+
    cell(r,'net',m0(a.N))+cell(r,'perday',r.v.perday==null?'—':m0(r.v.perday))+cell(r,'nrpm',r.v.nrpm==null?'—':r2(r.v.nrpm))+cell(r,'gross',m0(a.G),1)+'<td class="ar w">'+f0(a.M)+'</td></tr>';}).join('')+
   '</tbody></table></div><div class="cs" style="margin-top:8px">'+t('sm.tt.note')+'</div>';
 }
 /* Week tab: the trip of the week being filled in (a new week keeps it) */
 function tripNames(){var L=tripsAll().map(function(T){return T.name;}),k=tripKey(S.trip);if(k&&!L.some(function(n){return tripKey(n)===k;}))L.unshift(tripNorm(S.trip));return L;}
 function tripOpts(cur){var k=tripKey(cur),L=tripNames();if(k&&!L.some(function(n){return tripKey(n)===k;}))L.unshift(tripNorm(cur));
- return{html:'<option value="">'+esc(t('tp.none'))+'</option>'+L.map(function(n){return'<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('')+'<option value="__new">'+esc(t('tp.new'))+'</option>',val:L.find(function(n){return tripKey(n)===k;})||''};}
+ return{html:'<option value="">'+esc(t('tp.none'))+'</option>'+L.map(function(n){return'<option value="'+esc(n)+'">'+esc(n+(tripEndedOn(n)?' · 🏁':''))+'</option>';}).join('')+'<option value="__new">'+esc(t('tp.new'))+'</option>',val:L.find(function(n){return tripKey(n)===k;})||''};}
+/* finished trips (🏁): {tripKey: 'YYYY-MM-DD'} in the cloud draft, read by Dispatch and Accounting Gladiator */
+function endedClean(o){var r={};if(o&&typeof o==='object')Object.keys(o).forEach(function(k){var kk=tripKey(k);if(kk&&isISO(o[k]))r[kk]=o[k];});return r;}
+function tripEndedOn(n){var k=tripKey(n);return k&&S.tripsEnded&&S.tripsEnded[k]||'';}
+function weekHasNums(){var p=weekPayload();return num(p.totalGross)>0||num(p.totalMiles)>0||num(p.fuelCost)>0;}
+function tripEnd(){
+ if(!guardWrite()||S.ed)return;var k=tripKey(S.trip),n=tripNorm(S.trip);if(!k)return;
+ var has=weekHasNums();if(!confirm(t('tp.endQ',{n:n,w:has?t('tp.endQw'):''})))return;
+ S.tripsEnded=Object.assign({},S.tripsEnded);S.tripsEnded[k]=todayISO();
+ if(!has)S.trip='';
+ fillTripSel();queueSave();toast(t('tp.ended',{n:n}));if(curPage==='summary')renderSummary();
+}
+function tripReopen(n){
+ var k=tripKey(n==null?S.trip:n);if(!k||!S.tripsEnded[k])return false;
+ S.tripsEnded=Object.assign({},S.tripsEnded);delete S.tripsEnded[k];return true;
+}
 function fillTripSel(){
  var sel=$('#in-trip');if(!sel)return;var o=tripOpts(S.trip),k=tripKey(S.trip);sel.innerHTML=o.html;sel.value=o.val;sel.disabled=!!S.ro;
+ var eo=!S.ed&&tripEndedOn(S.trip),be=$('#btn-trip-end'),st=$('#wk-trip-st');
+ if(be)be.hidden=!k||!!S.ed||!!eo||!!S.ro;
+ if(st){st.hidden=!eo;if(eo)$('#wk-trip-stt').textContent=t('tp.endedOn',{d:dShort(eo)});}
  var hn=$('#wk-trip-n');if(hn){var n=k&&!S.ed?S.archive.filter(function(w){return tripKey(w.tripName)===k;}).length:-1;hn.textContent=n>=0?t('tp.wkN',{n:n+1}):'';}
 }
 function weekTripSet(v){
  if(!guardWrite()){fillTripSel();return;}
  if(v==='__new'){fillTripSel();tripSheet('draft');return;}
- S.trip=tripNorm(v);fillTripSel();queueSave();
+ S.trip=tripNorm(v);
+ /* picking a finished trip again for the week being filled in reopens it */
+ if(!S.ed&&tripReopen(S.trip))toast(t('tp.reopened',{n:S.trip}));
+ fillTripSel();queueSave();
 }
 /* Archive: the trip of the chosen week */
 function arTripFill(w){var row=$('#ar-trip-row'),sel=$('#ar-trip');if(!row||!sel)return;row.hidden=!w;if(!w)return;var o=tripOpts(w.tripName);sel.innerHTML=o.html;sel.value=o.val;sel.disabled=!!S.ro;}
@@ -3144,7 +3170,7 @@ async function tripReload(){
 async function tripSave(){
  if(!guardWrite())return;
  var name=tripNorm($('#tp-name').value);if(!name){toast(t('tp.noName'));$('#tp-name').focus();return;}
- if(TPS.mode==='draft'){S.trip=name;$('#trip-bg').hidden=true;fillTripSel();queueSave();toast(t('tp.saved'));return;}
+ if(TPS.mode==='draft'){S.trip=name;tripReopen(name);$('#trip-bg').hidden=true;fillTripSel();queueSave();toast(t('tp.saved'));return;}
  if(!sb||!S.user)return toast(t('t.login'));
  var ok=TPS.k,on={},ch=[];$$('.tp-chk').forEach(function(c){if(c.checked)on[c.value]=1;});
  if(!Object.keys(on).length)return toast(t('tp.noWeeks'));
@@ -3152,6 +3178,7 @@ async function tripSave(){
  if(S.ed&&ch.some(function(x){return x.w.db_id===S.ed.id;}))return edBusy();
  var btn=$('[data-act="tpSave"]');btn.disabled=true;
  try{await tripWrite(ch);}catch(e){toast(t('t.err',{e:(e&&e.message)||e}),4500);return;}finally{btn.disabled=false;}
+ if(ok&&S.tripsEnded[ok]&&tripKey(name)!==ok){S.tripsEnded=Object.assign({},S.tripsEnded);S.tripsEnded[tripKey(name)]=S.tripsEnded[ok];delete S.tripsEnded[ok];queueSave();}
  if(ok&&tripKey(S.trip)===ok&&S.trip!==name){S.trip=name;queueSave();}
  if(ok&&SM.trip===ok)SM.trip=tripKey(name);
  $('#trip-bg').hidden=true;toast(t('tp.saved'));await tripReload();
@@ -3163,6 +3190,7 @@ async function tripDisband(){
  var ch=T.weeks.map(function(w){return{w:w,n:''};});
  if(S.ed&&ch.some(function(x){return x.w.db_id===S.ed.id;}))return edBusy();
  try{await tripWrite(ch);}catch(e){toast(t('t.err',{e:(e&&e.message)||e}),4500);return;}
+ if(tripReopen(ok))queueSave();
  if(tripKey(S.trip)===ok){S.trip='';queueSave();}
  $('#trip-bg').hidden=true;toast(t('tp.disOk'),3000);await tripReload();
 }
@@ -3842,6 +3870,7 @@ var ACT={
  shCopy:function(){shCopyText($('#sh-url').value);},shCopyId:function(b){shCopyText(shUrl(b.dataset.id));},shRevoke:function(b){shRevoke(b);},
  shSend:function(){var u=$('#sh-url').value;if(navigator.share)navigator.share({title:'OwnerGladiator · '+$('#sh-period').textContent,url:u}).catch(function(){});},
  smTrip:function(b){var L=smTripsAll(),i=L.findIndex(function(x){return x.k===SM.trip;}),j=i+num(b.dataset.d);if(i>=0&&L[j]){SM.trip=L[j].k;SM.spot='';renderSummary();}},
+ tripEnd:function(){tripEnd();},tripReopen:function(){if(!guardWrite())return;var n=S.trip;if(tripReopen(n)){fillTripSel();queueSave();toast(t('tp.reopened',{n:n}));if(curPage==='summary')renderSummary();}},
  smTripPick:function(b){SM.mode='trip';SafeStorage.set('hs_smode','trip');SM.trip=b.dataset.k;SM.spot='';renderSummary();window.scrollTo({top:0,behavior:'smooth'});},
  tpOpen:function(){if(!guardWrite())return;tripSheet('arch');},
  tpClose:function(b,e){if(e.target===b||b.tagName==='BUTTON')$('#trip-bg').hidden=true;},
@@ -4024,7 +4053,7 @@ async function handleSession(session){
  }else{S.user=null;S.viewId=null;$('#app').hidden=true;$('#auth').hidden=false;}
 }
 async function openProfile(){
- S.ed=null;S.template=null;S.archive=[];S.archSel=null;S.extras=[];S.goal=10000;S.goalKind='month';S.goals={};S.goalFrom='';S.goalTo='';S.milesMode='split';S.milesCalc='auto';loadTemplate();resetWeek();
+ S.ed=null;S.template=null;S.archive=[];S.tripsEnded={};S.trip='';S.archSel=null;S.extras=[];S.goal=10000;S.goalKind='month';S.goals={};S.goalFrom='';S.goalTo='';S.milesMode='split';S.milesCalc='auto';loadTemplate();resetWeek();
  var local=null;try{local=JSON.parse(SafeStorage.get(draftKey())||'null');}catch(e){}
  if(!S.ro&&local)applyDraft(local);
  edResume();

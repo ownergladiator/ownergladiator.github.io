@@ -1074,8 +1074,12 @@ function trips(weeks, draft) {
     var tr = by[key];
     if (!tr) { tr = by[key] = { id: key, name: String(w.tripName).replace(/\s+/g, ' ').trim(), a: a, b: b, weeks: 0, live: false }; list.push(tr); }
     if (a < tr.a) tr.a = a; if (b > tr.b) tr.b = b;
-    tr.weeks++; if (live) tr.live = true;
+    tr.weeks++; if (live && !ended[key]) tr.live = true;
   }
+  /* trips finished in the Hub with 🏁 are no longer "ongoing" */
+  var ended = draft && draft.tripsEnded && typeof draft.tripsEnded === 'object' ? draft.tripsEnded : {};
+  if (typeof ended === 'string') { try { ended = JSON.parse(ended) || {}; } catch (e) { ended = {}; } }
+  var e2 = {}; Object.keys(ended).forEach(function (k) { e2[tripKey(k)] = ended[k]; }); ended = e2;
   (weeks || []).forEach(function (w) { add(w, false); });
   if (draft && tripKey(draft.tripName)) add(draft, true);
   list.sort(function (x, y) { return x.a < y.a ? -1 : x.a > y.a ? 1 : 0; });
@@ -1129,7 +1133,7 @@ var CFG = {
   bucket: 'ag-docs',
   hub: 'https://ownergladiator.github.io/', dispatch: 'https://ownergladiator.github.io/dispatch/', money: 'https://ownergladiator.github.io/money/'
 };
-var VER = '1.0';
+var VER = '1.1';
 
 /* ---------------- small helpers ---------------- */
 var Store = { mem: {},
@@ -1344,7 +1348,7 @@ async function fetchHub(uid) {
   try {
     var r = await Promise.all([
       sb.from('weekly_reports').select('week_end_date,tripName:full_payload->>tripName,weekFrom:full_payload->>weekFrom,weekTo:full_payload->>weekTo,startDate:full_payload->>startDate,endDate:full_payload->>endDate').eq('user_id', uid),
-      sb.from('user_drafts').select('tripName:draft_json->>tripName,weekFrom:draft_json->>weekFrom,weekTo:draft_json->>weekTo').eq('user_id', uid).maybeSingle()
+      sb.from('user_drafts').select('tripName:draft_json->>tripName,weekFrom:draft_json->>weekFrom,weekTo:draft_json->>weekTo,tripsEnded:draft_json->tripsEnded').eq('user_id', uid).maybeSingle()
     ]);
     if (r[0].error) return null;
     return { weeks: r[0].data || [], draft: r[1].error ? null : (r[1].data || null) };

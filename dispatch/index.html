@@ -782,6 +782,8 @@ function buildTrips(ws, rows, todayStr, extras, draft) {
   sorted.forEach(function (s) { if (!s.tripKey) { rest.push(s); return; } (map[s.tripKey] || mk(s.tripKey, s.tripName)).weeks.push(s); });
   /* a trip just started in the Hub exists before its first load is entered */
   var dKey = draft ? tripKey(draft.tripName) : '';
+  /* trips finished in the Hub with 🏁: { tripKey: 'YYYY-MM-DD' } */
+  var ended = {}; if (draft && draft.tripsEnded && typeof draft.tripsEnded === 'object') Object.keys(draft.tripsEnded).forEach(function (k) { if (isISO(draft.tripsEnded[k])) ended[tripKey(k)] = draft.tripsEnded[k]; });
   if (dKey && !map[dKey]) mk(dKey, tripNorm(draft.tripName)).draftStart = isISO(draft.weekFrom) ? draft.weekFrom : todayStr;
   /* weeks the owner has not put into a trip: weeks in a row are shown together */
   var autos = [], cur = null, prev = null;
@@ -815,6 +817,8 @@ function buildTrips(ws, rows, todayStr, extras, draft) {
     t.start = r && isISO(r.start_date) ? r.start_date : t.anchor;
     if (t.first && t.first < t.start) t.start = t.first;
     t.end = r && isISO(r.end_date) && r.end_date >= t.start ? r.end_date : '';
+    t.ended = !t.auto && ended[t.key] || '';
+    if (t.ended && !t.end) t.end = t.last && t.last >= t.start ? t.last : (t.ended >= t.start ? t.ended : t.start);
     t.goal = r && r.goal_net != null && r.goal_net !== '' ? Math.max(0, num(r.goal_net)) : 0;
     t.tiers = r ? r.bonus : []; t.includeExtras = r ? r.include_extras !== false : true; t.note = r ? String(r.note || '').trim() : '';
     t.live = null; t.weeks.forEach(function (s) { if (s.live) t.live = s; });
@@ -828,7 +832,8 @@ function buildTrips(ws, rows, todayStr, extras, draft) {
     t.pct = t.goal > 0 ? t.net / t.goal * 100 : null;
     var latest = i === all.length - 1, isCur = !t.auto && !!dKey && dKey === t.key;
     t.current = isCur;
-    if (t.auto) t.status = latest && (t.live || (t.last && daysBetween(t.last, todayStr) <= ACTIVE_DAYS)) ? 'active' : 'done';
+    if (t.ended) t.status = 'done';
+    else if (t.auto) t.status = latest && (t.live || (t.last && daysBetween(t.last, todayStr) <= ACTIVE_DAYS)) ? 'active' : 'done';
     else if (isCur) t.status = !t.weeks.length && t.start > todayStr ? 'future' : 'active';
     else if (t.end && todayStr <= t.end && latest) t.status = 'active';
     else t.status = 'done';
@@ -930,7 +935,7 @@ var CFG = {
   key: 'sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3',
   hub: 'https://ownergladiator.github.io/'
 };
-var VER = '1.0';
+var VER = '1.1';
 
 /* ---------------- small helpers ---------------- */
 var Store = { mem: {},
