@@ -521,13 +521,14 @@ function mapBuild(){
 }
 function redraw(){if(MV.raf)return;MV.raf=requestAnimationFrame(()=>{MV.raf=0;drawNow();});}
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const routeOn=()=>S.tab==='load';
 function circleD(xy,km){const n=36,o=[];for(let i=0;i<n;i++){const a=i/n*2*Math.PI;o.push([xy[0]+km*Math.cos(a),xy[1]+km*Math.sin(a)]);}return lineD(o)+'Z';}
 function drawWorld(){
   if(!MV.ready)return;
   const V=visPlaces();
   $('#m-ar').innerHTML=V.filter(v=>v.ax>0).map(v=>`<path class="m-ar${v.kind==='check'?' ck':''}" vector-effect="non-scaling-stroke" d="${circleD(v.p.xy,v.ax)}"/>`).join('');
   let rt='';
-  if(ROUTE&&ROUTE.legs){
+  if(routeOn()&&ROUTE&&ROUTE.legs){
     for(const L of ROUTE.legs)rt+=`<path class="rt-case" vector-effect="non-scaling-stroke" d="${lineD(L.pts)}"/>`;
     for(const L of ROUTE.legs)rt+=`<path class="${L.t==='dh'?'rt-dh':'rt-ld'}${L.est?' rt-est':''}" vector-effect="non-scaling-stroke" d="${lineD(L.pts)}"/>`;
   }
@@ -549,9 +550,9 @@ function drawNow(){
     if(s>=0.2)for(const l of M.lb){const[x,y]=toS(l.x,l.y);if(!inV(x,y,10))continue;const w=l.t.length*6+10;if(!free(x,y,w+(s<0.5?60:30),s<0.5?60:34))continue;h+=`<g class="sh" transform="translate(${mr(x)} ${mr(y)})"><rect x="${-w/2}" y="-7.5" width="${w}" height="15" rx="4"/><text text-anchor="middle" y="3.4">${esc(l.t)}</text></g>`;}
   }
   /* route ends */
-  if(ROUTE&&ROUTE.stops)for(const st of ROUTE.stops){const[x,y]=toS(st.xy[0],st.xy[1]);if(!inV(x,y,20))continue;h+=`<g transform="translate(${mr(x)} ${mr(y)})"><circle r="8" fill="${st.t==='to'?'#3ddc97':st.t==='dh'?'#9aa1ad':'#ffc400'}" stroke="#0d0f12" stroke-width="2.5"/><text text-anchor="middle" y="3.5" style="font:800 9.5px Barlow,sans-serif;fill:#0d0f12">${st.n}</text></g>`;}
+  if(routeOn()&&ROUTE&&ROUTE.stops)for(const st of ROUTE.stops){const[x,y]=toS(st.xy[0],st.xy[1]);if(!inV(x,y,20))continue;h+=`<g transform="translate(${mr(x)} ${mr(y)})"><circle r="8" fill="${st.t==='to'?'#3ddc97':st.t==='dh'?'#9aa1ad':'#ffc400'}" stroke="#0d0f12" stroke-width="2.5"/><text text-anchor="middle" y="3.5" style="font:800 9.5px Barlow,sans-serif;fill:#0d0f12">${st.n}</text></g>`;}
   /* marks */
-  const hitIds=new Set(HITS.map(x=>x.v.p.id));
+  const hitIds=new Set(routeOn()?HITS.map(x=>x.v.p.id):[]);
   const now=Date.now();
   for(const v of V){
     const[x,y]=toS(v.p.xy[0],v.p.xy[1]);if(!inV(x,y,24))continue;
@@ -575,7 +576,8 @@ function plural(n,a,b,c){n=Math.abs(n)%100;const m=n%10;if(n>10&&n<20)return c;i
 function mapBar(){
   const el=$('#mbar');if(!el)return;
   let h='';
-  if(ROUTE&&ROUTE.ok){const n=HITS.length;h+=`<button class="mpill ${n?'bad':ROUTE.est?'':'ok'}" data-tab="load">${n?'⚠ На маршруте: '+n:ROUTE.est?'≈ Маршрут примерный':'✓ Маршрут чистый'}</button>`;}
+  if(!routeOn()){}
+  else if(ROUTE&&ROUTE.ok){const n=HITS.length;h+=`<button class="mpill ${n?'bad':ROUTE.est?'':'ok'}" data-tab="load">${n?'⚠ На маршруте: '+n:ROUTE.est?'≈ Маршрут примерный':'✓ Маршрут чистый'}</button>`;}
   else if(ROUTE&&ROUTE.busy)h+=`<span class="mpill">Строю маршрут…</span>`;
   el.innerHTML=h;
   const nb=$('#nav-hits');if(nb){const n=ROUTE&&ROUTE.ok?HITS.length:0;nb.hidden=!n;nb.textContent=n;}
@@ -599,7 +601,7 @@ function mapInit(){
   svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(Math.exp(-e.deltaY*0.0016),e.clientX-r.left,e.clientY-r.top);},{passive:false});
   $('.mctl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const z=b.dataset.z;
     if(z==='in')zoomAt(1.8,MV.W/2,MV.H/2);else if(z==='out')zoomAt(1/1.8,MV.W/2,MV.H/2);
-    else if(z==='fit'){if(ROUTE&&ROUTE.bb)fitBox(ROUTE.bb,30);else mapFitUS();redraw();}
+    else if(z==='fit'){if(routeOn()&&ROUTE&&ROUTE.bb)fitBox(ROUTE.bb,30);else mapFitUS();redraw();}
     else if(z==='me')locate(true);});
   let rt=0;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{mapSize();redraw();},120);});
 }
@@ -702,7 +704,7 @@ async function buildRoute(){
   const all=legs.flatMap(l=>l.pts),bb=[1e9,1e9,-1e9,-1e9];for(const p of all){bb[0]=Math.min(bb[0],p[0]);bb[1]=Math.min(bb[1],p[1]);bb[2]=Math.max(bb[2],p[0]);bb[3]=Math.max(bb[3],p[1]);}
   ROUTE={ok:true,load:L,legs,stops,bb,est:!!err,km:legs.reduce((s,l)=>s+(l.km||0),0)};
   computeHits();drawWorld();
-  const fk=L.key+'|'+useDh;if(fk!==lastFit){lastFit=fk;fitBox(bb,34);}
+  const fk=L.key+'|'+useDh;if(fk!==lastFit&&routeOn()){lastFit=fk;fitBox(bb,34);}
   redraw();mapBar();renderLoad();
 }
 let lastFit='';
@@ -841,11 +843,16 @@ async function saveCands(){
 /* ---------- UI: tabs ---------- */
 let tt=0;
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{t.hidden=true;},2800);}
+let mapView=null;
 function showTab(id){
+  const was=S.tab;
+  if(was!=='load'&&id==='load'&&MV.ready)mapView={k:MV.k,cx:MV.cx,cy:MV.cy};
   S.tab=id;savePrefs();
   document.querySelectorAll('.tab').forEach(s=>s.hidden=s.id!=='t-'+id);
   document.querySelectorAll('nav.nav [data-tab]').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===id?'page':'false'));
-  if(id==='load'&&ROUTE&&ROUTE.bb){fitBox(ROUTE.bb,34);redraw();}
+  if(id==='load'){if(ROUTE&&ROUTE.bb){fitBox(ROUTE.bb,34);if(ROUTE.load)lastFit=ROUTE.load.key+'|'+(S.dh&&!!ROUTE.load.dh);}}
+  else if(was==='load'){if(mapView){MV.k=mapView.k;MV.cx=mapView.cx;MV.cy=mapView.cy;}else mapFitUS();}
+  drawWorld();redraw();mapBar();
 }
 function filtersHtml(){
   return `<div class="fl" role="group" aria-label="Фильтры">
