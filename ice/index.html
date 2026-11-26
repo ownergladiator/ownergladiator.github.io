@@ -103,6 +103,7 @@ p{margin:6px 0}
 .m-nb{fill:var(--mnb);stroke:var(--mnb);stroke-width:1.2;fill-rule:evenodd}
 .m-st{fill:var(--mland);stroke:var(--mbd);stroke-width:.9;fill-rule:evenodd;stroke-linejoin:round}
 .m-lk{fill:var(--mw);stroke:var(--mbd);stroke-width:.6;fill-rule:evenodd}
+.m-sel{fill:rgba(255,196,0,.07);stroke:#ffc400;stroke-width:1.6;fill-rule:evenodd;stroke-linejoin:round}
 .m-rd{fill:none;stroke:var(--mrd);stroke-width:1.1;stroke-linejoin:round;stroke-linecap:round}
 .m-ar{fill:var(--ice);fill-opacity:.1;stroke:var(--ice);stroke-opacity:.75;stroke-width:1.2;stroke-dasharray:4 3}
 .m-ar.ck{fill:var(--chk);stroke:var(--chk)}
@@ -418,10 +419,10 @@ const ST_NAME={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'Californi
 const emblem=()=>'<img src="logo.png?v=2" alt="Ice Gladiator" class="logo-img">';
 
 /* ---------- state ---------- */
-const DEF={tab:'map',ice:true,check:true,approx:true,days:0,buf:3,dh:true,loadKey:'',custom:null,mine:false};
+const DEF={tab:'map',ice:true,check:true,approx:true,days:0,buf:3,dh:true,loadKey:'',custom:null,mine:false,st:''};
 let S=Object.assign({},DEF);
 try{S=Object.assign({},DEF,JSON.parse(Store.get('ig_prefs')||'{}'));}catch(e){}
-const savePrefs=()=>Store.set('ig_prefs',JSON.stringify({tab:S.tab,ice:S.ice,check:S.check,approx:S.approx,days:S.days,buf:S.buf,dh:S.dh,loadKey:S.loadKey,custom:S.custom,mine:S.mine}));
+const savePrefs=()=>Store.set('ig_prefs',JSON.stringify({tab:S.tab,ice:S.ice,check:S.check,approx:S.approx,days:S.days,buf:S.buf,dh:S.dh,loadKey:S.loadKey,custom:S.custom,mine:S.mine,st:S.st}));
 let USER=null,MARKS=[],PLACES=[],LOADS=[],HUB={ok:false,err:'',at:0},ROUTE=null,HITS=[],SEL=null,CANDS=[],NOPT=[],PICK=null,ME=null,marksAt=0,syncSt='ok',query='';
 
 /* ---------- cloud ---------- */
@@ -455,6 +456,19 @@ function buildPlaces(){
   PLACES=[...m.values()];
   for(const p of PLACES){p.reps.sort((a,b)=>String(b.seen_at).localeCompare(String(a.seen_at)));p.xy=ALB(p.lon,p.lat);}
 }
+function routeOn(){return S.tab==='load';}
+function stateAt(xy){
+  if(!M)return'';
+  for(const s of M.stR){const b=s.bb;if(xy[0]<b[0]||xy[0]>b[2]||xy[1]<b[1]||xy[1]>b[3])continue;let n=0;for(const r of s.rings)if(inPoly(xy[0],xy[1],r))n++;if(n%2)return s.c;}
+  return'';
+}
+function placeStates(p){
+  if(p.sts&&(p.stGeo||!M))return p.sts;
+  const set=new Set();
+  for(const r of p.reps)(String(r.state||'').toUpperCase().match(/\b[A-Z]{2}\b/g)||[]).forEach(c=>{if(ST_NAME[c])set.add(c);});
+  const g=stateAt(p.xy);if(g)set.add(g);
+  p.stGeo=!!M;p.sts=[...set];return p.sts;
+}
 function repVis(r){
   if(r.kind==='check'?!S.check:!S.ice)return false;
   if(!S.approx&&r.approx_km>0)return false;
@@ -462,9 +476,10 @@ function repVis(r){
   if(S.days&&Date.now()-Date.parse(r.seen_at)>S.days*864e5)return false;
   return true;
 }
-function visPlaces(){
-  const out=[];
+function visPlaces(noSt){
+  const out=[],st=!noSt&&S.st&&!routeOn()?S.st:'';
   for(const p of PLACES){
+    if(st&&!placeStates(p).includes(st))continue;
     const v=p.reps.filter(repVis);if(!v.length)continue;
     const top=v[0];
     out.push({p,reps:v,last:top.seen_at,kind:v.some(r=>r.kind==='ice')?'ice':'check',ax:Math.min(...v.map(r=>r.approx_km||0)),title:top.title||'Отметка',state:top.state||'',mine:USER&&v.some(r=>r.user_id===USER.id)});
@@ -494,9 +509,10 @@ function mapData(){
   if(!MAPP)MAPP=fetch(CFG.map).then(r=>{if(!r.ok)throw new Error('map '+r.status);return r.json();}).then(j=>{
     const q=j.q,arcs=j.arcs.map(s=>mdec(s,q));
     const ring=ids=>{let o=[];ids.forEach(id=>{const a=id<0?arcs[~id].slice().reverse():arcs[id];o=o.length?o.concat(a.slice(1)):a.slice();});return o;};
-    const stD=j.st.map(s=>s.r.map(ring).map(r=>lineD(r)+'Z').join('')).join('');
+    const stR=j.st.map(s=>{const rings=s.r.map(ring),bb=[1e9,1e9,-1e9,-1e9];rings.forEach(r=>r.forEach(p=>{if(p[0]<bb[0])bb[0]=p[0];if(p[1]<bb[1])bb[1]=p[1];if(p[0]>bb[2])bb[2]=p[0];if(p[1]>bb[3])bb[3]=p[1];}));return{c:s.c,rings,bb};});
+    const stD=stR.map(s=>s.rings.map(r=>lineD(r)+'Z').join('')).join('');
     const rd=j.ed.filter(e=>e[2]).map(e=>lineD(mdec(e[3],q))).join('');
-    M={stD,nbD:j.nb.map(s=>lineD(mdec(s,q))+'Z').join(''),lkD:j.lk.map(s=>lineD(mdec(s,q))+'Z').join(''),rdD:rd,
+    M={stR,stD,nbD:j.nb.map(s=>lineD(mdec(s,q))+'Z').join(''),lkD:j.lk.map(s=>lineD(mdec(s,q))+'Z').join(''),rdD:rd,
       ct:j.ct.map(c=>({n:c[0],x:c[1]*q,y:c[2]*q,r:c[3]})),lb:(j.lb||[]).map(l=>({t:String(l[0]),x:l[1]*q,y:l[2]*q})),us:j.us};
     return M;
   }).catch(e=>{MAPP=null;throw e;});
@@ -521,12 +537,12 @@ function mapBuild(){
 }
 function redraw(){if(MV.raf)return;MV.raf=requestAnimationFrame(()=>{MV.raf=0;drawNow();});}
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const routeOn=()=>S.tab==='load';
 function circleD(xy,km){const n=36,o=[];for(let i=0;i<n;i++){const a=i/n*2*Math.PI;o.push([xy[0]+km*Math.cos(a),xy[1]+km*Math.sin(a)]);}return lineD(o)+'Z';}
 function drawWorld(){
   if(!MV.ready)return;
   const V=visPlaces();
-  $('#m-ar').innerHTML=V.filter(v=>v.ax>0).map(v=>`<path class="m-ar${v.kind==='check'?' ck':''}" vector-effect="non-scaling-stroke" d="${circleD(v.p.xy,v.ax)}"/>`).join('');
+  const ss=S.st&&!routeOn()&&M&&M.stR.find(s=>s.c===S.st);
+  $('#m-ar').innerHTML=(ss?`<path class="m-sel" vector-effect="non-scaling-stroke" d="${ss.rings.map(r=>lineD(r)+'Z').join('')}"/>`:'')+V.filter(v=>v.ax>0).map(v=>`<path class="m-ar${v.kind==='check'?' ck':''}" vector-effect="non-scaling-stroke" d="${circleD(v.p.xy,v.ax)}"/>`).join('');
   let rt='';
   if(routeOn()&&ROUTE&&ROUTE.legs){
     for(const L of ROUTE.legs)rt+=`<path class="rt-case" vector-effect="non-scaling-stroke" d="${lineD(L.pts)}"/>`;
@@ -718,7 +734,7 @@ function nearOnLine(P,pts){
 }
 function computeHits(){
   HITS=[];if(!ROUTE||!ROUTE.ok)return;
-  const bufKm=S.buf*MI,V=visPlaces();
+  const bufKm=S.buf*MI,V=visPlaces(true);
   let off=0;const legs=ROUTE.legs.map(l=>{const o={l,off,bb:[1e9,1e9,-1e9,-1e9]};let len=0;for(let i=0;i<l.pts.length;i++){const p=l.pts[i];if(p[0]<o.bb[0])o.bb[0]=p[0];if(p[1]<o.bb[1])o.bb[1]=p[1];if(p[0]>o.bb[2])o.bb[2]=p[0];if(p[1]>o.bb[3])o.bb[3]=p[1];if(i)len+=Math.hypot(p[0]-l.pts[i-1][0],p[1]-l.pts[i-1][1]);}off+=len;o.len=len;return o;});
   for(const v of V){
     let best=null;
@@ -860,8 +876,16 @@ function filtersHtml(){
 <button class="tg" data-f="check" aria-pressed="${S.check}"><i class="sq" style="background:var(--chk)"></i>Проверки</button>
 <button class="tg" data-f="approx" aria-pressed="${S.approx}"><i class="ds"></i>Примерные</button>
 <button class="tg" data-f="mine" aria-pressed="${S.mine}">Только мои</button>
-<select data-days aria-label="Период">${[[0,'За всё время'],[7,'7 дней'],[30,'30 дней'],[90,'90 дней']].map(([v,t])=>`<option value="${v}"${S.days===v?' selected':''}>${t}</option>`).join('')}</select></div>`;
+<select data-days aria-label="Период">${[[0,'За всё время'],[7,'7 дней'],[30,'30 дней'],[90,'90 дней']].map(([v,t])=>`<option value="${v}"${S.days===v?' selected':''}>${t}</option>`).join('')}</select>
+${stateSelect()}</div>`;
 }
+function stateSelect(){
+  const cnt={};for(const v of visPlaces(true))for(const c of placeStates(v.p))cnt[c]=(cnt[c]||0)+1;
+  if(S.st&&!cnt[S.st])cnt[S.st]=0;
+  const ks=Object.keys(cnt).sort();
+  return `<select data-st aria-label="Штат"${S.st?' style="border-color:var(--acc);color:var(--acc)"':''}><option value="">Все штаты</option>${ks.map(c=>`<option value="${c}"${S.st===c?' selected':''}>${c} · ${esc(ST_NAME[c]||c)} (${cnt[c]})</option>`).join('')}</select>`;
+}
+function fitState(c){const s=M&&M.stR.find(x=>x.c===c);if(s){fitBox(s.bb,28);}else mapFitUS();redraw();}
 function plRow(v,extra){
   const d=new Date(v.last);
   return `<button class="pl" data-place="${esc(v.p.id)}"><span class="dt">${dShort(d)}</span><span class="dot${v.kind==='check'?' ck':''}" style="background:${v.kind==='ice'?'var(--ice)':'var(--chk)'}${v.ax?';opacity:.55':''}"></span><span class="t">${esc(v.title)}<small>${esc([v.state,v.ax?'примерно ±'+v.ax+' км':'',v.reps.length>1?v.reps.length+' сообщ.':''].filter(Boolean).join(' · '))}</small></span><span class="r">${extra||esc(ago(d))}</span></button>`;
@@ -1146,6 +1170,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.matches('[data-days]')){S.days=+t.value;savePrefs();computeHits();drawWorld();redraw();mapBar();renderAll();return;}
+  if(t.matches('[data-st]')){S.st=t.value;savePrefs();drawWorld();if(!routeOn()){if(S.st)fitState(S.st);else{mapFitUS();redraw();}}renderAll();return;}
   if(t.matches('[data-load]')){S.loadKey=t.value;savePrefs();renderLoad();if(t.value!=='custom'||(S.custom&&S.custom.from))buildRoute();return;}
   if(t.matches('[data-dh]')){S.dh=t.checked;savePrefs();buildRoute();return;}
   if(t.id==='tgfile'&&t.files&&t.files.length){importFiles([...t.files]);t.value='';return;}
