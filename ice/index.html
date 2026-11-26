@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ice Gladiator</title>
+<meta name="description" content="Ice Gladiator — где замечали ICE: карта отметок, импорт из Telegram и проверка маршрута текущего груза из OwnerGladiator.">
+<meta name="theme-color" content="#0d0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ice">
+<meta name="application-name" content="Ice Gladiator">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<!--
+  Ice Gladiator: where ICE / inspections were seen. A sibling of OwnerGladiator Hub (same Supabase project, same sign-in).
+  What it owns: ice_marks (one row per report; every signed-in user reads all marks, only the author edits or deletes his own).
+  What it reads from the Hub (never writes): user_drafts.draft_json.loads (this week) and weekly_reports.full_payload.loads,
+  always filtered to the signed-in user, to check the current load's road route (OSRM) against the marks.
+  Map: ../map-us.json (the Hub's own map data: states, lakes, interstates, cities, pre-projected Albers km).
+-->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: рабочий инструмент хотшотчика в рейсе: коротко, по делу, видно сразу, есть ли опасность впереди.
+   IDEA: дорожный атлас ночью, на котором диспетчер отметил красные точки, и твой маршрут поверх.
+   PICTURE: карта США (штаты, интерстейты, города) с отметками ICE, маршрут текущего груза и точки рядом с ним.
+   COLOUR/TYPE: семейство Gladiator: ночной #0d0f12, жёлтый #ffc400, сигнальный красный для ICE, янтарь для проверок; Barlow / Barlow Condensed.
+   LAYOUT: телефон — карта сверху, под ней вкладки (Карта, Груз, Отметки, Импорт) и нижняя панель с «+»; широкий экран — карта слева, панель справа. */
+:root{color-scheme:dark;--bg:#0d0f12;--card:#15181d;--card2:#1b1f26;--line:#2a2f38;--line2:#22262e;--ink:#f4f4f2;--mut:#9aa1ad;--acc:#ffc400;--acc2:#e3a300;--ok:#3ddc97;--warn:#ffb547;--bad:#ff5a5f;--bad2:#ff8a8d;--ice:#ff4d5a;--chk:#ffb020;--grn:#3ddc97;--blu:#5cc8ff;--cond:'Barlow Condensed',Barlow,sans-serif;
+--mw:#0a1622;--mnb:#161b22;--mland:#1e232b;--mbd:#363e4b;--mrd:#4a5261}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px/1.45 Barlow,-apple-system,'Segoe UI',Roboto,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+a{color:var(--acc)}
+.wrap{max-width:1320px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) 12px calc(104px + env(safe-area-inset-bottom))}
+.boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);color:var(--mut);font-size:14px;z-index:70}
+.boot svg{width:84px;height:auto}
+.auth{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+.auth .box{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
+.auth .logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:4px;text-align:center}
+.auth .logo svg{width:104px;height:auto}
+.auth .bn{font:800 clamp(28px,9vw,36px)/1 var(--cond);letter-spacing:.3px}
+.auth .bn b{color:var(--acc)}
+.tagline{font-size:14px;color:var(--mut);line-height:1.4;max-width:330px}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld>span{font-size:12.5px;font-weight:600;color:var(--mut)}
+.msg{font-size:13.5px;line-height:1.4}.msg:empty{display:none}.msg.err{color:var(--bad2)}.msg.ok{color:var(--ok)}
+.seg{display:inline-flex;background:#0f1216;border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+.seg button{height:34px;padding:0 11px;border:0;border-radius:9px;background:transparent;color:var(--mut);font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--card2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.auth .seg{display:grid;grid-template-columns:1fr 1fr}
+.auth .btn{width:100%;min-height:46px;font-size:15px}
+.hint{font-size:12.5px;color:var(--mut);text-align:center}
+.btn{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;text-decoration:none}
+.btn.sm{min-height:36px;padding:0 11px;font-size:13.5px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#171200}
+.btn.red{background:var(--ice);border-color:var(--ice);color:#fff}
+.btn.dan{color:var(--bad2);border-color:rgba(255,90,95,.4)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--mut)}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select,textarea{font:500 16px Barlow,sans-serif;color:var(--ink);background:#0f1216;border:1px solid var(--line);border-radius:10px;min-height:42px;padding:0 10px;width:100%}
+textarea{padding:9px 10px;min-height:110px;resize:vertical;line-height:1.4}
+.top{display:flex;align-items:center;justify-content:space-between;height:46px;margin-bottom:8px}
+.brand{display:flex;align-items:center;gap:8px;font:800 25px/1 var(--cond);letter-spacing:.3px}
+.brand b{color:var(--acc);font-weight:800}
+.emb{display:flex}.emb svg{width:28px;height:auto;display:block}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.sync{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none}
+.sync.pend{background:var(--warn)}.sync.off{background:var(--bad)}
+.iconbtn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.lbl{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.num{font-family:var(--cond);font-weight:800;font-variant-numeric:tabular-nums}
+.mut{color:var(--mut)}
+.note{font-size:13px;color:var(--mut)}
+.stack{display:flex;flex-direction:column;gap:10px}
+h2{font:800 22px/1.1 var(--cond);margin:0 0 6px}
+h3{font:700 18px/1.15 var(--cond);margin:12px 0 4px}
+p{margin:6px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 12px;border-radius:999px;font-weight:700;font-size:13px;white-space:nowrap}
+.chip.ok{background:rgba(61,220,151,.12);color:var(--ok);border:1px solid rgba(61,220,151,.35)}
+.chip.warn{background:rgba(255,181,71,.12);color:var(--warn);border:1px solid rgba(255,181,71,.35)}
+.chip.bad{background:rgba(255,77,90,.14);color:var(--bad2);border:1px solid rgba(255,77,90,.45)}
+/* layout */
+.main{display:grid;gap:10px}
+@media(min-width:1000px){.main{grid-template-columns:minmax(0,1.45fr) minmax(360px,1fr);align-items:start}.mapcol{position:sticky;top:10px}}
+/* map */
+.mapc{position:relative;height:clamp(270px,46vh,560px);border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--mw)}
+@media(min-width:1000px){.mapc{height:calc(100vh - 150px)}}
+.mapc>svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.mctl svg{display:block}
+.mapc.pick>svg{cursor:crosshair}
+.m-w{fill:var(--mw)}
+.m-nb{fill:var(--mnb);stroke:var(--mnb);stroke-width:1.2;fill-rule:evenodd}
+.m-st{fill:var(--mland);stroke:var(--mbd);stroke-width:.9;fill-rule:evenodd;stroke-linejoin:round}
+.m-lk{fill:var(--mw);stroke:var(--mbd);stroke-width:.6;fill-rule:evenodd}
+.m-rd{fill:none;stroke:var(--mrd);stroke-width:1.1;stroke-linejoin:round;stroke-linecap:round}
+.m-ar{fill:var(--ice);fill-opacity:.1;stroke:var(--ice);stroke-opacity:.75;stroke-width:1.2;stroke-dasharray:4 3}
+.m-ar.ck{fill:var(--chk);stroke:var(--chk)}
+.rt-case{fill:none;stroke:#0a0d11;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.rt-ld{fill:none;stroke:var(--acc);stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}
+.rt-dh{fill:none;stroke:var(--acc);stroke-width:2.4;stroke-dasharray:5 5;stroke-linecap:round;opacity:.75}
+.rt-est{stroke-dasharray:2 6}
+.lb-c{font:600 11px Barlow,sans-serif;fill:#c3c9d3;paint-order:stroke;stroke:#0d0f12;stroke-width:3px;pointer-events:none}
+.lb-c.r1{font-size:12px;fill:#e1e5ea}
+.sh rect{fill:#1f4ea3;stroke:#e8ecf2;stroke-width:1.1}
+.sh text{font:800 9.5px Barlow,sans-serif;fill:#fff;pointer-events:none}
+.mk text{font:800 10px Barlow,sans-serif;fill:#fff;pointer-events:none}
+.mctl{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.mctl button{width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:rgba(21,24,29,.9);color:var(--ink);font-size:19px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.mbar{position:absolute;left:8px;right:56px;top:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:2;pointer-events:none}
+.mbar>*{pointer-events:auto}
+.mpill{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 11px;border-radius:999px;background:rgba(21,24,29,.92);border:1px solid var(--line);font-size:13px;font-weight:700;cursor:pointer;color:var(--ink)}
+.mpill.bad{border-color:rgba(255,77,90,.6);color:#ffd0d3;background:rgba(80,14,20,.92)}
+.mpill.ok{border-color:rgba(61,220,151,.45)}
+.mpick{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(21,24,29,.95);border:1px solid var(--acc);border-radius:12px;padding:8px 10px;font-size:14px;font-weight:600}
+.mstat{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--mut);z-index:1;pointer-events:none;text-shadow:0 1px 2px #000}
+/* filters */
+.fl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0 8px}
+.tg{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#0f1216;color:var(--ink);font-size:13.5px;font-weight:600;cursor:pointer}
+.tg[aria-pressed=false]{opacity:.45}
+.tg i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.tg i.sq{border-radius:2px;transform:rotate(45deg)}
+.tg i.ds{border:2px dashed var(--ice);background:transparent}
+.fl select{width:auto;min-height:38px;border-radius:999px;font-size:14px;font-weight:600;padding:0 12px}
+/* lists */
+.mon{font:700 13px Barlow,sans-serif;color:var(--mut);margin:14px 2px 2px;text-transform:uppercase;letter-spacing:.06em}
+.pl{display:grid;grid-template-columns:54px 12px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line2);padding:10px 2px;min-height:50px;cursor:pointer;color:var(--ink)}
+.pl:hover{background:#171b21}
+.pl .dt{font:800 14px var(--cond);white-space:nowrap}
+.pl .dot{width:12px;height:12px;border-radius:50%}
+.pl .dot.ck{border-radius:2px;transform:rotate(45deg);width:11px;height:11px}
+.pl .t{font-weight:600;line-height:1.25}
+.pl .t small{display:block;font-weight:500;color:var(--mut);font-size:12.5px}
+.pl .r{font-size:12.5px;color:var(--mut);white-space:nowrap;text-align:right}
+.pl .r b{display:block;color:var(--ink);font:800 15px var(--cond)}
+.empty{padding:16px 4px;color:var(--mut);font-size:14px}
+.srch{margin-bottom:6px}
+/* load */
+.ld-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ld-r{font:800 20px/1.15 var(--cond)}
+.ld-r .ar{color:var(--acc)}
+.ld-m{font-size:13px;color:var(--mut);margin-top:3px}
+.res{margin-top:10px;border-radius:14px;padding:12px 14px}
+.res.bad{background:rgba(255,77,90,.1);border:1px solid rgba(255,77,90,.4)}
+.res.ok{background:rgba(61,220,151,.08);border:1px solid rgba(61,220,151,.32)}
+.res.info{background:#0f1216;border:1px solid var(--line)}
+.res .big{font:800 28px/1 var(--cond)}
+.opts{display:grid;gap:8px;margin-top:10px}
+.opts .o{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.opts .o>span{font-size:13px;color:var(--mut);font-weight:600}
+.ck{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.ck input{width:20px;height:20px;min-height:0;accent-color:var(--acc)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.f{display:block;font-size:13px;color:var(--mut);margin-top:10px}
+.f>input,.f>select,.f>textarea{margin-top:4px}
+details{margin-top:10px;border:1px solid var(--line2);border-radius:12px;padding:4px 12px}
+summary{cursor:pointer;font-size:14px;font-weight:600;padding:8px 0;min-height:40px}
+/* import */
+.cand{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:10px 0;border-top:1px solid var(--line2)}
+.cand:first-child{border-top:0}
+.cand .ct{display:flex;flex-direction:column;gap:6px}
+.cand .row2{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:6px}
+.cand .x{align-self:start}
+.cand .src{font-size:12.5px;color:var(--mut);white-space:pre-wrap;max-height:4.2em;overflow:hidden}
+.cand.dup{opacity:.5}
+.badge{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:8px;background:var(--card2);color:var(--mut)}
+.badge.r{background:rgba(255,77,90,.18);color:#ffb3b8}.badge.a{background:rgba(255,176,32,.16);color:#ffd27a}.badge.g{background:rgba(61,220,151,.14);color:var(--ok)}
+.prog{height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;background:var(--acc);transition:width .2s}
+.steps{margin:6px 0 0;padding-left:20px;font-size:14px;line-height:1.5}
+.menu-list{display:flex;flex-direction:column}
+.menu-list a,.menu-list button{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 4px;border:0;border-top:1px solid var(--line2);background:none;color:var(--ink);font-size:15px;font-weight:600;text-decoration:none;cursor:pointer;text-align:left;width:100%}
+.menu-list>:first-child{border-top:0}
+.menu-list svg{flex:none;color:var(--mut)}
+.msec{margin-top:14px}
+.ver{font-size:12px;color:var(--mut);text-align:center;margin-top:14px}
+.rep{border-top:1px solid var(--line2);padding:9px 0 6px}
+.rep time{font:800 14px var(--cond);white-space:nowrap}
+.rep p{margin:3px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.rep .ra{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.add-opts{display:grid;gap:8px;margin-top:10px}
+.add-opts button{display:flex;align-items:center;gap:12px;text-align:left;min-height:60px;padding:8px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card2);cursor:pointer;color:var(--ink)}
+.add-opts b{display:block;font-size:15.5px}.add-opts small{color:var(--mut);font-size:13px}
+/* nav */
+nav.nav{position:fixed;left:0;right:0;bottom:0;height:calc(74px + env(safe-area-inset-bottom));background:rgba(13,15,18,.97);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;padding:0 max(6px,calc(50vw - 300px)) calc(10px + env(safe-area-inset-bottom));z-index:20}
+nav.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut);font-size:11px;font-weight:600;background:none;border:0;padding:8px 0;cursor:pointer;position:relative}
+nav.nav button[aria-current=page]{color:var(--acc);font-weight:700}
+nav.nav .plus{justify-self:center;width:56px;height:56px;border-radius:18px;background:var(--ice);color:#fff;margin-top:-24px;box-shadow:0 6px 18px rgba(255,77,90,.32);justify-content:center;padding:0}
+nav.nav .dotn{position:absolute;top:4px;right:calc(50% - 18px);min-width:17px;height:17px;border-radius:9px;background:var(--ice);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px}
+/* sheet */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 16px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:18px}}
+.shh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;justify-content:flex-end}
+.acts .sp{flex:1}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#22262e;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;z-index:60;max-width:calc(100vw - 28px)}
+@media(prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+</head>
+<body>
+<div id="boot" class="boot"><span id="boot-emb"></span><div>Ice Gladiator</div></div>
+<div id="auth" class="auth" hidden></div>
+<div id="app" hidden>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span id="hdr-emb" class="emb"></span><span>Ice<b>Gladiator</b></span></div>
+    <div class="hdr-r">
+      <span class="sync" id="sync" role="img" aria-label="Синхронизировано"></span>
+      <button class="iconbtn" data-act="refresh" aria-label="Обновить отметки и груз"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f4f4f2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+      <button class="iconbtn" data-act="menu" aria-label="Меню и аккаунт"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4f4f2" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </header>
+  <div class="main">
+    <div class="mapcol">
+      <div class="mapc" id="mapc">
+        <svg id="map" role="img" aria-label="Карта США с отметками ICE и маршрутом груза"></svg>
+        <div class="mbar" id="mbar"></div>
+        <div class="mctl"><button type="button" data-z="in" aria-label="Приблизить">+</button><button type="button" data-z="out" aria-label="Отдалить">−</button><button type="button" data-z="fit" aria-label="Показать всё"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button type="button" data-z="me" aria-label="Где я"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button></div>
+        <div class="mpick" id="mpick" hidden><span>Нажми на карту, где видели ICE</span><button class="btn sm" data-act="pickCancel">Отмена</button></div>
+        <div class="mstat" id="mstat"></div>
+      </div>
+    </div>
+    <div class="side">
+      <section class="tab" id="t-map"></section>
+      <section class="tab" id="t-load" hidden></section>
+      <section class="tab" id="t-list" hidden></section>
+      <section class="tab" id="t-imp" hidden></section>
+    </div>
+  </div>
+</div>
+<nav class="nav" aria-label="Разделы">
+  <button data-tab="map" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Карта</button>
+  <button data-tab="load"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16V8h9v8M11 11h4l3 3v2h-7"/><circle cx="6" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>Груз<span class="dotn" id="nav-hits" hidden></span></button>
+  <button class="plus" data-act="add" aria-label="Добавить отметку"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-tab="list"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Отметки</button>
+  <button data-tab="imp"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>Импорт</button>
+</nav>
+</div>
+<div id="ov" class="ov" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Ice Gladiator — finding places in messages (no DOM). Works in the browser and in Node tests. */
+(function(root){
+'use strict';
+const US_LAT=[17,72],US_LON=[-180,-60];
+const okLL=(la,lo)=>isFinite(la)&&isFinite(lo)&&la>=US_LAT[0]&&la<=US_LAT[1]&&lo>=US_LON[0]&&lo<=US_LON[1];
+const r6=x=>Math.round(x*1e6)/1e6;
+const STATES='AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'.split(' ');
+const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,янв:1,фев:2,мар:3,апр:4,мая:5,май:5,июн:6,июл:7,авг:8,сен:9,окт:10,ноя:11,дек:12};
+
+/* every coordinate pair in a text, with the line it sits on (used as a name for lists like "Kingman – (35.21, -113.97)") */
+function coords(text){
+  const t=String(text||''),out=[],seen=new Set();
+  function add(la,lo,idx){
+    la=+la;lo=+lo;
+    if(!okLL(la,lo)&&okLL(lo,la)){const x=la;la=lo;lo=x;}
+    if(!okLL(la,lo))return;
+    const k=r6(la).toFixed(4)+','+r6(lo).toFixed(4);if(seen.has(k))return;seen.add(k);
+    const a=t.lastIndexOf('\n',idx)+1,b0=t.indexOf('\n',idx),b=b0<0?t.length:b0;
+    out.push({lat:r6(la),lon:r6(lo),line:t.slice(a,b),at:idx});
+  }
+  let m;
+  const pats=[
+    /[?&](?:q|query|ll|sll|daddr|saddr|destination|center|coordinate)=(-?\d{1,3}\.\d+)(?:,|%2C)\s*(-?\d{1,3}\.\d+)/gi,
+    /@(-?\d{1,3}\.\d{3,}),(-?\d{1,3}\.\d{3,})/g,
+    /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/g,
+    /lat(?:itude)?\s*[:=]?\s*(-?\d{1,3}\.\d{3,})[^\d-]{1,24}?lo?ng?(?:itude)?\s*[:=]?\s*(-?\d{1,3}\.\d{3,})/gi,
+    /(-?\d{1,3}\.\d{3,})\s*°?\s*[,;]?\s+(-?\d{1,3}\.\d{3,})/g,
+    /(-?\d{1,3}\.\d{2,})\s*°?\s*,\s*(-?\d{1,3}\.\d{2,})/g
+  ];
+  for(const re of pats){re.lastIndex=0;while((m=re.exec(t)))add(m[1],m[2],m.index);}
+  /* 41.29 N, 81.67 W */
+  const nw=/(\d{1,2}\.\d{2,})\s*°?\s*([NS])[,\s]+(\d{1,3}\.\d{2,})\s*°?\s*([EW])/gi;
+  while((m=nw.exec(t)))add((m[2].toUpperCase()==='S'?-1:1)*m[1],(m[4].toUpperCase()==='W'?-1:1)*m[3],m.index);
+  out.sort((a,b)=>a.at-b.at);
+  return out;
+}
+
+/* street address "7754 E 20, Loraine, TX 79532", else "City, ST 12345", else "City, ST" */
+function address(text){
+  const t=String(text||'').replace(/\r/g,'');
+  const st='(?:'+STATES.join('|')+')';
+  let m=t.match(new RegExp('\\b(\\d{1,6}\\s+[A-Za-z0-9 .\'#/&-]{2,60}?,\\s*[A-Za-z .\'-]{2,40},\\s*'+st+'\\.?\\s*(\\d{5})?)\\b'));
+  if(m)return{q:m[1].trim(),kind:'street',zip:m[2]||''};
+  m=t.match(new RegExp('\\b([A-Z][A-Za-z .\'-]{1,40}),\\s*('+st+')\\s+(\\d{5})\\b'));
+  if(m)return{q:m[1].trim()+', '+m[2]+' '+m[3],kind:'zip',zip:m[3],city:m[1].trim(),st:m[2]};
+  const re=new RegExp('\\b([A-Z][A-Za-z.\'-]+(?: [A-Z][A-Za-z.\'-]+){0,3}),\\s*('+st+')\\b','g');
+  while((m=re.exec(t))){const c=m[1].trim();if(c.length>=3&&!STATES.includes(c.toUpperCase()))return{q:c+', '+m[2],kind:'city',city:c,st:m[2]};}
+  return null;
+}
+
+/* a short name: the first line that is not a link, a hashtag, a channel handle or just coordinates */
+function title(text,fallback){
+  const pm=String(text||'').match(/\/maps\/place\/([^/@?]+)/);
+  if(pm){try{const n=decodeURIComponent(pm[1].replace(/\+/g,' ')).trim();if(n&&!/^-?\d/.test(n))fallback=n.slice(0,90);}catch(e){}}
+  const lines=String(text||'').split(/\n+/).map(s=>s.replace(/https?:\/\/\S+/g,'').replace(/[#@][\w\u0400-\u04FF_]+/g,'').replace(/lat(?:itude)?\s*[:=]?\s*-?\d+\.\d+[^\d-]{1,24}?lo?ng?(?:itude)?\s*[:=]?\s*-?\d+\.\d+/gi,'').replace(/📍|🔔|📌|💥/g,'').replace(/\(?-?\d{1,3}\.\d{2,}\s*[,;]?\s*-?\d{1,3}\.\d{2,}\)?/g,'').replace(/\s+/g,' ').trim());
+  for(const l of lines){if(l.replace(/[^A-Za-zА-Яа-яЁё0-9]/g,'').length>=3&&!/^(location|forwarded from|in reply to)/i.test(l))return l.slice(0,90);}
+  return fallback||'Отметка';
+}
+function lineName(line){
+  return String(line||'').replace(/https?:\/\/\S+/g,'').replace(/lat(?:itude)?\s*[:=]?\s*-?\d+\.\d+[^\d-]{1,24}?lo?ng?(?:itude)?\s*[:=]?\s*-?\d+\.\d+/gi,'').replace(/^location\b/i,'').replace(/\(?-?\d{1,3}\.\d{2,}\s*[,;]?\s*-?\d{1,3}\.\d{2,}\)?/g,'').replace(/^[\s•\-–—:📍]+|[\s•\-–—:(]+$/g,'').replace(/\s+/g,' ').trim().slice(0,90);
+}
+function stateOf(text){
+  const m=String(text||'').match(new RegExp('(?:,\\s*|\\b)('+STATES.join('|')+')\\b(?:\\s+\\d{5})?'));
+  return m?m[1]:'';
+}
+function guessKind(text){return /\bLPR\b|камер[аы]|license plate|deep audit|глубок/i.test(String(text||''))?'check':'ice';}
+function shortHash(s){let h=2166136261;s=String(s);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
+
+/* what one message gives: places with coordinates, or an address to look up, or nothing */
+function fromMessage(msg){
+  const text=String(msg.text||''),links=(msg.links||[]).join('\n'),all=text+'\n'+links;
+  const cs=coords(all);
+  const base={text:text.trim(),date:msg.date||null,key:msg.key||null,kind:guessKind(text)};
+  if(cs.length>1){
+    return {places:cs.map((c,i)=>Object.assign({},base,{lat:c.lat,lon:c.lon,ax:0,title:lineName(c.line)||title(text),state:stateOf(c.line)||stateOf(text),key:base.key?base.key+':'+i:null})),addr:null};
+  }
+  if(cs.length===1){const c=cs[0];return {places:[Object.assign({},base,{lat:c.lat,lon:c.lon,ax:0,title:title(text,lineName(c.line)),state:stateOf(text)})],addr:null};}
+  const a=address(text);
+  if(a)return {places:[],addr:Object.assign({},base,{title:title(text,a.q),state:a.st||stateOf(a.q),addr:a})};
+  return {places:[],addr:null};
+}
+
+/* "14 May 2026, 07:49:46" / "14.05.2026 07:49:46 UTC-07:00" / "2026-05-14T07:49:46" -> Date (device local time) */
+function parseDate(s){
+  s=String(s||'').trim();if(!s)return null;
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if(m)return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0));
+  m=s.match(/(\d{1,2})[.\s/-]([A-Za-zА-Яа-я]{3,}|\d{1,2})[.\s/,-]+(\d{4})[,\sT]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if(m){const mo=/^\d+$/.test(m[2])?+m[2]:MON[m[2].slice(0,3).toLowerCase()];if(mo)return new Date(+m[3],mo-1,+m[1],+m[4],+m[5],+(m[6]||0));}
+  const d=new Date(s);return isNaN(d)?null:d;
+}
+
+/* Telegram Desktop / macOS export: messages.html (needs a DOMParser) */
+function tgHtml(html,DP){
+  const doc=new DP().parseFromString(String(html),'text/html');
+  doc.querySelectorAll('br').forEach(br=>br.replaceWith('\n'));
+  doc.querySelectorAll('blockquote,p,div.text>div').forEach(n=>n.append('\n'));
+  const chat=((doc.querySelector('.page_header .name, .page_header .text')||{}).textContent||'').trim();
+  const out=[];
+  doc.querySelectorAll('div.message').forEach(el=>{
+    if(el.classList.contains('service'))return;
+    const id=(el.id||'').replace(/^message/,'');if(!id)return;
+    const de=el.querySelector('.date[title]');
+    const body=el.querySelector('.body')||el;
+    const txt=[...body.querySelectorAll(':scope > .text, :scope > .forwarded > .text, .forwarded .text, .media_wrap .text, .reply_to ~ .text')].map(n=>n.textContent).join('\n')||((body.querySelector('.text')||{}).textContent||'');
+    const loc=[...body.querySelectorAll('.media_location .status, .media_location .description, .media_location .title, .location')].map(n=>n.textContent).join(' ');
+    const links=[...body.querySelectorAll('a[href]')].map(a=>a.getAttribute('href')).filter(h=>/^https?:/i.test(h));
+    const media=!!body.querySelector('.media_wrap, .photo_wrap, .video_file_wrap');
+    out.push({id,date:de?parseDate(de.getAttribute('title')):null,text:(txt+'\n'+loc).trim(),links,media});
+  });
+  return {chat,messages:out};
+}
+/* Telegram Desktop export: result.json */
+function tgJson(data){
+  const d=typeof data==='string'?JSON.parse(data):data;
+  const chat=String(d.name||'');
+  const msgs=(d.messages||[]).filter(m=>m&&m.type==='message').map(m=>{
+    const parts=Array.isArray(m.text)?m.text:[m.text||''];
+    const text=parts.map(p=>typeof p==='string'?p:(p&&p.text)||'').join('');
+    const links=parts.filter(p=>p&&typeof p==='object'&&(p.href||/^https?:/.test(p.text||''))).map(p=>p.href||p.text);
+    if(m.location_information)links.push('https://maps.google.com/?q='+m.location_information.latitude+','+m.location_information.longitude);
+    return {id:String(m.id),date:m.date?parseDate(m.date):(m.date_unixtime?new Date(m.date_unixtime*1000):null),text,links,media:!!(m.photo||m.media_type||m.file)};
+  });
+  return {chat,messages:msgs};
+}
+function chatKey(chat,id){return /ice\s*locations/i.test(chat||'')?'tg:'+id:'tg:'+shortHash(chat||'chat')+':'+id;}
+
+const api={coords,address,title,lineName,stateOf,guessKind,fromMessage,parseDate,tgHtml,tgJson,chatKey,shortHash,okLL};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.IGParse=api;
+})(typeof window!=='undefined'?window:this);
+
+</script>
+<script>
+/* Ice Gladiator — app (map, marks, current load route, import, sign-in). Finding places in text is window.IGParse. */
+{
+'use strict';
+const CFG={
+  url:'https://cbbqnocjrcalatlcjvzz.supabase.co',
+  key:'sb_publishable_Koz8o_b4AjrHqcH1qCxYEA_cJNKn6l3',
+  hub:'https://ownergladiator.github.io/',accounting:'https://ownergladiator.github.io/accounting/',
+  dispatch:'https://ownergladiator.github.io/dispatch/',money:'https://ownergladiator.github.io/money/',weight:'https://ownergladiator.github.io/weight/',
+  map:'../map-us.json?v=1'
+};
+const VER='1.0';
+const P=window.IGParse;
+const Store={mem:{},
+  get(k){try{return localStorage.getItem(k);}catch(e){return k in this.mem?this.mem[k]:null;}},
+  set(k,v){try{localStorage.setItem(k,v);}catch(e){this.mem[k]=v;}},
+  del(k){try{localStorage.removeItem(k);}catch(e){delete this.mem[k];}}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const MI=1.609344;
+const MON=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const MONF=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const dShort=d=>{d=new Date(d);return d.getDate()+' '+MON[d.getMonth()];};
+const dTime=d=>{d=new Date(d);return d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()+', '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+const ago=d=>{const n=Math.floor((Date.now()-new Date(d))/864e5);return n<=0?'сегодня':n===1?'вчера':n<7?n+' дн. назад':n<60?Math.round(n/7)+' нед. назад':Math.round(n/30)+' мес. назад';};
+const isoLocal=d=>{d=new Date(d);const z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());};
+const todayISO=()=>isoLocal(new Date()).slice(0,10);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const ST_NAME={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',DC:'District of Columbia'};
+
+/* ---------- emblem: the Gladiator helmet with a siren and a radar pin ---------- */
+const EMB={
+  b:'M 256 172 C 326 172 378 220 380 292 C 381 336 377 364 372 390 C 380.8 406 390.4 420 397.2 432 C 385.6 436 372 434 362 428 C 348 446 330 456 306 460 L 310 458 L 268 332 L 256 332 L 244 332 L 202 458 L 206 460 C 182 456 164 446 150 428 C 140 434 126.4 436 114.8 432 C 121.6 420 131.2 406 140 390 C 135 364 131 336 132 292 C 134 220 186 172 256 172 Z M 208.1 167.9 L 161.6 76.7 Q 151.6 57.1 164.3 51.1 A 230 230 0 0 1 347.7 51.1 Q 360.4 57.1 350.4 76.7 L 303.9 167.9 L 286.2 162.5 L 268.1 159.6 L 256 159 L 243.9 159.6 L 225.8 162.5 Z',
+  v:'M 256 322 L 265 306 L 268 298 L 348 270 Q 360 266 358 280 L 354 300 Q 352 306 344 308 L 275 329 Q 268 331 268 334 L 310 459 L 256 459 L 202 459 L 244 334 Q 244 331 237 329 L 168 308 Q 160 306 158 300 L 154 280 Q 152 266 164 270 L 244 298 L 247 306 L 256 322 Z',
+  d:'M 250.7 362 L 261.3 362 L 262.5 377 L 249.5 377 Z M 248.2 394 L 263.8 394 L 265.6 416 L 246.4 416 Z M 245.1 432 L 266.9 432 L 269 459 L 243 459 Z',
+  pin:'M60 166 C 46 146 8 104 8 64 A 52 52 0 0 1 112 64 C 112 104 74 146 60 166 Z',
+  dome:'M228 38 L228 22 A 28 28 0 0 1 284 22 L284 38 Z'
+};
+function emblem(id){
+  const c='igc'+id,r='igr'+id,s='igs'+id,ink='#121418';
+  return `<svg viewBox="86 -34 392 518" role="img" aria-label="Ice Gladiator"><defs><clipPath id="${c}"><rect x="256" y="0" width="256" height="512"/></clipPath><clipPath id="${r}"><rect x="60" y="-20" width="90" height="220"/></clipPath><clipPath id="${s}"><rect x="256" y="-40" width="60" height="80"/></clipPath></defs>`+
+  `<path fill="#FFC400" d="${EMB.b}"/><path fill="#E3A300" clip-path="url(#${c})" d="${EMB.b}"/><path fill="${ink}" d="${EMB.v}"/><path fill="#FFC400" d="${EMB.d}"/>`+
+  `<path d="M206 2 L190 -8 M204 18 L186 18 M210 -14 L200 -26" stroke="#FF4D5A" stroke-width="7" stroke-linecap="round"/><path d="M306 2 L322 -8 M308 18 L326 18 M302 -14 L312 -26" stroke="#5CC8FF" stroke-width="7" stroke-linecap="round"/>`+
+  `<path d="${EMB.dome}" fill="#FF4D5A"/><path d="${EMB.dome}" fill="#2FA6E0" clip-path="url(#${s})"/><path d="M240 18 A 14 14 0 0 1 252 8" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".85"/><path d="${EMB.dome}" fill="none" stroke="${ink}" stroke-width="8" stroke-linejoin="round"/><rect x="218" y="34" width="76" height="14" rx="5" fill="${ink}"/>`+
+  `<g transform="translate(318 300) rotate(8) scale(.95)"><path d="M120 30 A 46 46 0 0 1 132 92" fill="none" stroke="#FF4D5A" stroke-width="9" stroke-linecap="round" opacity=".9"/><path d="M136 8 A 72 72 0 0 1 154 104" fill="none" stroke="#FF4D5A" stroke-width="9" stroke-linecap="round" opacity=".55"/><path d="${EMB.pin}" fill="#FF4D5A"/><path d="${EMB.pin}" fill="#D7263D" clip-path="url(#${r})"/><path d="${EMB.pin}" fill="none" stroke="${ink}" stroke-width="9" stroke-linejoin="round"/><circle cx="60" cy="62" r="25" fill="#fff" stroke="${ink}" stroke-width="8"/><path d="M60 47 V66" stroke="${ink}" stroke-width="9" stroke-linecap="round"/><circle cx="60" cy="77" r="5" fill="${ink}"/></g></svg>`;
+}
+
+/* ---------- state ---------- */
+const DEF={tab:'map',ice:true,check:true,approx:true,days:0,buf:3,dh:true,loadKey:'',custom:null,mine:false};
+let S=Object.assign({},DEF);
+try{S=Object.assign({},DEF,JSON.parse(Store.get('ig_prefs')||'{}'));}catch(e){}
+const savePrefs=()=>Store.set('ig_prefs',JSON.stringify({tab:S.tab,ice:S.ice,check:S.check,approx:S.approx,days:S.days,buf:S.buf,dh:S.dh,loadKey:S.loadKey,custom:S.custom,mine:S.mine}));
+let USER=null,MARKS=[],PLACES=[],LOADS=[],HUB={ok:false,err:'',at:0},ROUTE=null,HITS=[],SEL=null,CANDS=[],NOPT=[],PICK=null,ME=null,marksAt=0,syncSt='ok',query='';
+
+/* ---------- cloud ---------- */
+const sb=(()=>{try{return window.supabase&&window.supabase.createClient?window.supabase.createClient(CFG.url,CFG.key):null;}catch(e){return null;}})();
+const isNet=e=>/fetch|network|load failed|timeout|abort|offline/i.test(String((e&&(e.message||e.details))||e||''));
+const SYNC_T={ok:'Отметки загружены',pend:'Загружаю…',off:'Нет связи — показываю сохранённые на телефоне'};
+function setSync(st){syncSt=st;const el=$('#sync');if(!el)return;el.className='sync'+(st==='ok'?'':st==='off'?' off':' pend');el.setAttribute('aria-label',SYNC_T[st]);el.title=SYNC_T[st];}
+const cacheKey=()=>'ig_marks_'+(USER?USER.id:'');
+const COLS='id,user_id,lat,lon,kind,approx_km,title,state,note,seen_at,source,src_key';
+async function loadMarks(){
+  setSync('pend');
+  try{
+    const r=await sb.from('ice_marks').select(COLS).order('seen_at',{ascending:false}).limit(5000);
+    if(r.error)throw r.error;
+    MARKS=r.data||[];marksAt=Date.now();Store.set(cacheKey(),JSON.stringify(MARKS));setSync('ok');
+  }catch(e){
+    try{MARKS=JSON.parse(Store.get(cacheKey())||'[]');}catch(e2){MARKS=[];}
+    setSync('off');
+  }
+  buildPlaces();
+}
+
+/* ---------- places: reports at the same spot (~100 m) are one place ---------- */
+function buildPlaces(){
+  const m=new Map();
+  for(const r of MARKS){
+    const k=(+r.lat).toFixed(3)+','+(+r.lon).toFixed(3);
+    let p=m.get(k);if(!p){p={id:k,lat:+r.lat,lon:+r.lon,reps:[]};m.set(k,p);}
+    p.reps.push(r);
+  }
+  PLACES=[...m.values()];
+  for(const p of PLACES){p.reps.sort((a,b)=>String(b.seen_at).localeCompare(String(a.seen_at)));p.xy=ALB(p.lon,p.lat);}
+}
+function repVis(r){
+  if(r.kind==='check'?!S.check:!S.ice)return false;
+  if(!S.approx&&r.approx_km>0)return false;
+  if(S.mine&&USER&&r.user_id!==USER.id)return false;
+  if(S.days&&Date.now()-Date.parse(r.seen_at)>S.days*864e5)return false;
+  return true;
+}
+function visPlaces(){
+  const out=[];
+  for(const p of PLACES){
+    const v=p.reps.filter(repVis);if(!v.length)continue;
+    const top=v[0];
+    out.push({p,reps:v,last:top.seen_at,kind:v.some(r=>r.kind==='ice')?'ice':'check',ax:Math.min(...v.map(r=>r.approx_km||0)),title:top.title||'Отметка',state:top.state||'',mine:USER&&v.some(r=>r.user_id===USER.id)});
+  }
+  out.sort((a,b)=>String(b.last).localeCompare(String(a.last)));
+  return out;
+}
+
+/* ---------- map projection (same Albers as map-us.json; km, y down) ---------- */
+const AL=(()=>{const R=6371.0088,r=Math.PI/180,n=(Math.sin(29.5*r)+Math.sin(45.5*r))/2,C=Math.cos(29.5*r)**2+2*n*Math.sin(29.5*r),r0=R*Math.sqrt(C-2*n*Math.sin(37.5*r))/n;return{R,r,n,C,r0};})();
+function ALB(lon,lat){const{R,r,n,C,r0}=AL;const rho=R*Math.sqrt(C-2*n*Math.sin(lat*r))/n,th=n*(lon+96)*r;return[rho*Math.sin(th),-(r0-rho*Math.cos(th))];}
+function ALBinv(x,y){const{R,r,n,C,r0}=AL;const yy=-y,rho=Math.hypot(x,r0-yy),th=Math.atan2(x,r0-yy);const s=(C-(rho*n/R)**2)/(2*n);return[-96+th/(n*r),Math.asin(clamp(s,-1,1))/r];}
+const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',B64I={};for(let i=0;i<64;i++)B64I[B64.charCodeAt(i)]=i;
+function mdec(s,q){const o=[];let x=0,y=0,i=0;const n=s.length,v=[0,0];while(i<n){for(let k=0;k<2;k++){let r=0,sh=0,c;do{c=B64I[s.charCodeAt(i++)];r|=(c&31)<<sh;sh+=5;}while(c&32);v[k]=(r&1)?~(r>>1):(r>>1);}x+=v[0];y+=v[1];o.push([x*q,y*q]);}return o;}
+const mr=v=>Math.round(v*10)/10;
+function lineD(g){if(!g||!g.length)return'';let s='M'+mr(g[0][0])+' '+mr(g[0][1]);for(let i=1;i<g.length;i++)s+='L'+mr(g[i][0])+' '+mr(g[i][1]);return s;}
+function inPoly(x,y,Pg){let ins=false;for(let i=0,j=Pg.length-1;i<Pg.length;j=i++){const xi=Pg[i][0],yi=Pg[i][1],xj=Pg[j][0],yj=Pg[j][1];if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))ins=!ins;}return ins;}
+function dpS(p,tol){const n=p.length;if(n<3)return p.slice();const keep=new Uint8Array(n),st=[[0,n-1]];keep[0]=keep[n-1]=1;
+ while(st.length){const[a,b]=st.pop();if(b-a<2)continue;const ax=p[a][0],ay=p[a][1],dx=p[b][0]-ax,dy=p[b][1]-ay,L2=dx*dx+dy*dy;let md=-1,mi=-1;
+  for(let i=a+1;i<b;i++){const px=p[i][0]-ax,py=p[i][1]-ay,t=L2?clamp((px*dx+py*dy)/L2,0,1):0,ex=px-t*dx,ey=py-t*dy,d=ex*ex+ey*ey;if(d>md){md=d;mi=i;}}
+  if(md>tol*tol){keep[mi]=1;st.push([a,mi],[mi,b]);}}
+ const o=[];for(let j=0;j<n;j++)if(keep[j])o.push(p[j]);return o;}
+
+let M=null,MAPP=null;
+function mapData(){
+  if(M)return Promise.resolve(M);
+  if(!MAPP)MAPP=fetch(CFG.map).then(r=>{if(!r.ok)throw new Error('map '+r.status);return r.json();}).then(j=>{
+    const q=j.q,arcs=j.arcs.map(s=>mdec(s,q));
+    const ring=ids=>{let o=[];ids.forEach(id=>{const a=id<0?arcs[~id].slice().reverse():arcs[id];o=o.length?o.concat(a.slice(1)):a.slice();});return o;};
+    const stD=j.st.map(s=>s.r.map(ring).map(r=>lineD(r)+'Z').join('')).join('');
+    const rd=j.ed.filter(e=>e[2]).map(e=>lineD(mdec(e[3],q))).join('');
+    M={stD,nbD:j.nb.map(s=>lineD(mdec(s,q))+'Z').join(''),lkD:j.lk.map(s=>lineD(mdec(s,q))+'Z').join(''),rdD:rd,
+      ct:j.ct.map(c=>({n:c[0],x:c[1]*q,y:c[2]*q,r:c[3]})),lb:(j.lb||[]).map(l=>({t:String(l[0]),x:l[1]*q,y:l[2]*q})),us:j.us};
+    return M;
+  }).catch(e=>{MAPP=null;throw e;});
+  return MAPP;
+}
+
+/* ---------- the map view ---------- */
+const MV={W:0,H:0,k:1,cx:0,cy:0,kUS:1,ready:false,reg:[],raf:0};
+function mapSize(){const r=$('#mapc').getBoundingClientRect();MV.W=Math.max(240,Math.round(r.width));MV.H=Math.max(200,Math.round(r.height));if(M){const u=M.us;MV.kUS=Math.min(MV.W/((u[2]-u[0])*1.03),MV.H/((u[3]-u[1])*1.03));}$('#map').setAttribute('viewBox','0 0 '+MV.W+' '+MV.H);}
+const sc=()=>MV.kUS*MV.k;
+const toS=(x,y)=>[(x-MV.cx)*sc()+MV.W/2,(y-MV.cy)*sc()+MV.H/2];
+const toW=(sx,sy)=>[(sx-MV.W/2)/sc()+MV.cx,(sy-MV.H/2)/sc()+MV.cy];
+function mapFitUS(){if(!M)return;const u=M.us;MV.k=1;MV.cx=(u[0]+u[2])/2;MV.cy=(u[1]+u[3])/2;}
+function fitBox(b,pad){if(!M)return;const u=M.us,w=Math.max(b[2]-b[0],40),h=Math.max(b[3]-b[1],40);MV.k=clamp(Math.min((MV.W-pad*2)/(w*MV.kUS),(MV.H-pad*2)/(h*MV.kUS)),1,60);MV.cx=(b[0]+b[2])/2;MV.cy=(b[1]+b[3])/2;limitView();}
+function limitView(){if(!M)return;const u=M.us;MV.k=clamp(MV.k,1,80);MV.cx=clamp(MV.cx,u[0],u[2]);MV.cy=clamp(MV.cy,u[1],u[3]);}
+function zoomAt(f,sx,sy){const w=toW(sx,sy);MV.k=clamp(MV.k*f,1,80);const s=sc();MV.cx=w[0]-(sx-MV.W/2)/s;MV.cy=w[1]-(sy-MV.H/2)/s;limitView();redraw();}
+function focusXY(xy,k){MV.k=Math.max(MV.k,k||6);MV.cx=xy[0];MV.cy=xy[1];limitView();redraw();}
+function mapBuild(){
+  const svg=$('#map');
+  svg.innerHTML=`<rect class="m-w" x="-10" y="-10" width="99999" height="99999"/><g id="m-w"><path class="m-nb" vector-effect="non-scaling-stroke" d="${M.nbD}"/><path class="m-st" vector-effect="non-scaling-stroke" d="${M.stD}"/><path class="m-lk" vector-effect="non-scaling-stroke" d="${M.lkD}"/><path class="m-rd" vector-effect="non-scaling-stroke" d="${M.rdD}"/><g id="m-ar"></g><g id="m-rt"></g></g><g id="m-ov"></g>`;
+  MV.ready=true;
+}
+function redraw(){if(MV.raf)return;MV.raf=requestAnimationFrame(()=>{MV.raf=0;drawNow();});}
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function circleD(xy,km){const n=36,o=[];for(let i=0;i<n;i++){const a=i/n*2*Math.PI;o.push([xy[0]+km*Math.cos(a),xy[1]+km*Math.sin(a)]);}return lineD(o)+'Z';}
+function drawWorld(){
+  if(!MV.ready)return;
+  const V=visPlaces();
+  $('#m-ar').innerHTML=V.filter(v=>v.ax>0).map(v=>`<path class="m-ar${v.kind==='check'?' ck':''}" vector-effect="non-scaling-stroke" d="${circleD(v.p.xy,v.ax)}"/>`).join('');
+  let rt='';
+  if(ROUTE&&ROUTE.legs){
+    for(const L of ROUTE.legs)rt+=`<path class="rt-case" vector-effect="non-scaling-stroke" d="${lineD(L.pts)}"/>`;
+    for(const L of ROUTE.legs)rt+=`<path class="${L.t==='dh'?'rt-dh':'rt-ld'}${L.est?' rt-est':''}" vector-effect="non-scaling-stroke" d="${lineD(L.pts)}"/>`;
+  }
+  $('#m-rt').innerHTML=rt;
+  MV.vis=V;
+}
+function drawNow(){
+  if(!MV.ready)return;
+  const s=sc();
+  $('#m-w').setAttribute('transform',`translate(${MV.W/2} ${MV.H/2}) scale(${s}) translate(${-MV.cx} ${-MV.cy})`);
+  const V=MV.vis||[],W=MV.W,H=MV.H,inV=(x,y,m)=>x>-m&&y>-m&&x<W+m&&y<H+m,reg=[];
+  let h='';
+  /* cities by rank and zoom, interstate shields when close */
+  const k=MV.k,taken=[];
+  const free=(x,y,w,hh)=>{for(const t of taken)if(Math.abs(t[0]-x)<(t[2]+w)/2&&Math.abs(t[1]-y)<(t[3]+hh)/2)return false;taken.push([x,y,w,hh]);return true;};
+  if(M){
+    const maxR=s<0.12?1:s<0.3?2:3;
+    for(const c of M.ct){if(c.r>maxR)continue;const[x,y]=toS(c.x,c.y);if(!inV(x,y,4))continue;const w=c.n.length*6;if(!free(x+4+w/2,y,w+10,18))continue;h+=`<circle cx="${mr(x)}" cy="${mr(y)}" r="2" fill="#aab2bd"/><text class="lb-c${c.r===1?' r1':''}" x="${mr(x+5)}" y="${mr(y+4)}">${esc(c.n)}</text>`;}
+    if(s>=0.2)for(const l of M.lb){const[x,y]=toS(l.x,l.y);if(!inV(x,y,10))continue;const w=l.t.length*6+10;if(!free(x,y,w+(s<0.5?60:30),s<0.5?60:34))continue;h+=`<g class="sh" transform="translate(${mr(x)} ${mr(y)})"><rect x="${-w/2}" y="-7.5" width="${w}" height="15" rx="4"/><text text-anchor="middle" y="3.4">${esc(l.t)}</text></g>`;}
+  }
+  /* route ends */
+  if(ROUTE&&ROUTE.stops)for(const st of ROUTE.stops){const[x,y]=toS(st.xy[0],st.xy[1]);if(!inV(x,y,20))continue;h+=`<g transform="translate(${mr(x)} ${mr(y)})"><circle r="8" fill="${st.t==='to'?'#3ddc97':st.t==='dh'?'#9aa1ad':'#ffc400'}" stroke="#0d0f12" stroke-width="2.5"/><text text-anchor="middle" y="3.5" style="font:800 9.5px Barlow,sans-serif;fill:#0d0f12">${st.n}</text></g>`;}
+  /* marks */
+  const hitIds=new Set(HITS.map(x=>x.v.p.id));
+  const now=Date.now();
+  for(const v of V){
+    const[x,y]=toS(v.p.xy[0],v.p.xy[1]);if(!inV(x,y,24))continue;
+    const n=v.reps.length,ice=v.kind==='ice',col=ice?'#ff4d5a':'#ffb020',hol=v.ax>0,sel=SEL&&SEL===v.p.id,hit=hitIds.has(v.p.id);
+    let g=`<g class="mk" transform="translate(${mr(x)} ${mr(y)})">`;
+    if(hit)g+=`<circle r="14" fill="none" stroke="#ffc400" stroke-width="3"/>`;
+    if(!reduceMotion&&ice&&now-Date.parse(v.last)<3*864e5)g+=`<circle r="8" fill="none" stroke="#ff4d5a" stroke-width="2"><animate attributeName="r" values="8;22" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" repeatCount="indefinite"/></circle>`;
+    if(sel)g+=`<circle r="${hit?18:13}" fill="none" stroke="#f4f4f2" stroke-width="2.5"/>`;
+    if(ice)g+=`<circle r="${n>1?8.5:6.5}" fill="${hol?'#15181d':col}" stroke="${hol?col:'#fff'}" stroke-width="2"${hol?' stroke-dasharray="3 2"':''}/>`;
+    else g+=`<rect x="-5.5" y="-5.5" width="11" height="11" transform="rotate(45)" fill="${hol?'#15181d':col}" stroke="${hol?col:'#fff'}" stroke-width="2"${hol?' stroke-dasharray="3 2"':''}/>`;
+    if(n>1&&ice)g+=`<text text-anchor="middle" y="3.5">${n}</text>`;
+    h+=g+'</g>';reg.push({x,y,t:'p',id:v.p.id});
+  }
+  /* import candidates waiting to be saved */
+  CANDS.forEach((c,i)=>{if(c.lat==null||c.skip)return;const xy=ALB(c.lon,c.lat),[x,y]=toS(xy[0],xy[1]);if(!inV(x,y,20))return;h+=`<g transform="translate(${mr(x)} ${mr(y)})"><circle r="8" fill="none" stroke="#ffc400" stroke-width="2.5" stroke-dasharray="3 2"/><circle r="3" fill="#ffc400"/></g>`;reg.push({x,y,t:'c',i});});
+  if(ME){const xy=ALB(ME.lon,ME.lat),[x,y]=toS(xy[0],xy[1]);if(inV(x,y,20))h+=`<circle cx="${mr(x)}" cy="${mr(y)}" r="7" fill="#5cc8ff" stroke="#fff" stroke-width="2.5"/>`;}
+  $('#m-ov').innerHTML=h;MV.reg=reg;
+  $('#mstat').textContent=V.length?V.length+' '+plural(V.length,'место','места','мест'):'';
+}
+function plural(n,a,b,c){n=Math.abs(n)%100;const m=n%10;if(n>10&&n<20)return c;if(m>1&&m<5)return b;if(m===1)return a;return c;}
+function mapBar(){
+  const el=$('#mbar');if(!el)return;
+  let h='';
+  if(ROUTE&&ROUTE.ok){const n=HITS.length;h+=`<button class="mpill ${n?'bad':ROUTE.est?'':'ok'}" data-tab="load">${n?'⚠ На маршруте: '+n:ROUTE.est?'≈ Маршрут примерный':'✓ Маршрут чистый'}</button>`;}
+  else if(ROUTE&&ROUTE.busy)h+=`<span class="mpill">Строю маршрут…</span>`;
+  el.innerHTML=h;
+  const nb=$('#nav-hits');if(nb){const n=ROUTE&&ROUTE.ok?HITS.length:0;nb.hidden=!n;nb.textContent=n;}
+}
+function mapInit(){
+  const svg=$('#map'),ptrs=new Map();let g=null;
+  svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const r=svg.getBoundingClientRect();
+    if(ptrs.size===1)g={sx:e.clientX,sy:e.clientY,t:Date.now(),moved:0,cx:MV.cx,cy:MV.cy,r};
+    else if(ptrs.size===2){const a=[...ptrs.values()];g={pinch:true,d0:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),k0:MV.k,mx:(a[0].x+a[1].x)/2-r.left,my:(a[0].y+a[1].y)/2-r.top,w:null,moved:99,r};g.w=toW(g.mx,g.my);}
+  });
+  svg.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId)||!g)return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(g.pinch&&ptrs.size>=2){const a=[...ptrs.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),mx=(a[0].x+a[1].x)/2-g.r.left,my=(a[0].y+a[1].y)/2-g.r.top;MV.k=clamp(g.k0*d/Math.max(g.d0,1),1,80);const s=sc();MV.cx=g.w[0]-(mx-MV.W/2)/s;MV.cy=g.w[1]-(my-MV.H/2)/s;limitView();redraw();return;}
+    if(!g.pinch){const dx=e.clientX-g.sx,dy=e.clientY-g.sy;g.moved=Math.max(g.moved,Math.hypot(dx,dy));if(g.moved>4){const s=sc();MV.cx=g.cx-dx/s;MV.cy=g.cy-dy/s;limitView();redraw();}}
+  });
+  const end=e=>{if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
+    if(g&&!g.pinch&&g.moved<7&&Date.now()-g.t<700){const r=svg.getBoundingClientRect();mapTap(e.clientX-r.left,e.clientY-r.top);}
+    if(!ptrs.size)g=null;else if(g&&g.pinch){const a=[...ptrs.values()][0];g={sx:a.x,sy:a.y,t:0,moved:99,cx:MV.cx,cy:MV.cy,r:svg.getBoundingClientRect()};}
+  };
+  svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+  svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(Math.exp(-e.deltaY*0.0016),e.clientX-r.left,e.clientY-r.top);},{passive:false});
+  $('.mctl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const z=b.dataset.z;
+    if(z==='in')zoomAt(1.8,MV.W/2,MV.H/2);else if(z==='out')zoomAt(1/1.8,MV.W/2,MV.H/2);
+    else if(z==='fit'){if(ROUTE&&ROUTE.bb)fitBox(ROUTE.bb,30);else mapFitUS();redraw();}
+    else if(z==='me')locate(true);});
+  let rt=0;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{mapSize();redraw();},120);});
+}
+function mapTap(x,y){
+  if(PICK){const w=toW(x,y),ll=ALBinv(w[0],w[1]);const pk=PICK;endPick();pk(ll[1],ll[0]);return;}
+  let best=null,bd=24;
+  for(const r of MV.reg){const d=Math.hypot(r.x-x,r.y-y);if(d<bd){bd=d;best=r;}}
+  if(!best)return;
+  if(best.t==='p'){SEL=best.id;redraw();openPlace(best.id);}
+  else if(best.t==='c'){showTab('imp');const el=document.querySelector(`[data-cand="${best.i}"]`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+function startPick(msg,cb){PICK=cb;$('#mapc').classList.add('pick');const m=$('#mpick');m.hidden=false;m.firstElementChild.textContent=msg;$('#mapc').scrollIntoView({behavior:'smooth',block:'nearest'});}
+function endPick(){PICK=null;$('#mapc').classList.remove('pick');$('#mpick').hidden=true;}
+function locate(center){
+  if(!navigator.geolocation){toast('Телефон не даёт местоположение');return Promise.resolve(null);}
+  return new Promise(res=>navigator.geolocation.getCurrentPosition(p=>{ME={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};if(center)focusXY(ALB(ME.lon,ME.lat),8);else redraw();res(ME);},
+    e=>{toast(e.code===1?'Разреши доступ к местоположению в настройках браузера':'Не удалось определить, где ты');res(null);},{enableHighAccuracy:true,timeout:15000,maximumAge:60000}));
+}
+
+/* ---------- OwnerGladiator loads (read only, this user only) ---------- */
+const hasGeo=g=>g&&isFinite(+g.lat)&&isFinite(+g.lon)&&+g.lat!==0;
+const gLabel=g=>g?(g.label||[g.city,g.st].filter(Boolean).join(', ')||'точка'):'';
+async function fetchHub(){
+  HUB={ok:false,err:'',at:Date.now()};
+  try{
+    const[d,w]=await Promise.all([
+      sb.from('user_drafts').select('draft_json,updated_at').eq('user_id',USER.id).maybeSingle(),
+      sb.from('weekly_reports').select('week_end_date,full_payload').eq('user_id',USER.id).order('week_end_date',{ascending:false}).limit(3)
+    ]);
+    if(d.error)throw d.error;
+    const list=[];
+    const add=(loads,start,src,week)=>{
+      const ls=(Array.isArray(loads)?loads:[]).map((l,i)=>({l,i})).filter(x=>x.l&&hasGeo(x.l.fromGeo)&&hasGeo(x.l.toGeo));
+      ls.sort((a,b)=>String(a.l.pickup||'').localeCompare(String(b.l.pickup||''))||a.i-b.i);
+      let prev=hasGeo(start)?start:null;
+      for(const {l,i} of ls){
+        const pts=(Array.isArray(l.partials)?l.partials:[]).flatMap(q=>[q.fromGeo,q.toGeo]).filter(hasGeo);
+        list.push({key:src+':'+(week||'')+':'+i+':'+gLabel(l.fromGeo)+'>'+gLabel(l.toGeo)+':'+(l.pickup||''),src,week,from:l.fromGeo,to:l.toGeo,partials:pts,pN:(Array.isArray(l.partials)?l.partials:[]).filter(q=>q&&(q.fromText||q.toText||q.fromGeo)).length,dh:prev&&!(Math.abs(prev.lat-l.fromGeo.lat)<0.02&&Math.abs(prev.lon-l.fromGeo.lon)<0.02)?prev:null,pickup:l.pickup||'',delivery:l.delivery||'',miles:+l.miles||0,broker:l.broker||''});
+        prev=l.toGeo;
+      }
+    };
+    const dj=d.data&&d.data.draft_json||{};
+    add(dj.loads,dj.startGeo,'draft','');
+    for(const r of (w.data||[])){const fp=r.full_payload||{};add(fp.loads,fp.startGeo,'week',r.week_end_date);}
+    LOADS=list;HUB.ok=true;HUB.trip=dj.tripName||'';
+  }catch(e){HUB.err=isNet(e)?'Нет связи с OwnerGladiator':'Не удалось прочитать грузы: '+String(e.message||e);}
+}
+function autoLoad(){
+  const t=todayISO(),dr=LOADS.filter(x=>x.src==='draft');
+  const now=dr.filter(x=>x.pickup<=t&&(x.delivery||x.pickup)>=t);
+  if(now.length)return now[now.length-1];
+  if(dr.length)return dr.reduce((a,b)=>b.pickup>=a.pickup?b:a);
+  const wk=LOADS.filter(x=>x.src==='week');if(!wk.length)return null;
+  const ws=wk.filter(x=>x.week===wk[0].week);return ws[ws.length-1];
+}
+function curLoad(){
+  if(S.loadKey==='custom')return S.custom&&hasGeo(S.custom.from)&&hasGeo(S.custom.to)?{key:'custom',src:'custom',from:S.custom.from,to:S.custom.to,partials:[],dh:null,pickup:'',delivery:'',miles:0,broker:''}:null;
+  return LOADS.find(x=>x.key===S.loadKey)||autoLoad();
+}
+
+/* ---------- road route (OSRM, like the Hub) ---------- */
+const ONT=[[-82.25,42.92],[-82.3,42.5],[-82.75,42.27],[-82.5,42.08],[-81.6,42.55],[-80.6,42.75],[-79.9,42.95],[-79.35,43.05],[-79.3,43.17],[-79.75,43.32],[-79.4,43.62],[-78.8,43.88],[-78.3,44],[-77.4,44.15],[-76.6,44.32],[-76.6,44.7],[-78.5,44.7],[-80,44.6],[-81.3,44.3],[-81.65,43.35]];
+const ERIE={lat:42.087,lon:-80.08};
+const viaCanada=line=>{let n=0;for(const p of line)if(inPoly(p[0],p[1],ONT)&&++n>=2)return true;return false;};
+function polyDec(s){s=s||'';const o=[];let i=0,la=0,lo=0;const n=s.length;while(i<n){let b,sh=0,r=0;do{b=s.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5;}while(b>=32&&i<n);la+=(r&1)?~(r>>1):(r>>1);sh=0;r=0;do{b=s.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5;}while(b>=32&&i<n);lo+=(r&1)?~(r>>1):(r>>1);o.push([lo/1e5,la/1e5]);}return o;}
+async function fetchJson(url,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||10000);try{const r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}finally{clearTimeout(t);}}
+const osrmUrl=list=>'https://router.project-osrm.org/route/v1/driving/'+list.map(g=>(+g.lon).toFixed(5)+','+(+g.lat).toFixed(5)).join(';')+'?overview=full&geometries=polyline';
+let RTC={};try{RTC=JSON.parse(Store.get('ig_rt')||'{}')||{};}catch(e){RTC={};}
+function rtSave(){const ks=Object.keys(RTC);if(ks.length>40)ks.sort((a,b)=>RTC[a].t-RTC[b].t).slice(0,ks.length-30).forEach(k=>delete RTC[k]);try{localStorage.setItem('ig_rt',JSON.stringify(RTC));}catch(e){RTC={};}}
+async function roadLine(list){
+  const key=list.map(g=>(+g.lat).toFixed(3)+','+(+g.lon).toFixed(3)).join(';');
+  const c=RTC[key];if(c&&c.p){c.t=Date.now();return{pts:mdec(c.p,0.05),km:c.km};}
+  let j=await fetchJson(osrmUrl(list),12000),r=j&&j.routes&&j.routes[0];
+  if(!r)throw new Error('no route');
+  let line=polyDec(r.geometry);
+  const inO=g=>inPoly(+g.lon,+g.lat,ONT);
+  if(viaCanada(line)&&!list.some(inO)){
+    try{const l2=[list[0],ERIE,...list.slice(1)];const j2=await fetchJson(osrmUrl(l2),12000),r2=j2&&j2.routes&&j2.routes[0];if(r2){const ln2=polyDec(r2.geometry);if(!viaCanada(ln2)){r=r2;line=ln2;}}}catch(e){}
+  }
+  const pts=dpS(line.map(q=>ALB(q[0],q[1])),0.04);
+  const B='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  let enc='',px=0,py=0;const put=v=>{v=v<0?((~v)<<1)|1:v<<1;do{const ch=v&31;v=v>>5;enc+=B.charAt(v?ch|32:ch);}while(v);};
+  for(const p of pts){const x=Math.round(p[0]/0.05),y=Math.round(p[1]/0.05);put(x-px);put(y-py);px=x;py=y;}
+  RTC[key]={p:enc,km:r.distance/1000,t:Date.now()};rtSave();
+  return{pts:pts.map(p=>[Math.round(p[0]/0.05)*0.05,Math.round(p[1]/0.05)*0.05]),km:r.distance/1000};
+}
+function orderStops(a,b,mids){const A=ALB(a.lon,a.lat),B=ALB(b.lon,b.lat),dx=B[0]-A[0],dy=B[1]-A[1],L2=dx*dx+dy*dy||1;return mids.map(g=>{const p=ALB(g.lon,g.lat);return{g,t:((p[0]-A[0])*dx+(p[1]-A[1])*dy)/L2};}).sort((x,y)=>x.t-y.t).map(x=>x.g);}
+let routeTok=0;
+async function buildRoute(){
+  const L=curLoad(),tok=++routeTok;
+  if(!L){ROUTE=null;HITS=[];drawWorld();redraw();mapBar();renderLoad();return;}
+  ROUTE={busy:true,load:L};mapBar();renderLoad();
+  const legs=[],stops=[];let err='';
+  const useDh=S.dh&&L.dh;
+  if(useDh){try{const r=await roadLine([L.dh,L.from]);legs.push({t:'dh',pts:r.pts,km:r.km});}catch(e){legs.push({t:'dh',est:true,pts:[ALB(L.dh.lon,L.dh.lat),ALB(L.from.lon,L.from.lat)],km:0});err='net';}stops.push({t:'dh',n:'•',xy:ALB(L.dh.lon,L.dh.lat)});}
+  const chain=[L.from,...orderStops(L.from,L.to,L.partials||[]),L.to];
+  try{const r=await roadLine(chain);legs.push({t:'ld',pts:r.pts,km:r.km});}catch(e){legs.push({t:'ld',est:true,pts:chain.map(g=>ALB(g.lon,g.lat)),km:0});err='net';}
+  if(tok!==routeTok)return;
+  stops.push({t:'from',n:'A',xy:ALB(L.from.lon,L.from.lat)});(L.partials||[]).forEach(g=>stops.push({t:'mid',n:'•',xy:ALB(g.lon,g.lat)}));stops.push({t:'to',n:'B',xy:ALB(L.to.lon,L.to.lat)});
+  const all=legs.flatMap(l=>l.pts),bb=[1e9,1e9,-1e9,-1e9];for(const p of all){bb[0]=Math.min(bb[0],p[0]);bb[1]=Math.min(bb[1],p[1]);bb[2]=Math.max(bb[2],p[0]);bb[3]=Math.max(bb[3],p[1]);}
+  ROUTE={ok:true,load:L,legs,stops,bb,est:!!err,km:legs.reduce((s,l)=>s+(l.km||0),0)};
+  computeHits();drawWorld();
+  const fk=L.key+'|'+useDh;if(fk!==lastFit){lastFit=fk;fitBox(bb,34);}
+  redraw();mapBar();renderLoad();
+}
+let lastFit='';
+/* nearest distance (km) from a point to the route and how far along the route it is */
+function nearOnLine(P,pts){
+  let best=1e18,along=0,acc=0;
+  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],dx=b[0]-a[0],dy=b[1]-a[1],L2=dx*dx+dy*dy,len=Math.sqrt(L2);
+    const t=L2?clamp(((P[0]-a[0])*dx+(P[1]-a[1])*dy)/L2,0,1):0,qx=a[0]+t*dx-P[0],qy=a[1]+t*dy-P[1],d=qx*qx+qy*qy;
+    if(d<best){best=d;along=acc+t*len;}acc+=len;}
+  return{d:Math.sqrt(best),along,len:acc};
+}
+function computeHits(){
+  HITS=[];if(!ROUTE||!ROUTE.ok)return;
+  const bufKm=S.buf*MI,V=visPlaces();
+  let off=0;const legs=ROUTE.legs.map(l=>{const o={l,off,bb:[1e9,1e9,-1e9,-1e9]};let len=0;for(let i=0;i<l.pts.length;i++){const p=l.pts[i];if(p[0]<o.bb[0])o.bb[0]=p[0];if(p[1]<o.bb[1])o.bb[1]=p[1];if(p[0]>o.bb[2])o.bb[2]=p[0];if(p[1]>o.bb[3])o.bb[3]=p[1];if(i)len+=Math.hypot(p[0]-l.pts[i-1][0],p[1]-l.pts[i-1][1]);}off+=len;o.len=len;return o;});
+  for(const v of V){
+    let best=null;
+    for(const g of legs){const b=g.l.pts,bb=g.bb;
+      const lim=bufKm+(v.ax||0);if(v.p.xy[0]<bb[0]-lim||v.p.xy[0]>bb[2]+lim||v.p.xy[1]<bb[1]-lim||v.p.xy[1]>bb[3]+lim)continue;
+      const r=nearOnLine(v.p.xy,b);if(r.d<=lim&&(!best||r.d<best.d))best={d:r.d,along:g.off+r.along,leg:g.l.t};}
+    if(best)HITS.push(Object.assign({v},best));
+  }
+  HITS.sort((a,b)=>a.along-b.along);
+}
+
+/* ---------- geocoding (ZIP / city like the Hub, street addresses via OpenStreetMap) ---------- */
+let geoQ=Promise.resolve(),geoLast=0;
+function osm(url){const run=async()=>{const w=1150-(Date.now()-geoLast);if(w>0)await sleep(w);geoLast=Date.now();return fetchJson(url,12000);};const p=geoQ.then(run,run);geoQ=p.catch(()=>{});return p;}
+async function geoZip(z){try{const j=await fetchJson('https://api.zippopotam.us/us/'+z,8000),p=j&&j.places&&j.places[0];if(p)return{lat:+p.latitude,lon:+p.longitude,city:p['place name'],st:p['state abbreviation'],zip:z,label:p['place name']+', '+p['state abbreviation']};}catch(e){}return null;}
+async function geoCity(city,st){
+  try{const j=await fetchJson('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=30&language=en&format=json',8000);
+    const rs=(j&&j.results||[]).filter(r=>r.country_code==='US'&&(!st||r.admin1===ST_NAME[st]));const r=rs[0];
+    if(r){const s=st||Object.keys(ST_NAME).find(k=>ST_NAME[k]===r.admin1)||'';return{lat:r.latitude,lon:r.longitude,city:r.name,st:s,label:r.name+(s?', '+s:'')};}}catch(e){}
+  return null;
+}
+async function geoFind(text){
+  text=String(text||'').trim();if(!text)return null;
+  let m=text.match(/\b(\d{5})\b/);if(m&&/^\s*\d{5}\s*$/.test(text))return geoZip(m[1]);
+  m=text.match(/^(.+?),\s*([A-Za-z]{2})\b/);
+  if(m){const st=m[2].toUpperCase();if(ST_NAME[st]){const z=text.match(/\b(\d{5})\b/);if(z){const g=await geoZip(z[1]);if(g)return g;}return geoCity(m[1].trim(),st);}}
+  if(m=text.match(/\b(\d{5})\b/))return geoZip(m[1]);
+  return geoCity(text,'');
+}
+async function geoAddr(a){
+  if(a.kind==='street'){try{const j=await osm('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=us&limit=1&q='+encodeURIComponent(a.q));const r=j&&j[0];if(r)return{lat:+r.lat,lon:+r.lon,ax:0};}catch(e){}}
+  if(a.zip){const g=await geoZip(a.zip);if(g)return{lat:g.lat,lon:g.lon,ax:8};}
+  if(a.city){const g=await geoCity(a.city,a.st);if(g)return{lat:g.lat,lon:g.lon,ax:10};}
+  return null;
+}
+async function revName(lat,lon){
+  try{const j=await osm('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&lat='+lat+'&lon='+lon);const a=j&&j.address||{};
+    const st=(a['ISO3166-2-lvl4']||'').replace('US-','');const place=a.city||a.town||a.village||a.hamlet||a.county||'';return{st,label:place?('около '+place+(st?', '+st:'')):''};}catch(e){return null;}
+}
+
+/* ---------- import: paste or a Telegram export file ---------- */
+function isDup(c){
+  const t=c.date?+new Date(c.date):Date.now(),xy=ALB(c.lon,c.lat);
+  for(const r of MARKS){
+    if(c.key&&USER&&r.user_id===USER.id&&r.src_key===c.key)return true;
+    const d=Math.hypot(...((q=>[q[0]-xy[0],q[1]-xy[1]])(ALB(+r.lon,+r.lat))));
+    if(d<1.5&&Math.abs(Date.parse(r.seen_at)-t)<36*3600e3)return true;
+  }
+  return CANDS.some(o=>o!==c&&o.lat!=null&&!o.skip&&Math.hypot(...((q=>[q[0]-xy[0],q[1]-xy[1]])(ALB(o.lon,o.lat))))<0.3&&Math.abs((o.date?+new Date(o.date):Date.now())-t)<36*3600e3);
+}
+function addCand(p,src){const c={lat:p.lat,lon:p.lon,ax:p.ax||0,title:p.title||'Отметка',state:p.state||'',kind:p.kind||'ice',note:(p.text||'').slice(0,1900),date:p.date?new Date(p.date):new Date(),key:p.key||null,src:src,dup:false,skip:false};c.dup=isDup(c);c.skip=c.dup;CANDS.push(c);return c;}
+const ownKey=k=>!!k&&!!USER&&MARKS.some(x=>x.user_id===USER.id&&x.src_key===k);
+async function importMessages(msgs,src,cutoff){
+  const addrs=[];let n=0,ex=0;
+  for(const m of msgs){
+    const r=P.fromMessage(m);
+    for(const p of r.places){const c=addCand(p,src);n++;if(c.dup)ex++;else if(!c.state||/^Отметка$/.test(c.title))c.needName=true;}
+    const old=cutoff&&m.date&&+new Date(m.date)<=cutoff;
+    if(r.addr&&!ownKey(r.addr.key)&&!old)addrs.push(r.addr);
+    if(!r.places.length&&!r.addr&&(m.text||'').trim()&&!ownKey(m.key)&&!old)NOPT.push({text:m.text.trim().slice(0,600),date:m.date,key:m.key,media:m.media});
+  }
+  renderImp();drawNow();
+  const jobs=addrs.length+CANDS.filter(c=>c.needName&&!c.skip).length;let done=0;
+  const prog=()=>{const el=$('#imp-prog');if(el){el.hidden=!jobs||done>=jobs;el.querySelector('i').style.width=(jobs?done/jobs*100:0)+'%';}};
+  prog();
+  for(const a of addrs){
+    const g=await geoAddr(a.addr);done++;prog();
+    if(g){const c=addCand(Object.assign({},a,{lat:g.lat,lon:g.lon,ax:g.ax}),src);n++;if(c.dup)ex++;}
+    else NOPT.push({text:a.text.slice(0,600),date:a.date,key:a.key,why:'адрес не найден: '+a.addr.q});
+    renderImp();drawWorld();redraw();
+  }
+  for(const c of CANDS.filter(c=>c.needName&&!c.skip)){
+    const r=await revName(c.lat,c.lon);done++;prog();c.needName=false;
+    if(r){if(!c.state&&r.st)c.state=r.st;if(/^Отметка$/.test(c.title)&&r.label)c.title=r.label;}
+    renderImp();
+  }
+  prog();
+  return{n,ex};
+}
+async function importText(txt){
+  txt=String(txt||'').trim();if(!txt){toast('Вставь текст сообщения');return;}
+  const before=CANDS.length;
+  await importMessages([{text:txt,links:[],date:new Date(),key:'p:'+P.shortHash(txt)}],'paste');
+  const added=CANDS.slice(before);
+  if(!added.length&&!NOPT.length)toast('Не нашёл в тексте координат или адреса — поставь точку на карте');
+  else if(added.length){const c=added.find(x=>!x.skip)||added[0];focusXY(ALB(c.lon,c.lat),6);}
+}
+async function importFiles(files){
+  let msgs=[],chat='';
+  for(const f of files){
+    const txt=await f.text();
+    try{
+      const r=/\.json$/i.test(f.name)||/^\s*\{/.test(txt)?P.tgJson(txt):P.tgHtml(txt,DOMParser);
+      chat=chat||r.chat;msgs=msgs.concat(r.messages.map(m=>Object.assign(m,{key:P.chatKey(r.chat,m.id)})));
+    }catch(e){toast('Не смог прочитать файл '+f.name);}
+  }
+  if(!msgs.length){toast('В файле нет сообщений');return;}
+  toast('Читаю '+msgs.length+' сообщений…');
+  /* messages without a place that are older than what is already imported are old talk, not new marks */
+  const own=MARKS.filter(x=>USER&&x.user_id===USER.id&&String(x.src_key||'').startsWith('tg:')).map(x=>Date.parse(x.seen_at));
+  const r=await importMessages(msgs,'telegram',own.length?Math.max(...own):0);
+  const fresh=CANDS.filter(c=>!c.skip).length;
+  toast(fresh?('Новых отметок: '+fresh):'Новых отметок нет — всё уже на карте');
+}
+async function saveCands(){
+  const rows=CANDS.filter(c=>!c.skip&&c.lat!=null).map(c=>({lat:+(+c.lat).toFixed(6),lon:+(+c.lon).toFixed(6),kind:c.kind==='check'?'check':'ice',approx_km:clamp(Math.round(c.ax||0),0,300),title:String(c.title||'Отметка').slice(0,160),state:String(c.state||'').slice(0,12),note:String(c.note||'').slice(0,2000),seen_at:new Date(c.date||Date.now()).toISOString(),source:c.src==='telegram'?'telegram':c.src==='gps'?'gps':c.src==='manual'?'manual':'paste',src_key:c.key?String(c.key).slice(0,120):null}));
+  if(!rows.length){toast('Нечего сохранять');return;}
+  const btn=$('#imp-save');if(btn)btn.disabled=true;
+  let ok=0;
+  const r=await sb.from('ice_marks').insert(rows).select(COLS);
+  if(!r.error){ok=r.data.length;MARKS=r.data.concat(MARKS);}
+  else if(r.error.code==='23505'||/duplicate/i.test(r.error.message)){for(const row of rows){const q=await sb.from('ice_marks').insert(row).select(COLS);if(!q.error){ok++;MARKS.unshift(q.data[0]);}}}
+  else{toast(isNet(r.error)?'Нет связи — попробуй позже':'Не сохранилось: '+r.error.message);if(btn)btn.disabled=false;return;}
+  MARKS.sort((a,b)=>String(b.seen_at).localeCompare(String(a.seen_at)));Store.set(cacheKey(),JSON.stringify(MARKS));
+  CANDS=[];NOPT=NOPT.filter(x=>x.lat==null);buildPlaces();computeHits();drawWorld();redraw();mapBar();renderAll();
+  toast('Сохранено: '+ok);
+}
+
+/* ---------- UI: tabs ---------- */
+let tt=0;
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{t.hidden=true;},2800);}
+function showTab(id){
+  S.tab=id;savePrefs();
+  document.querySelectorAll('.tab').forEach(s=>s.hidden=s.id!=='t-'+id);
+  document.querySelectorAll('nav.nav [data-tab]').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===id?'page':'false'));
+  if(id==='load'&&ROUTE&&ROUTE.bb){fitBox(ROUTE.bb,34);redraw();}
+}
+function filtersHtml(){
+  return `<div class="fl" role="group" aria-label="Фильтры">
+<button class="tg" data-f="ice" aria-pressed="${S.ice}"><i style="background:var(--ice)"></i>ICE</button>
+<button class="tg" data-f="check" aria-pressed="${S.check}"><i class="sq" style="background:var(--chk)"></i>Проверки</button>
+<button class="tg" data-f="approx" aria-pressed="${S.approx}"><i class="ds"></i>Примерные</button>
+<button class="tg" data-f="mine" aria-pressed="${S.mine}">Только мои</button>
+<select data-days aria-label="Период">${[[0,'За всё время'],[7,'7 дней'],[30,'30 дней'],[90,'90 дней']].map(([v,t])=>`<option value="${v}"${S.days===v?' selected':''}>${t}</option>`).join('')}</select></div>`;
+}
+function plRow(v,extra){
+  const d=new Date(v.last);
+  return `<button class="pl" data-place="${esc(v.p.id)}"><span class="dt">${dShort(d)}</span><span class="dot${v.kind==='check'?' ck':''}" style="background:${v.kind==='ice'?'var(--ice)':'var(--chk)'}${v.ax?';opacity:.55':''}"></span><span class="t">${esc(v.title)}<small>${esc([v.state,v.ax?'примерно ±'+v.ax+' км':'',v.reps.length>1?v.reps.length+' сообщ.':''].filter(Boolean).join(' · '))}</small></span><span class="r">${extra||esc(ago(d))}</span></button>`;
+}
+function renderMapTab(){
+  const V=visPlaces(),ice=V.filter(v=>v.kind==='ice'),ck=V.length-ice.length;
+  const last=ice[0];
+  $('#t-map').innerHTML=`<div class="card">${filtersHtml()}
+<div style="display:flex;gap:18px;flex-wrap:wrap;margin:2px 0 4px"><div><div class="num" style="font-size:30px;line-height:1">${ice.length}</div><div class="note">мест с ICE</div></div><div><div class="num" style="font-size:30px;line-height:1">${ck}</div><div class="note">проверок и камер</div></div>${last?`<div style="flex:1;min-width:150px"><div class="num" style="font-size:20px;line-height:1.2">${dShort(last.last)}</div><div class="note">последняя: ${esc(last.title)}</div></div>`:''}</div></div>
+<div class="card" style="margin-top:10px"><div class="lbl">Свежие отметки</div>${V.slice(0,6).map(v=>plRow(v)).join('')||'<div class="empty">За выбранный период отметок нет.</div>'}
+<div class="acts" style="justify-content:flex-start"><button class="btn sm" data-tab="list">Все отметки</button><button class="btn sm" data-tab="imp">Импорт из Telegram</button></div></div>`;
+}
+function renderList(){
+  const q=query.trim().toLowerCase();
+  let V=visPlaces();if(q)V=V.filter(v=>(v.title+' '+v.state+' '+v.reps.map(r=>r.note).join(' ')).toLowerCase().includes(q));
+  let h='',m='';
+  for(const v of V){const d=new Date(v.last),mm=d.getFullYear()+'-'+d.getMonth();if(mm!==m){m=mm;h+=`<div class="mon">${MONF[d.getMonth()]} ${d.getFullYear()}</div>`;}h+=plRow(v);}
+  const el=$('#t-list');
+  const had=el.querySelector('#q');const pos=had&&document.activeElement===had?had.selectionStart:null;
+  el.innerHTML=`<div class="card">${filtersHtml()}<input id="q" class="srch" type="search" placeholder="Поиск: штат, трасса, заправка…" value="${esc(query)}" autocomplete="off"><div id="list-body">${h||'<div class="empty">Ничего не найдено.</div>'}</div></div>`;
+  if(pos!=null){const i=$('#q');i.focus();i.setSelectionRange(pos,pos);}
+}
+function loadLabel(L){return gLabel(L.from)+' → '+gLabel(L.to);}
+function loadOpt(L){const d=L.pickup?dShort(L.pickup+'T12:00')+(L.delivery&&L.delivery!==L.pickup?'–'+dShort(L.delivery+'T12:00'):''):'';return (L.src==='draft'?'Эта неделя · ':'Неделя до '+dShort(L.week+'T12:00')+' · ')+loadLabel(L)+(d?' · '+d:'');}
+function renderLoad(){
+  const el=$('#t-load');if(!el)return;
+  const L=curLoad(),auto=autoLoad();
+  let h='<div class="card">';
+  h+=`<div class="ld-h"><div><div class="lbl">Текущий груз из OwnerGladiator</div>${HUB.trip?`<div class="note">Рейс: ${esc(HUB.trip)}</div>`:''}</div><button class="btn sm" data-act="hubRefresh">Обновить</button></div>`;
+  if(HUB.err)h+=`<div class="res info">${esc(HUB.err)}</div>`;
+  const opts=LOADS.map(x=>`<option value="${esc(x.key)}"${L&&L.key===x.key?' selected':''}>${esc((auto&&x.key===auto.key?'● ':'')+loadOpt(x))}</option>`).join('');
+  h+=`<label class="f">Какой груз проверить<select data-load>${opts}<option value="custom"${S.loadKey==='custom'?' selected':''}>Свой маршрут (откуда → куда)…</option></select></label>`;
+  if(S.loadKey==='custom'){
+    const c=S.custom||{};
+    h+=`<form id="cust" class="g2" style="margin-top:8px"><label class="f" style="margin:0">Откуда<input id="c-from" type="text" placeholder="ZIP или City, ST" value="${esc(c.fromText||'')}" autocomplete="off"></label><label class="f" style="margin:0">Куда<input id="c-to" type="text" placeholder="ZIP или City, ST" value="${esc(c.toText||'')}" autocomplete="off"></label><button class="btn pri" style="grid-column:1/-1" type="submit">Проверить маршрут</button></form>`;
+  }
+  if(!LOADS.length&&HUB.ok&&S.loadKey!=='custom')h+=`<div class="res info">В OwnerGladiator пока нет груза с адресами «откуда» и «куда». Вбей груз в Hub — он появится здесь сам. Или выбери «Свой маршрут».</div>`;
+  if(L){
+    h+=`<div style="margin-top:12px"><div class="ld-r">${esc(gLabel(L.from))} <span class="ar">→</span> ${esc(gLabel(L.to))}</div><div class="ld-m">${esc([L.pickup?dShort(L.pickup+'T12:00')+(L.delivery&&L.delivery!==L.pickup?' – '+dShort(L.delivery+'T12:00'):''):'',L.miles?Math.round(L.miles)+' mi':'',L.broker,L.pN?'догрузы: '+L.pN:''].filter(Boolean).join(' · '))}</div></div>`;
+    h+=`<div class="opts"><div class="o"><span>Насколько близко к дороге</span><div class="seg" role="group" aria-label="Расстояние от дороги">${[1,3,5,10].map(b=>`<button data-buf="${b}" aria-pressed="${S.buf===b}">${b} mi</button>`).join('')}</div></div>
+<div class="o"><span>Какие отметки учитывать</span><select data-days style="width:auto">${[[0,'За всё время'],[7,'7 дней'],[30,'30 дней'],[90,'90 дней']].map(([v,t])=>`<option value="${v}"${S.days===v?' selected':''}>${t}</option>`).join('')}</select></div>
+${L.dh?`<label class="ck"><input type="checkbox" data-dh${S.dh?' checked':''}> С порожним пробегом от ${esc(gLabel(L.dh))}</label>`:''}</div>`;
+    if(ROUTE&&ROUTE.busy)h+=`<div class="res info">Строю маршрут по дорогам…</div>`;
+    else if(ROUTE&&ROUTE.ok){
+      const n=HITS.length,mi=ROUTE.km?Math.round(ROUTE.km/MI):0;
+      if(ROUTE.est)h+=`<div class="res info" style="border-color:rgba(255,181,71,.45)"><b>Дорога не загрузилась</b> — сервис маршрутов не ответил, поэтому проверка идёт по прямой линии между точками и может пропустить отметки. <button class="btn sm" data-act="routeRetry" style="margin-top:6px">Попробовать ещё раз</button></div>`;
+      h+=`<div class="res ${n?'bad':ROUTE.est?'info':'ok'}"><div class="big">${n?'⚠ '+n+' '+plural(n,'отметка','отметки','отметок')+' на пути':ROUTE.est?'Рядом с прямой отметок нет':'✓ Отметок рядом нет'}</div><div class="note" style="margin-top:4px">${mi?'Маршрут '+mi+' mi по дорогам · ':''}в пределах ${S.buf} mi от дороги${S.days?' · за '+S.days+' дн.':''}${ROUTE.est?' · дорога не загрузилась, линия примерная':''}</div></div>`;
+      if(n)h+=HITS.map(x=>plRow(x.v,`<b>${Math.round(x.along/MI)} mi</b>${x.d<0.3?'на дороге':(x.d/MI).toFixed(1)+' mi от дороги'}${x.leg==='dh'?' · порожняк':''}`)).join('');
+      const way=[L.dh&&S.dh?L.dh:null,L.from,...(L.partials||[]),L.to].filter(Boolean);
+      h+=`<div class="acts" style="justify-content:flex-start"><a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/${way.map(g=>(+g.lat).toFixed(5)+','+(+g.lon).toFixed(5)).join('/')}">Маршрут в Google Maps ↗</a></div>`;
+    }
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+function candHtml(c,i){
+  return `<div class="cand${c.skip?' dup':''}" data-cand="${i}"><div class="ct">
+<div class="row2"><input type="text" data-cf="title" value="${esc(c.title)}" aria-label="Название"><select data-cf="kind" aria-label="Тип"><option value="ice"${c.kind==='ice'?' selected':''}>ICE</option><option value="check"${c.kind==='check'?' selected':''}>Проверка</option></select></div>
+<div class="row2"><input type="datetime-local" data-cf="date" value="${isoLocal(c.date)}" aria-label="Когда"><button class="btn sm" data-act="candShow" data-i="${i}">На карте</button></div>
+<div>${c.dup?'<span class="badge">похоже, уже есть на карте</span> ':''}${c.ax?`<span class="badge a">примерно ±${c.ax} км</span> `:'<span class="badge g">точка</span> '}<span class="badge">${esc(c.state||'—')}</span></div>
+${c.note?`<div class="src">${esc(c.note)}</div>`:''}</div>
+<div class="x"><label class="ck"><input type="checkbox" data-cf="use"${c.skip?'':' checked'} aria-label="Добавить"> </label></div></div>`;
+}
+function renderImp(){
+  const el=$('#t-imp');if(!el)return;
+  const use=CANDS.filter(c=>!c.skip).length;
+  let h='';
+  if(CANDS.length||NOPT.length){
+    h+=`<div class="card"><div class="ld-h"><h2 style="margin:0">Найдено</h2><button class="btn sm ghost" data-act="candClear">Очистить</button></div><div class="prog" id="imp-prog" hidden><i style="width:0"></i></div>`;
+    h+=CANDS.map(candHtml).join('');
+    if(CANDS.length)h+=`<div class="acts"><span class="note sp">${use} из ${CANDS.length} отмечено</span><button class="btn pri" id="imp-save" data-act="candSave"${use?'':' disabled'}>Сохранить ${use}</button></div>`;
+    if(NOPT.length)h+=`<details${CANDS.length?'':' open'}><summary>Без точки: ${NOPT.length}</summary>${NOPT.map((x,i)=>`<div class="rep"><time>${x.date?esc(dTime(x.date)):''}</time><p>${esc(x.text||'(фото или видео без подписи)')}</p>${x.why?`<p class="note">${esc(x.why)}</p>`:''}<div class="ra"><button class="btn sm" data-act="noptPick" data-i="${i}">Указать на карте</button><button class="btn sm ghost" data-act="noptDrop" data-i="${i}">Убрать</button></div></div>`).join('')}</details>`;
+    h+='</div>';
+  }
+  h+=`<div class="card" style="margin-top:10px"><h2>Вставить сообщение</h2><p class="note">В Telegram зажми сообщение → «Копировать» и вставь сюда. Подойдут координаты, ссылка Google Maps с точкой, геометка или адрес «улица, город, штат ZIP».</p>
+<textarea id="paste" placeholder="Например: Ice update I-40, Mt Juliet, TN 37122 📍 36.176175,-86.476323"></textarea>
+<div class="acts"><button class="btn pri" data-act="pasteGo">Найти точки</button></div>
+<p class="note">Короткие ссылки maps.app.goo.gl телефон открыть не даёт: открой ссылку, скопируй координаты или поставь точку на карте.</p></div>
+<div class="card" style="margin-top:10px"><h2>Файл экспорта канала</h2><ol class="steps"><li>Telegram на компьютере → канал «Ice locations» → ⋮ → «Экспорт истории чата».</li><li>Формат HTML или JSON, фото и видео можно не включать.</li><li>Выбери здесь файл <b>messages.html</b> (или <b>result.json</b>).</li></ol>
+<p class="note">Повторно загружать тот же файл можно: то, что уже на карте, второй раз не добавится.</p>
+<div class="acts" style="justify-content:flex-start"><label class="btn pri" style="position:relative;overflow:hidden">Выбрать файл<input id="tgfile" type="file" accept=".html,.htm,.json,text/html,application/json" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer"></label></div></div>
+<div class="card" style="margin-top:10px"><h2>Сам заметил</h2><div class="acts" style="justify-content:flex-start"><button class="btn red" data-act="addGps">Я здесь — ICE рядом</button><button class="btn" data-act="addPick">Указать на карте</button></div></div>`;
+  el.innerHTML=h;
+}
+function renderAll(){renderMapTab();renderList();renderLoad();renderImp();}
+
+/* ---------- sheets ---------- */
+const IC={
+  x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f4f4f2" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  key:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>',
+  out:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg>',
+  link:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  gps:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff4d5a" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+  pin:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffc400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-7-7-12a7 7 0 0 1 14 0c0 5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  paste:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5cc8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6"/></svg>'
+};
+const ov=()=>$('#ov');
+function sheet(html){const o=ov();o.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;o.hidden=false;}
+function closeSheet(){ov().hidden=true;ov().innerHTML='';}
+function openPlace(id){
+  const pl=PLACES.find(p=>p.id===id);if(!pl)return;
+  const v=visPlaces().find(x=>x.p.id===id),reps=v?v.reps:pl.reps,top=reps[0]||pl.reps[0],hit=HITS.find(x=>x.v.p.id===id);
+  const gm='https://www.google.com/maps/search/?api=1&query='+pl.lat.toFixed(6)+','+pl.lon.toFixed(6);
+  sheet(`<div class="shh"><h2 style="margin:0">${esc(top.title||'Отметка')}</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${IC.x}</button></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><span class="badge ${top.kind==='check'?'a':'r'}">${top.kind==='check'?'Проверка / камера':'ICE'}</span><span class="badge">${top.approx_km?'примерно ±'+top.approx_km+' км':'точное место'}</span>${top.state?`<span class="badge">${esc(top.state)}</span>`:''}${hit?`<span class="badge r">на маршруте: ${Math.round(hit.along/MI)} mi</span>`:''}</div>
+${pl.reps.map(r=>`<div class="rep"><time>${esc(dTime(r.seen_at))}</time> <span class="note">${esc(ago(r.seen_at))}${USER&&r.user_id===USER.id?' · моя':''}</span>${r.note?`<p>${esc(r.note)}</p>`:''}${USER&&r.user_id===USER.id?`<div class="ra"><button class="btn sm" data-act="repEdit" data-id="${esc(r.id)}">Изменить</button><button class="btn sm dan" data-act="repDel" data-id="${esc(r.id)}">Удалить</button></div>`:''}</div>`).join('')}
+<div class="acts"><button class="btn" data-act="repMore" data-lat="${pl.lat}" data-lon="${pl.lon}">ICE снова здесь</button><a class="btn pri" href="${gm}" target="_blank" rel="noopener">Google Maps ↗</a></div>`);
+}
+function openAdd(){
+  sheet(`<div class="shh"><h2 style="margin:0">Новая отметка</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${IC.x}</button></div>
+<div class="add-opts"><button data-act="addGps">${IC.gps}<span><b>Я здесь — ICE рядом</b><small>Точка по GPS телефона, время — сейчас</small></span></button>
+<button data-act="addPick">${IC.pin}<span><b>Указать на карте</b><small>Нажми на карту, где видели</small></span></button>
+<button data-tab="imp">${IC.paste}<span><b>Вставить из Telegram</b><small>Сообщение или файл экспорта канала</small></span></button></div>`);
+}
+function openForm(o){
+  /* o: {lat,lon,id?,title,kind,note,seen_at,approx_km,state} */
+  const ed=!!o.id;
+  sheet(`<form id="mform" novalidate><div class="shh"><h2 style="margin:0">${ed?'Изменить отметку':'Отметка'}</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${IC.x}</button></div>
+<p class="note" style="margin-top:6px">${(+o.lat).toFixed(5)}, ${(+o.lon).toFixed(5)}${o.state?' · '+esc(o.state):''}</p>
+<label class="f">Что и где<input id="mf-t" type="text" maxlength="160" value="${esc(o.title||'')}" placeholder="Например: весовая I-40 East, Pilot exit 12"></label>
+<div class="g2"><label class="f">Тип<select id="mf-k"><option value="ice"${o.kind!=='check'?' selected':''}>ICE</option><option value="check"${o.kind==='check'?' selected':''}>Проверка / камера</option></select></label>
+<label class="f">Точность<select id="mf-a">${[[0,'Точно здесь'],[5,'Примерно ±5 км'],[15,'Примерно ±15 км'],[50,'Район ±50 км']].map(([v,t])=>`<option value="${v}"${(o.approx_km||0)===v?' selected':''}>${t}</option>`).join('')}</select></label></div>
+<label class="f">Когда<input id="mf-d" type="datetime-local" value="${isoLocal(o.seen_at||new Date())}"></label>
+<label class="f">Подробности<textarea id="mf-n" maxlength="2000" placeholder="Сколько машин, что проверяют, в какую сторону">${esc(o.note||'')}</textarea></label>
+<div id="mf-msg" class="msg err" role="status"></div>
+<div class="acts"><button type="button" class="btn" data-close>Отмена</button><button type="submit" class="btn pri">${ed?'Сохранить':'Добавить на карту'}</button></div></form>`);
+  ov().querySelector('#mform')._o=o;
+  if(!ed&&!o.state)revName(o.lat,o.lon).then(r=>{const f=$('#mform');if(f&&f._o===o&&r){o.state=r.st||'';const t=$('#mf-t');if(t&&!t.value&&r.label)t.placeholder=r.label;}});
+  setTimeout(()=>{const t=$('#mf-t');if(t)t.focus();},40);
+}
+async function formSave(f){
+  const o=f._o,msg=$('#mf-msg');
+  const row={lat:+(+o.lat).toFixed(6),lon:+(+o.lon).toFixed(6),title:($('#mf-t').value.trim()||$('#mf-t').placeholder.replace(/^Например:.*/,'')||'Отметка').slice(0,160),kind:$('#mf-k').value==='check'?'check':'ice',approx_km:+$('#mf-a').value||0,note:$('#mf-n').value.trim().slice(0,2000),seen_at:new Date($('#mf-d').value||Date.now()).toISOString(),state:String(o.state||'').slice(0,12)};
+  const btn=f.querySelector('[type=submit]');btn.disabled=true;
+  let r;
+  if(o.id)r=await sb.from('ice_marks').update(row).eq('id',o.id).select(COLS);
+  else r=await sb.from('ice_marks').insert(Object.assign(row,{source:o.src||'manual'})).select(COLS);
+  btn.disabled=false;
+  if(r.error){msg.textContent=isNet(r.error)?'Нет связи — попробуй ещё раз':r.error.message;return;}
+  const d=r.data[0];MARKS=MARKS.filter(x=>x.id!==d.id);MARKS.unshift(d);MARKS.sort((a,b)=>String(b.seen_at).localeCompare(String(a.seen_at)));Store.set(cacheKey(),JSON.stringify(MARKS));
+  buildPlaces();computeHits();drawWorld();SEL=(+d.lat).toFixed(3)+','+(+d.lon).toFixed(3);redraw();mapBar();renderAll();closeSheet();toast(o.id?'Сохранено':'Отметка на карте');
+}
+async function repDel(id,b){
+  if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Точно удалить?';setTimeout(()=>{if(b.isConnected){b.dataset.armed='';b.textContent='Удалить';}},3500);return;}
+  const r=await sb.from('ice_marks').delete().eq('id',id);
+  if(r.error){toast(isNet(r.error)?'Нет связи':'Не удалилось: '+r.error.message);return;}
+  MARKS=MARKS.filter(x=>x.id!==id);Store.set(cacheKey(),JSON.stringify(MARKS));buildPlaces();computeHits();drawWorld();redraw();mapBar();renderAll();closeSheet();toast('Удалено');
+}
+function openMenu(){
+  if(!USER)return;
+  sheet(`<div class="shh"><h2 style="margin:0">Меню</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${IC.x}</button></div>
+<div class="msec"><div class="lbl">Аккаунт</div><p style="margin:4px 0 0;font-weight:600;overflow-wrap:anywhere">${esc(USER.email||'')}</p><p class="note"><span class="sync${syncSt==='ok'?'':syncSt==='off'?' off':' pend'}" style="display:inline-block;margin-right:6px"></span>${SYNC_T[syncSt]}. Один аккаунт с OwnerGladiator Hub.</p>
+<p class="note">Отметки общие: их видят все, кто вошёл в Ice Gladiator. Менять и удалять можно только свои.</p></div>
+<div class="msec card" style="padding:2px 12px"><div class="menu-list"><button data-act="pass">${IC.key}Сменить пароль</button><button data-act="signOut">${IC.out}Выйти</button></div></div>
+<div class="msec"><div class="lbl">Другие приложения</div><div class="card" style="padding:2px 12px;margin-top:6px"><div class="menu-list">
+<a href="${CFG.hub}">${IC.link}OwnerGladiator Hub</a><a href="${CFG.weight}">${IC.link}WeightGladiator</a><a href="${CFG.accounting}">${IC.link}Accounting Gladiator</a><a href="${CFG.dispatch}">${IC.link}Dispatch Gladiator</a><a href="${CFG.money}">${IC.link}MoneyGladiator</a></div></div></div>
+<div class="ver">Ice Gladiator ${VER}</div>`);
+}
+function openPass(){
+  sheet(`<form id="passform" novalidate><div class="shh"><h2 style="margin:0">Новый пароль</h2><button type="button" class="iconbtn" data-close aria-label="Закрыть">${IC.x}</button></div>
+<label class="fld" style="margin-top:12px"><span>Новый пароль (минимум 6 символов)</span><input id="np" type="password" autocomplete="new-password"></label>
+<div id="np-msg" class="msg" role="status" style="margin-top:8px"></div>
+<div class="acts"><button type="button" class="btn" data-close>Отмена</button><button type="submit" class="btn pri">Сохранить пароль</button></div></form>`);
+  setTimeout(()=>{const n=$('#np');if(n)n.focus();},30);
+}
+
+/* ---------- sign-in (shared with OwnerGladiator Hub) ---------- */
+let authMode='in',authEmail='';
+function renderAuth(msg,kind){
+  const up=authMode==='up';
+  $('#auth').innerHTML=`<div class="box"><div class="logo">${emblem('a')}<div class="bn">Ice<b>Gladiator</b></div><div class="tagline">Где замечали ICE: карта отметок и проверка маршрута текущего груза из OwnerGladiator.</div></div>
+<div class="seg" role="group" aria-label="Вход или регистрация"><button data-act="authMode" data-m="in" aria-pressed="${!up}">Вход</button><button data-act="authMode" data-m="up" aria-pressed="${up}">Регистрация</button></div>
+<form id="auform" class="stack" novalidate>
+<label class="fld"><span>Email</span><input id="au-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" value="${esc(authEmail)}"></label>
+<label class="fld"><span>${up?'Пароль (минимум 6 символов)':'Пароль'}</span><input id="au-pass" type="password" autocomplete="${up?'new-password':'current-password'}"></label>
+<div id="au-msg" class="msg${kind?' '+kind:''}" role="status">${esc(msg||'')}</div>
+<button class="btn pri" id="au-go" type="submit">${up?'Создать аккаунт':'Войти'}</button></form>
+${up?'':'<button class="btn ghost" data-act="authForgot">Забыли пароль?</button>'}
+<div class="hint">Аккаунт общий с OwnerGladiator Hub: тот же email и пароль.</div></div>`;
+}
+function authMsg(m,kind){const e=$('#au-msg');if(e){e.textContent=m;e.className='msg'+(kind?' '+kind:'');}}
+function authErr(e){
+  const m=String((e&&(e.message||e.error_description||e.error))||e||'');
+  if(/not confirmed/i.test(m))return 'Email ещё не подтверждён — открой письмо со ссылкой.';
+  if(/invalid login|invalid_grant|credentials/i.test(m))return 'Неверный email или пароль.';
+  if(/already registered|already been registered|user_already_exists/i.test(m))return 'Этот email уже зарегистрирован — просто войди. Пароль тот же, что в OwnerGladiator Hub.';
+  if(isNet(m))return 'Нет связи с сервером. Проверь интернет.';
+  return m;
+}
+const siteUrl=()=>location.href.split('#')[0].split('?')[0];
+async function authGo(){
+  if(!sb)return authMsg('Не загрузилась библиотека входа. Проверь интернет и обнови страницу.','err');
+  const em=$('#au-email').value.trim(),pw=$('#au-pass').value;authEmail=em;
+  if(!em||!pw)return authMsg('Введи email и пароль.','err');
+  const btn=$('#au-go');btn.disabled=true;authMsg('Загрузка…');
+  try{
+    if(authMode==='up'){
+      if(pw.length<6){authMsg('Пароль — минимум 6 символов.','err');return;}
+      const u=await sb.auth.signUp({email:em,password:pw,options:{emailRedirectTo:siteUrl()}});
+      if(u.error){if(/already/i.test(String(u.error.message))){authMode='in';renderAuth(authErr(u.error),'err');}else authMsg(authErr(u.error),'err');return;}
+      if(u.data&&u.data.session){handleSession(u.data.session);return;}
+      if(u.data&&u.data.user&&Array.isArray(u.data.user.identities)&&!u.data.user.identities.length){authMode='in';renderAuth('Этот email уже зарегистрирован — просто войди.','err');return;}
+      authMode='in';renderAuth(`Письмо отправлено на ${em}. Открой ссылку в нём, потом войди.`,'ok');return;
+    }
+    const r=await sb.auth.signInWithPassword({email:em,password:pw});
+    if(r.error)authMsg(authErr(r.error),'err');else if(r.data&&r.data.session)handleSession(r.data.session);
+  }catch(e){authMsg(authErr(e),'err');}
+  finally{const b=$('#au-go');if(b)b.disabled=false;}
+}
+async function authForgot(){
+  if(!sb)return;
+  const em=$('#au-email').value.trim();if(!em)return authMsg('Введи email — пришлём ссылку для нового пароля.','err');
+  const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:siteUrl()});
+  authMsg(r.error?authErr(r.error):'Письмо со ссылкой отправлено.',r.error?'err':'ok');
+}
+async function signOut(){try{if(USER)Store.del(cacheKey());}catch(e){}try{await sb.auth.signOut();}catch(e){}handleSession(null);}
+
+let starting=false;
+async function enterApp(){
+  $('#auth').hidden=true;$('#app').hidden=false;$('#boot').hidden=true;
+  mapSize();
+  try{await mapData();mapSize();if(!MV.ready){mapBuild();mapFitUS();}}catch(e){$('#mstat').textContent='Карта не загрузилась — проверь интернет';}
+  drawWorld();redraw();showTab(['map','load','list','imp'].includes(S.tab)?S.tab:'map');renderAll();
+}
+async function handleSession(session){
+  if(session&&session.user){
+    if(USER&&USER.id===session.user.id){USER=session.user;return;}
+    USER=session.user;MARKS=[];LOADS=[];ROUTE=null;HITS=[];CANDS=[];NOPT=[];
+    if(starting)return;starting=true;
+    try{MARKS=JSON.parse(Store.get(cacheKey())||'[]');}catch(e){MARKS=[];}
+    buildPlaces();
+    await enterApp();
+    await Promise.all([loadMarks(),fetchHub()]);
+    starting=false;
+    if(!USER||USER.id!==session.user.id)return;
+    drawWorld();redraw();renderAll();buildRoute();
+  }else{
+    USER=null;starting=false;closeSheet();
+    authMode='in';$('#app').hidden=true;$('#auth').hidden=false;renderAuth();$('#boot').hidden=true;
+  }
+}
+async function refreshAll(force){
+  if(!USER)return;
+  if(!force&&Date.now()-marksAt<45000&&Date.now()-HUB.at<45000)return;
+  const prevKey=(curLoad()||{}).key;
+  await Promise.all([loadMarks(),fetchHub()]);
+  computeHits();drawWorld();redraw();renderAll();
+  const k=(curLoad()||{}).key;if(force||k!==prevKey||!ROUTE)buildRoute();else{mapBar();renderLoad();}
+}
+
+/* ---------- events ---------- */
+const ACT={
+  menu:()=>openMenu(),pass:()=>openPass(),signOut:()=>signOut(),add:()=>openAdd(),
+  refresh:async()=>{toast('Обновляю…');await refreshAll(true);toast('Готово');},
+  hubRefresh:async()=>{await fetchHub();renderLoad();buildRoute();},
+  routeRetry:()=>{lastFit='';buildRoute();},
+  authMode:b=>{const em=$('#au-email');if(em)authEmail=em.value;authMode=b.dataset.m;renderAuth();},
+  authForgot:()=>authForgot(),
+  pickCancel:()=>endPick(),
+  addGps:async()=>{closeSheet();toast('Определяю, где ты…');const p=await locate(true);if(p)openForm({lat:p.lat,lon:p.lon,kind:'ice',src:'gps',seen_at:new Date(),approx_km:p.acc>3000?5:0});},
+  addPick:()=>{closeSheet();startPick('Нажми на карту, где видели ICE',(la,lo)=>openForm({lat:la,lon:lo,kind:'ice',src:'manual',seen_at:new Date()}));},
+  repMore:b=>{openForm({lat:+b.dataset.lat,lon:+b.dataset.lon,kind:'ice',src:'manual',seen_at:new Date(),title:(MARKS.find(m=>(+m.lat).toFixed(3)===(+b.dataset.lat).toFixed(3)&&(+m.lon).toFixed(3)===(+b.dataset.lon).toFixed(3))||{}).title||''});},
+  repEdit:b=>{const r=MARKS.find(x=>x.id===b.dataset.id);if(r)openForm(Object.assign({},r));},
+  repDel:b=>repDel(b.dataset.id,b),
+  pasteGo:async b=>{b.disabled=true;await importText($('#paste').value);b.disabled=false;},
+  candSave:()=>saveCands(),
+  candClear:()=>{CANDS=[];NOPT=[];renderImp();redraw();},
+  candShow:b=>{const c=CANDS[+b.dataset.i];if(c){focusXY(ALB(c.lon,c.lat),8);$('#mapc').scrollIntoView({behavior:'smooth',block:'nearest'});}},
+  noptPick:b=>{const x=NOPT[+b.dataset.i];if(!x)return;startPick('Нажми на карту, где это было',(la,lo)=>{NOPT.splice(NOPT.indexOf(x),1);const c=addCand({lat:la,lon:lo,ax:0,title:P.title(x.text,'Отметка'),state:P.stateOf(x.text),kind:P.guessKind(x.text),text:x.text,date:x.date,key:x.key},'telegram');c.skip=false;c.dup=false;renderImp();redraw();showTab('imp');});},
+  noptDrop:b=>{NOPT.splice(+b.dataset.i,1);renderImp();}
+};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button,[data-place]');if(!b)return;
+  const ds=b.dataset;
+  if(ds.close!==undefined&&b.hasAttribute('data-close')){closeSheet();return;}
+  if(ds.tab){if(!ov().hidden)closeSheet();showTab(ds.tab);return;}
+  if(ds.place){SEL=ds.place;const pl=PLACES.find(p=>p.id===ds.place);if(pl)focusXY(pl.xy,Math.max(MV.k,6));openPlace(ds.place);return;}
+  if(ds.f){S[ds.f]=!S[ds.f];savePrefs();computeHits();drawWorld();redraw();mapBar();renderAll();return;}
+  if(ds.buf){S.buf=+ds.buf;savePrefs();computeHits();redraw();mapBar();renderLoad();return;}
+  if(ds.act&&ACT[ds.act]){ACT[ds.act](b);return;}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.matches('[data-days]')){S.days=+t.value;savePrefs();computeHits();drawWorld();redraw();mapBar();renderAll();return;}
+  if(t.matches('[data-load]')){S.loadKey=t.value;savePrefs();renderLoad();if(t.value!=='custom'||(S.custom&&S.custom.from))buildRoute();return;}
+  if(t.matches('[data-dh]')){S.dh=t.checked;savePrefs();buildRoute();return;}
+  if(t.id==='tgfile'&&t.files&&t.files.length){importFiles([...t.files]);t.value='';return;}
+  const cf=t.dataset&&t.dataset.cf;if(cf){const c=CANDS[+t.closest('[data-cand]').dataset.cand];if(!c)return;
+    if(cf==='use'){c.skip=!t.checked;renderImp();redraw();}else if(cf==='date')c.date=new Date(t.value||Date.now());else c[cf]=t.value;}
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){query=e.target.value;renderList();}});
+document.addEventListener('submit',async e=>{
+  e.preventDefault();const f=e.target;
+  if(f.id==='auform')authGo();
+  else if(f.id==='mform')formSave(f);
+  else if(f.id==='passform'){const v=$('#np').value,m=$('#np-msg');if(v.length<6){m.textContent='Пароль — минимум 6 символов.';m.className='msg err';return;}const r=await sb.auth.updateUser({password:v});if(r.error){m.textContent=authErr(r.error);m.className='msg err';return;}closeSheet();toast('Пароль изменён');}
+  else if(f.id==='cust'){
+    const ft=$('#c-from').value.trim(),tt2=$('#c-to').value.trim();if(!ft||!tt2){toast('Впиши откуда и куда');return;}
+    const btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Ищу адреса…';
+    const[a,b]=await Promise.all([geoFind(ft),geoFind(tt2)]);
+    btn.disabled=false;btn.textContent='Проверить маршрут';
+    if(!a||!b){toast('Не нашёл '+(!a?'«'+ft+'»':'«'+tt2+'»')+'. Попробуй ZIP или «City, ST»');return;}
+    S.custom={from:a,to:b,fromText:ft,toText:tt2};S.loadKey='custom';savePrefs();buildRoute();
+  }
+});
+ov().addEventListener('click',e=>{if(e.target===ov())closeSheet();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!ov().hidden)closeSheet();else if(PICK)endPick();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshAll(false);});
+
+function init(){
+  $('#boot-emb').innerHTML=emblem('b');$('#hdr-emb').innerHTML=emblem('h');
+  mapInit();
+  if(!sb){$('#auth').hidden=false;renderAuth('Не загрузилась библиотека входа. Проверь интернет и обнови страницу.','err');$('#boot').hidden=true;return;}
+  sb.auth.getSession().then(r=>handleSession(r&&r.data&&r.data.session)).catch(()=>handleSession(null));
+  sb.auth.onAuthStateChange((ev,s)=>{setTimeout(()=>{
+    if(ev==='PASSWORD_RECOVERY')setTimeout(openPass,600);
+    if(!s&&USER)handleSession(null);
+    else if(s&&s.user&&(!USER||USER.id!==s.user.id))handleSession(s);
+  },0);});
+}
+window.IG={ALB,ALBinv,nearOnLine,computeHits:()=>{computeHits();return HITS;},state:()=>({S,MARKS,PLACES,LOADS,ROUTE,HITS,CANDS,NOPT,MV})};
+init();
+}
+
+</script>
+</body>
+</html>
